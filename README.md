@@ -4,6 +4,8 @@
 
 ## Installation
 
+Please review documentation [here](https://help.scenario.com/installing-the-unity-plugin)
+
 # Licensing:
 
 Copyright Scenario.com 2023. All rights reserved.

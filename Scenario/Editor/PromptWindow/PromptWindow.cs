@@ -130,7 +130,7 @@ public class PromptWindow : EditorWindow
     {
         Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.SelectedModelName + ", Seed: " + seed);
 
-        string modelId = promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : EditorPrefs.GetString("SelectedModelId");
+        string modelId = /*promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : */EditorPrefs.GetString("SelectedModelId");
 
         EditorCoroutineUtility.StartCoroutineOwnerless(PostInferenceRequest(modelId));
     }
@@ -239,13 +239,28 @@ public class PromptWindow : EditorWindow
             }
             else
             {
-                var maskBytes = PromptWindowUI.imageMask.EncodeToPNG();
+                Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
+
+                Color[] pixels = processedMask.GetPixels();
+
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    if (pixels[i].a == 0)
+                    {
+                        pixels[i] = Color.black;
+                    }
+                }
+
+                processedMask.SetPixels(pixels);
+                processedMask.Apply();
+
+                var maskBytes = processedMask.EncodeToPNG();
                 string maskBase64String = Convert.ToBase64String(maskBytes);
                 maskDataUrl = $"data:image/png;base64,{maskBase64String}";
             }
         }
 
-        bool enableSafetyCheck = false;
+        bool hideResults = false;
         string type = operationType;
         string image = $"\"{dataUrl}\"";
         string mask = $"\"{maskDataUrl}\"";
@@ -261,7 +276,7 @@ public class PromptWindow : EditorWindow
 
         string inputData = $@"{{
             ""parameters"": {{
-                ""enableSafetyCheck"": {enableSafetyCheck.ToString().ToLower()},
+                ""hideResults"": {enableSafetyCheck.ToString().ToLower()},
                 ""type"": ""{type}"",
                 {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}
                 {(promptWindowUI.isControlNet || promptWindowUI.isAdvancedSettings ? $@"""modality"": ""{modality}""," : "")}
@@ -314,7 +329,7 @@ public class PromptWindow : EditorWindow
         yield return new WaitForSecondsRealtime(1.0f);
 
         string baseUrl = ApiClient.apiUrl + "/models";
-        string modelId = promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : UnityEditor.EditorPrefs.GetString("postedModelName");
+        string modelId = /*promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : */UnityEditor.EditorPrefs.GetString("postedModelName");
 
         string url = $"{baseUrl}/{modelId}/inferences/{inferenceId}";
         RestClient client = new RestClient(url);

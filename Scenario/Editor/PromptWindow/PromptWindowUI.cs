@@ -472,7 +472,7 @@ public class PromptWindowUI
             guidancesliderValue = Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) * 10) / 10f;
             EditorGUILayout.EndHorizontal();
 
-            if (isImageToImage || isInpainting || isControlNet) {
+            if (isImageToImage || isControlNet) {
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Label("Influence: " + influncesliderValue.ToString("0.00"), GUILayout.Width(labelWidth));
                 influncesliderValue = GUILayout.HorizontalSlider(influncesliderValue, 0f, 1f, GUILayout.Width(sliderWidth));

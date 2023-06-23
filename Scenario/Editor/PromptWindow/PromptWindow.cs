@@ -260,7 +260,7 @@ public class PromptWindow : EditorWindow
             }
         }
 
-        bool enableSafetyCheck = false;
+        bool hideResults = false;
         string type = operationType;
         string image = $"\"{dataUrl}\"";
         string mask = $"\"{maskDataUrl}\"";
@@ -276,7 +276,6 @@ public class PromptWindow : EditorWindow
 
         string inputData = $@"{{
             ""parameters"": {{
-                ""enableSafetyCheck"": {enableSafetyCheck.ToString().ToLower()},
                 ""hideResults"": {enableSafetyCheck.ToString().ToLower()},
                 ""type"": ""{type}"",
                 {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}

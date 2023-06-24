@@ -63,7 +63,7 @@ public class InpaintingEditorUI
 
         actionButtons = new ActionButton[]
         {
-            /*new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },*/
+            new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },
             new ActionButton { Text = "Save mask to file", Tooltip = "Save mask to file", OnClick = SaveMaskToFile },
             /*new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
             new ActionButton { Text = "Clear", Tooltip = "Clear", OnClick = Clear },
@@ -514,10 +514,31 @@ public class InpaintingEditorUI
         }
     }
 
-    /*private void LoadMaskFromFile()
+    private void LoadMaskFromFile()
     {
-        // Add logic to load mask from file
-    }*/
+        string filePath = EditorUtility.OpenFilePanel("Load mask image", "", "png,jpg,jpeg");
+        if (!string.IsNullOrEmpty(filePath))
+        {
+            byte[] fileData = File.ReadAllBytes(filePath);
+            Texture2D loadedMask = new Texture2D(2, 2);
+            loadedMask.LoadImage(fileData);
+
+            if (loadedMask.width == canvasImage.width && loadedMask.height == canvasImage.height)
+            {
+                canvasImage.SetPixels(loadedMask.GetPixels());
+                canvasImage.Apply();
+
+                maskBuffer.SetPixels(loadedMask.GetPixels());
+                maskBuffer.Apply();
+
+                AddToCanvasHistory();
+            }
+            else
+            {
+                Debug.LogWarning("Loaded mask dimensions do not match canvas dimensions.");
+            }
+        }
+    }
 
     private void SaveMaskToFile()
     {

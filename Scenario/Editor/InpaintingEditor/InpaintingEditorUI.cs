@@ -58,9 +58,9 @@ public class InpaintingEditorUI
 
         toolButtons = new ToolButton[]
         {
-            new ToolButton { Text = "✎ Draw", Tooltip = "To draw the mask", Mode = DrawingMode.Draw },
-            new ToolButton { Text = "✐ Erase", Tooltip = "To erase mask marks.", Mode = DrawingMode.Erase },
-            new ToolButton { Text = "⬛ Expand", Tooltip = "To expand the image", Mode = DrawingMode.Expand }
+            new ToolButton { Text = "✎", Tooltip = "To draw the mask", Mode = DrawingMode.Draw },
+            new ToolButton { Text = "✐", Tooltip = "To erase mask marks.", Mode = DrawingMode.Erase },
+            new ToolButton { Text = "[]", Tooltip = "To expand the image", Mode = DrawingMode.Expand }
         };
 
         actionButtons = new ActionButton[]
@@ -118,13 +118,16 @@ public class InpaintingEditorUI
                 EditorGUILayout.BeginHorizontal();
             }
 
-            if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), GUILayout.Width(100), GUILayout.Height(40)))
+            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+            buttonStyle.fontSize = 25;
+
+            if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), buttonStyle, GUILayout.Width(50), GUILayout.Height(50)))
             {
                 currentDrawingMode = button.Mode;
                 button.OnClick?.Invoke();
             }
 
-            if (i % 2 == 1)
+            if (i % 3 == 2 || i == toolButtons.Length - 1)
             {
                 EditorGUILayout.EndHorizontal();
             }
@@ -253,38 +256,43 @@ public class InpaintingEditorUI
                 EditorGUILayout.Space();
                 EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
 
-                // Calculate positions
-                float centerX = position.width * 0.5f; // Center within the left side
+                float centerX = position.width * 0.5f;
                 float centerY = position.height / 2f;
                 float imageWidth = uploadedImage.width;
                 float imageHeight = uploadedImage.height;
                 float buttonSize = 50f;
 
-                // Image
                 GUI.DrawTexture(new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight), uploadedImage);
 
-                // Left button
                 if (GUI.Button(new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize, buttonSize), "+"))
                 {
-                    uploadedImage = ResizeImage(uploadedImage, FindNextSize((int)imageWidth), (int)imageHeight, addLeft: true);
+                    int newWidth = FindNextSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
+                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight, addLeft: true);
                 }
 
                 // Right button
                 if (GUI.Button(new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize), "+"))
                 {
-                    uploadedImage = ResizeImage(uploadedImage, FindNextSize((int)imageWidth), (int)imageHeight);
+                    int newWidth = FindNextSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
+                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight);
                 }
 
                 // Top button
                 if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize, buttonSize), "+"))
                 {
-                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, FindNextSize((int)imageHeight));
+                    int newHeight = FindNextSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
+                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight);
                 }
 
                 // Bottom button
                 if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize), "+"))
                 {
-                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, FindNextSize((int)imageHeight), addBottom: true);
+                    int newHeight = FindNextSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
+                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight, addBottom: true);
                 }
 
                 EditorGUILayout.EndVertical();
@@ -662,6 +670,7 @@ public class InpaintingEditorUI
             return;
         }
 
+        PromptWindowUI.imageUpload = uploadedImage;
         PromptWindowUI.imageMask = maskBuffer;
         inpaintingEditor.Close();
     }

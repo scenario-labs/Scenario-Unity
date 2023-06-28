@@ -62,13 +62,13 @@ public class PromptWindow : EditorWindow
     {
         Debug.Log("Requesting background removal, please wait..");
 
-        string url = $"{PluginSettings.ApiUrl}/images/remove-background";
+        string url = $"{PluginSettings.ApiUrl}/images/erase-background";
         Debug.Log(url);
 
         RestClient client = new RestClient(url);
         RestRequest request = new RestRequest(Method.PUT);
 
-        string param = $"{{\"data\":\"{dataUrl}\",\"backgroundColor\":\"transparent\",\"format\":\"png\"}}";
+        string param = $"{{\"image\":\"{dataUrl}\",\"backgroundColor\":\"transparent\",\"format\":\"png\",\"returnImage\":\"true\"}}";
         Debug.Log(param);
 
         request.AddHeader("accept", "application/json");
@@ -130,7 +130,7 @@ public class PromptWindow : EditorWindow
     {
         Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.SelectedModelName + ", Seed: " + seed);
 
-        string modelId = /*promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : */EditorPrefs.GetString("SelectedModelId");
+        string modelId = EditorPrefs.GetString("SelectedModelId");
 
         EditorCoroutineUtility.StartCoroutineOwnerless(PostInferenceRequest(modelId));
     }
@@ -276,7 +276,7 @@ public class PromptWindow : EditorWindow
 
         string inputData = $@"{{
             ""parameters"": {{
-                ""hideResults"": {enableSafetyCheck.ToString().ToLower()},
+                ""hideResults"": {hideResults.ToString().ToLower()},
                 ""type"": ""{type}"",
                 {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}
                 {(promptWindowUI.isControlNet || promptWindowUI.isAdvancedSettings ? $@"""modality"": ""{modality}""," : "")}
@@ -329,7 +329,7 @@ public class PromptWindow : EditorWindow
         yield return new WaitForSecondsRealtime(1.0f);
 
         string baseUrl = ApiClient.apiUrl + "/models";
-        string modelId = /*promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : */UnityEditor.EditorPrefs.GetString("postedModelName");
+        string modelId = UnityEditor.EditorPrefs.GetString("postedModelName");
 
         string url = $"{baseUrl}/{modelId}/inferences/{inferenceId}";
         RestClient client = new RestClient(url);

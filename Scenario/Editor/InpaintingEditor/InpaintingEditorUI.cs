@@ -23,8 +23,9 @@ public class InpaintingEditorUI
     internal InpaintingEditor inpaintingEditor;
     private float selectedOpacity = 1.0f;
 
-    private enum DrawingMode { Draw, Erase, Fill, Picker }
+    private enum DrawingMode { Draw, Erase, Fill, Picker, Expand }
     private DrawingMode currentDrawingMode = DrawingMode.Draw;
+    private int[] allowedSizes = { 512, 570, 640, 704, 768, 912, 1024 };
 
     private struct ToolButton
     {
@@ -59,6 +60,7 @@ public class InpaintingEditorUI
         {
             new ToolButton { Text = "✎ Draw", Tooltip = "To draw the mask", Mode = DrawingMode.Draw },
             new ToolButton { Text = "✐ Erase", Tooltip = "To erase mask marks.", Mode = DrawingMode.Erase },
+            new ToolButton { Text = "⬛ Expand", Tooltip = "To expand the image", Mode = DrawingMode.Expand }
         };
 
         actionButtons = new ActionButton[]
@@ -111,7 +113,7 @@ public class InpaintingEditorUI
         for (int i = 0; i < toolButtons.Length; i++)
         {
             ToolButton button = toolButtons[i];
-            if (i % 2 == 0)
+            if (i % 3 == 0)
             {
                 EditorGUILayout.BeginHorizontal();
             }
@@ -176,73 +178,118 @@ public class InpaintingEditorUI
 
         if (uploadedImage != null)
         {
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.Space();
-            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
-            float maxSize = 1024f;
-            float aspectRatio = (float)uploadedImage.width / (float)uploadedImage.height;
-            float width = Mathf.Min(uploadedImage.width, maxSize);
-            float height = width / aspectRatio;
-            Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
-            GUI.DrawTexture(rect, uploadedImage, ScaleMode.ScaleToFit);
-            
-            if (canvasImage == null || canvasImage.width != uploadedImage.width || canvasImage.height != uploadedImage.height)
+            if (currentDrawingMode == DrawingMode.Draw || currentDrawingMode == DrawingMode.Erase)
             {
-                int canvasWidth = Mathf.Min(uploadedImage.width, 1024);
-                int canvasHeight = Mathf.Min(uploadedImage.height, 1024);
-                canvasImage = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
-                canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-                canvasImage.Apply();
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
 
-                maskBuffer = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
-                maskBuffer.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-                maskBuffer.Apply();
+                float maxSize = 1024f;
+                float aspectRatio = (float)uploadedImage.width / (float)uploadedImage.height;
+                float width = Mathf.Min(uploadedImage.width, maxSize);
+                float height = width / aspectRatio;
+                Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+
+                GUI.DrawTexture(rect, uploadedImage, ScaleMode.ScaleToFit);
+                
+                if (canvasImage == null || canvasImage.width != uploadedImage.width || canvasImage.height != uploadedImage.height)
+                {
+                    int canvasWidth = Mathf.Min(uploadedImage.width, 1024);
+                    int canvasHeight = Mathf.Min(uploadedImage.height, 1024);
+                    canvasImage = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
+                    canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
+                    canvasImage.Apply();
+
+                    maskBuffer = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
+                    maskBuffer.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
+                    maskBuffer.Apply();
+                }
+                GUI.DrawTexture(rect, canvasImage, ScaleMode.ScaleToFit);
+
+                Rect lastRect = GUILayoutUtility.GetLastRect();
+                if (lastRect.Contains(Event.current.mousePosition))
+                {
+                    if (brushCursor == null || brushCursor.width != selectedBrushSize)
+                    {
+                        brushCursor = MakeCircularTex(selectedBrushSize, selectedColor);
+                    }
+                    EditorGUIUtility.AddCursorRect(lastRect, MouseCursor.CustomCursor);
+                    Cursor.SetCursor(brushCursor, new Vector2(brushCursor.width / 2, brushCursor.height / 2), CursorMode.Auto);
+
+                    if (Event.current.type == EventType.MouseDrag || Event.current.type == EventType.MouseDown)
+                    {
+                        Vector2 localMousePosition = Event.current.mousePosition - new Vector2(rect.x, rect.y);
+                        Vector2 textureCoords = new Vector2(localMousePosition.x / rect.width, localMousePosition.y / rect.height);
+
+                        int x = (int)(textureCoords.x * uploadedImage.width);
+                        int y = (int)((1 - textureCoords.y) * uploadedImage.height);
+
+                        if (currentDrawingMode == DrawingMode.Draw)
+                        {
+                            DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
+                            DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
+                        }
+                        else if (currentDrawingMode == DrawingMode.Erase)
+                        {
+                            DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
+                            DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
+                        }
+
+                        Event.current.Use();
+                    }
+
+                    else if (Event.current.type == EventType.MouseUp)
+                    {
+                        newStroke = true;
+                    }
+                }
+
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
             }
-            GUI.DrawTexture(rect, canvasImage, ScaleMode.ScaleToFit);
-
-            Rect lastRect = GUILayoutUtility.GetLastRect();
-            if (lastRect.Contains(Event.current.mousePosition))
+            else if (currentDrawingMode == DrawingMode.Expand)
             {
-                if (brushCursor == null || brushCursor.width != selectedBrushSize)
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+
+                // Calculate positions
+                float centerX = position.width * 0.5f; // Center within the left side
+                float centerY = position.height / 2f;
+                float imageWidth = uploadedImage.width;
+                float imageHeight = uploadedImage.height;
+                float buttonSize = 50f;
+
+                // Image
+                GUI.DrawTexture(new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight), uploadedImage);
+
+                // Left button
+                if (GUI.Button(new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize, buttonSize), "+"))
                 {
-                    brushCursor = MakeCircularTex(selectedBrushSize, selectedColor);
-                }
-                EditorGUIUtility.AddCursorRect(lastRect, MouseCursor.CustomCursor);
-                Cursor.SetCursor(brushCursor, new Vector2(brushCursor.width / 2, brushCursor.height / 2), CursorMode.Auto);
-
-                if (Event.current.type == EventType.MouseDrag || Event.current.type == EventType.MouseDown)
-                {
-                    Vector2 localMousePosition = Event.current.mousePosition - new Vector2(rect.x, rect.y);
-                    Vector2 textureCoords = new Vector2(localMousePosition.x / rect.width, localMousePosition.y / rect.height);
-
-                    int x = (int)(textureCoords.x * uploadedImage.width);
-                    int y = (int)((1 - textureCoords.y) * uploadedImage.height);
-
-                    if (currentDrawingMode == DrawingMode.Draw)
-                    {
-                        DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
-                        DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
-                    }
-                    else if (currentDrawingMode == DrawingMode.Erase)
-                    {
-                        DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
-                        DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
-                    }
-
-                    Event.current.Use();
+                    uploadedImage = ResizeImage(uploadedImage, FindNextSize((int)imageWidth), (int)imageHeight, addLeft: true);
                 }
 
-                else if (Event.current.type == EventType.MouseUp)
+                // Right button
+                if (GUI.Button(new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize), "+"))
                 {
-                    newStroke = true;
+                    uploadedImage = ResizeImage(uploadedImage, FindNextSize((int)imageWidth), (int)imageHeight);
                 }
+
+                // Top button
+                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize, buttonSize), "+"))
+                {
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, FindNextSize((int)imageHeight));
+                }
+
+                // Bottom button
+                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize), "+"))
+                {
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, FindNextSize((int)imageHeight), addBottom: true);
+                }
+
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
             }
-
-            EditorGUILayout.EndVertical();
-
-            EditorGUILayout.EndHorizontal();
         }
         else
         {
@@ -442,6 +489,46 @@ public class InpaintingEditorUI
         }
 
         tex.Apply();
+    }
+
+    private int FindNextSize(int currentSize)
+    {
+        foreach (int size in allowedSizes)
+        {
+            if (size > currentSize)
+                return size;
+        }
+        return currentSize;
+    }
+
+    private Texture2D ResizeImage(Texture2D original, int newWidth, int newHeight, bool addBottom = false, bool addLeft = false)
+    {
+        Texture2D resizedImage = new Texture2D(newWidth, newHeight);
+        Color[] originalPixels = original.GetPixels();
+        Color[] newPixels = new Color[newWidth * newHeight];
+
+        int xOffset = addLeft ? newWidth - original.width : 0;
+        int yOffset = addBottom ? newHeight - original.height : 0;
+
+        for (int y = 0; y < newHeight; y++)
+        {
+            for (int x = 0; x < newWidth; x++)
+            {
+                if (x >= xOffset && x < xOffset + original.width && y >= yOffset && y < yOffset + original.height)
+                {
+                    newPixels[y * newWidth + x] = originalPixels[(y - yOffset) * original.width + (x - xOffset)];
+                }
+                else
+                {
+                    newPixels[y * newWidth + x] = Color.white;
+                }
+            }
+        }
+
+        resizedImage.SetPixels(newPixels);
+        resizedImage.Apply();
+
+        return resizedImage;
     }
 
     private void CreateTransparentImage(int width, int height)

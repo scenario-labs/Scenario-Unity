@@ -52,14 +52,10 @@ public class PromptWindow : EditorWindow
         EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl));
     }
 
-    private void Callback_BackgroundRemoved(byte[] textureBytes)
-    {
-        PromptWindowUI.imageUpload.LoadImage(textureBytes);
-        Debug.Log("Upload image updated");
-    }
-    
     IEnumerator PutRemoveBackground(string dataUrl)
     {
+        string name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+
         Debug.Log("Requesting background removal, please wait..");
 
         string url = $"{PluginSettings.ApiUrl}/images/erase-background";
@@ -68,14 +64,13 @@ public class PromptWindow : EditorWindow
         RestClient client = new RestClient(url);
         RestRequest request = new RestRequest(Method.PUT);
 
-        string param = $"{{\"image\":\"{dataUrl}\",\"backgroundColor\":\"transparent\",\"format\":\"png\",\"returnImage\":\"true\"}}";
+        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
         Debug.Log(param);
 
         request.AddHeader("accept", "application/json");
         request.AddHeader("content-type", "application/json");
         request.AddHeader("Authorization", $"Basic {PluginSettings.EncodedAuth}");
-        request.AddParameter("application/json",
-            param, ParameterType.RequestBody);
+        request.AddParameter("application/json", param, ParameterType.RequestBody);
 
         yield return client.ExecuteAsync(request, response =>
         {
@@ -86,10 +81,45 @@ public class PromptWindow : EditorWindow
             else
             {
                 Debug.Log($"Response: {response.Content}");
-                pngBytesUploadImage = Convert.FromBase64String(response.Content);
-                processReceivedUploadImage = true;
+
+                try
+                {
+                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
+                    string imageUrl = jsonResponse.asset.url;
+
+                    EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageIntoMemory(imageUrl));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
+                }
             }
         });
+    }
+
+    IEnumerator DownloadImageIntoMemory(string imageUrl)
+    {
+        using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError(www.error);
+            }
+            else
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(www);
+                byte[] textureBytes = texture.EncodeToPNG();
+
+                Callback_BackgroundRemoved(textureBytes);
+            }
+        }
+    }
+
+    private void Callback_BackgroundRemoved(byte[] textureBytes)
+    {
+        PromptWindowUI.imageUpload.LoadImage(textureBytes);
     }
 
     private void Update()

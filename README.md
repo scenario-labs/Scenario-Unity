@@ -1,27 +1,23 @@
-![Untitled design](https://i.imgur.com/9vntoHd.jpg)
+![Untitled design](resources/social-header.png)
 
 # Scenario Unity Plugin
 
+🎉 Welcome to the Scenario Unity Plugin Open Source Project! 🎉
+
+We are thrilled to welcome you to our innovative endeavor. This plugin stands at the crossroads of creativity and technology, uniting Unity developers and AI-powered game asset generation via [Scenario.com's unique API](https://docs.scenario.com/docs).
+
+The Scenario Unity plugin simplifies asset creation, directly within the Unity Editor. It integrates seamlessly with your generators, enabling all Scenario features to be accessed directly within Unity. There's no more need to juggle between different platforms!
+
+Whether you're an expert Unity developer or just venturing into the world of game development, your insights are valuable. We invite you to explore the code, provide [feedback](https://github.com/scenario-labs/Scenario-Unity/issues), submit [pull requests](https://github.com/scenario-labs/Scenario-Unity/pulls), or use the project to learn and grow.
+
+With an open dialogue and shared passion for innovation, we look forward to the outstanding contributions we can make to the gaming community together. Let's redefine asset creation, and happy coding!
+
+Learn more about Scenario on our [website](https://scenario.com/).
+
 ## Installation
 
-Please review documentation [here](https://help.scenario.com/installing-the-unity-plugin)
+Please review documentation [here](https://help.scenario.com/installing-the-unity-plugin).
 
-# Licensing:
+## License
 
-Copyright Scenario.com 2023. All rights reserved.
- 
-You acknowledge and agree that Scenario.com. (“Scenario.com”) (or Scenario.com licensors) own all legal rights, title, and interest in and to the work, software, application, source code, documentation, and any other documents in this repository (collectively, the “Program”), including any intellectual property rights which subsist in the Program (whether those rights happen to be registered or not, and wherever in the world those rights may exist), whether in source code or any other form.
- 
-Subject to the limited license below, you may not (and you may not permit anyone else to) distribute, publish, copy, modify, merge, combine with another program, create derivative works of, reverse engineer, decompile, or otherwise attempt to extract the source code of, the Program or any part thereof, except that you may contribute to this repository.
- 
-You are allowed to use Scenario Unity Plugin any way you like as a non-distributed personal project. You however are not allowed to upload this software in any form modified or not to any AppStore, Asset store, or services that distribute Unity plugin builds to others.
-Scenario owns all rights to this code base and images. The community is able to push updates to this software if they wish to help develop it.
-Scenario will then compensate them for the work they have done if it is deemed useable.
- 
-You will not use any trademark, service mark, trade name, or logo of Scenario, or any other company or organization in a way that is likely or intended to cause confusion about the owner or authorized user of such marks, names, or logos.
-This License Agreement is subject to change. The terms of this agreement for all versions of the software, regardless of their release date, are governed by the most recent version of the readme document in the repository. This applies to versions released prior to and following any updates to the License Agreement.
- 
-If you have any questions, comments, or interest in pursuing any other use cases, please reach out to us.
-
-# Liability
-Scenario is not responsible for any mistakes you may make while using the apps that cause API calls. Scenario also is not liable or responsible for your device security which if compromised could cause your API keys to be scraped or pulled.
+Review the [license](LICENSE) for this project.

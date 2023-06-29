@@ -69,6 +69,7 @@ public class ImageEditorUI
             /*new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },
             new ActionButton { Text = "Save mask to file", Tooltip = "Save mask to file", OnClick = SaveMaskToFile },
             new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
+            new ActionButton { Text = "Create Image", Tooltip = "Create a new image", OnClick = CreateImage },
             new ActionButton { Text = "Clear", Tooltip = "Clear", OnClick = Clear },
             new ActionButton { Text = "Undo", Tooltip = "Undo", OnClick = UndoCanvas },
             new ActionButton { Text = "Redo", Tooltip = "Redo", OnClick = RedoCanvas },
@@ -620,6 +621,22 @@ public class ImageEditorUI
     }
 
     // Add the corresponding methods for the action buttons
+    private void CreateImage()
+    {
+        int width = 512;
+        int height = 512;
+        uploadedImage = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        Color[] pixels = new Color[width * height];
+
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = Color.white;
+        }
+
+        uploadedImage.SetPixels(pixels);
+        uploadedImage.Apply();
+    }
+
     /*private void LoadMaskFromFile()
     {
         string filePath = EditorUtility.OpenFilePanel("Load mask image", "", "png,jpg,jpeg");
@@ -675,13 +692,28 @@ public class ImageEditorUI
 
     private void Use()
     {
-        if (uploadedImage == null)
+        if (uploadedImage == null || canvasImage == null)
         {
-            Debug.Log("MUST HAVE AN UPLOADED IMAGE FOR MASKING");
+            Debug.Log("MUST HAVE AN UPLOADED IMAGE AND A CANVAS IMAGE FOR MASKING");
             return;
         }
 
-        PromptWindowUI.imageUpload = uploadedImage;
+        // Create a new texture that combines the uploaded image and the canvas image
+        Texture2D combinedImage = new Texture2D(uploadedImage.width, uploadedImage.height, TextureFormat.RGBA32, false);
+        for (int y = 0; y < combinedImage.height; y++)
+        {
+            for (int x = 0; x < combinedImage.width; x++)
+            {
+                Color backgroundColor = uploadedImage.GetPixel(x, y);
+                Color foregroundColor = canvasImage.GetPixel(x, y);
+                Color combinedColor = Color.Lerp(backgroundColor, foregroundColor, foregroundColor.a);
+                combinedImage.SetPixel(x, y, combinedColor);
+            }
+        }
+        combinedImage.Apply();
+
+        PromptWindowUI.imageUpload = combinedImage;
         imageEditor.Close();
     }
+
 }

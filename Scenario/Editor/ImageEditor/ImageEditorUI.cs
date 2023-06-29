@@ -19,7 +19,6 @@ public class ImageEditorUI
     private bool newStroke = true;
     public string uploadedImagePath;
 
-    internal Texture2D maskBuffer;
     internal ImageEditor imageEditor;
     private float selectedOpacity = 1.0f;
 
@@ -67,9 +66,9 @@ public class ImageEditorUI
 
         actionButtons = new ActionButton[]
         {
-            new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },
+            /*new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },
             new ActionButton { Text = "Save mask to file", Tooltip = "Save mask to file", OnClick = SaveMaskToFile },
-            /*new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
+            new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
             new ActionButton { Text = "Clear", Tooltip = "Clear", OnClick = Clear },
             new ActionButton { Text = "Undo", Tooltip = "Undo", OnClick = UndoCanvas },
             new ActionButton { Text = "Redo", Tooltip = "Redo", OnClick = RedoCanvas },
@@ -86,10 +85,6 @@ public class ImageEditorUI
         canvasImage = new Texture2D(uploadedImage.width, uploadedImage.height, TextureFormat.RGBA32, false, true);
         canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
         canvasImage.Apply();
-
-        maskBuffer = new Texture2D(uploadedImage.width, uploadedImage.height, TextureFormat.RGBA32, false, true);
-        maskBuffer.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-        maskBuffer.Apply();
 
         canvasHistory.Clear();
         canvasHistoryIndex = -1;
@@ -233,10 +228,6 @@ public class ImageEditorUI
                     canvasImage = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
                     canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
                     canvasImage.Apply();
-
-                    maskBuffer = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
-                    maskBuffer.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-                    maskBuffer.Apply();
                 }
                 GUI.DrawTexture(rect, canvasImage, ScaleMode.ScaleToFit);
 
@@ -261,12 +252,10 @@ public class ImageEditorUI
                         if (currentDrawingMode == DrawingMode.Draw)
                         {
                             DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
-                            DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
                         }
                         else if (currentDrawingMode == DrawingMode.Erase)
                         {
                             DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
-                            DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
                         }
 
                         Event.current.Use();
@@ -299,7 +288,6 @@ public class ImageEditorUI
                 {
                     int newWidth = FindNextSize((int)imageWidth);
                     uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
-                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight, addLeft: true);
                 }
 
                 // Right button
@@ -307,7 +295,6 @@ public class ImageEditorUI
                 {
                     int newWidth = FindNextSize((int)imageWidth);
                     uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
-                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight);
                 }
 
                 // Top button
@@ -315,7 +302,6 @@ public class ImageEditorUI
                 {
                     int newHeight = FindNextSize((int)imageHeight);
                     uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
-                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight);
                 }
 
                 // Bottom button
@@ -323,7 +309,6 @@ public class ImageEditorUI
                 {
                     int newHeight = FindNextSize((int)imageHeight);
                     uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
-                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight, addBottom: true);
                 }
 
                 EditorGUILayout.EndVertical();
@@ -612,9 +597,6 @@ public class ImageEditorUI
             canvasHistoryIndex--;
             canvasImage.SetPixels(canvasHistory[canvasHistoryIndex].GetPixels());
             canvasImage.Apply();
-
-            maskBuffer.SetPixels(canvasHistory[canvasHistoryIndex].GetPixels());
-            maskBuffer.Apply();
         }
     }
 
@@ -634,14 +616,11 @@ public class ImageEditorUI
             redoHistory.RemoveAt(redoHistory.Count - 1);
             canvasImage.SetPixels(redoImage.GetPixels());
             canvasImage.Apply();
-
-            maskBuffer.SetPixels(redoImage.GetPixels());
-            maskBuffer.Apply();
         }
     }
 
     // Add the corresponding methods for the action buttons
-    private void LoadMaskFromFile()
+    /*private void LoadMaskFromFile()
     {
         string filePath = EditorUtility.OpenFilePanel("Load mask image", "", "png,jpg,jpeg");
         if (!string.IsNullOrEmpty(filePath))
@@ -674,7 +653,7 @@ public class ImageEditorUI
         {
             File.WriteAllBytes(savePath, maskBuffer.EncodeToPNG());
         }
-    }
+    }*/
 
     /*private void FillAll()
     {
@@ -703,7 +682,6 @@ public class ImageEditorUI
         }
 
         PromptWindowUI.imageUpload = uploadedImage;
-        PromptWindowUI.imageMask = maskBuffer;
         imageEditor.Close();
     }
 }

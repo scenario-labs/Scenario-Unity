@@ -164,15 +164,17 @@ public class PromptImages : EditorWindow
 
     IEnumerator PutRemoveBackground(string dataUrl)
     {
+        string name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+
         Debug.Log("Requesting background removal, please wait..");
 
-        string url = $"{PluginSettings.ApiUrl}/images/remove-background";
+        string url = $"{PluginSettings.ApiUrl}/images/erase-background";
         Debug.Log(url);
 
         RestClient client = new RestClient(url);
         RestRequest request = new RestRequest(Method.PUT);
 
-        string param = $"{{\"data\":\"{dataUrl}\",\"backgroundColor\":\"transparent\",\"format\":\"png\"}}";
+        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
         Debug.Log(param);
 
         request.AddHeader("accept", "application/json");
@@ -185,16 +187,44 @@ public class PromptImages : EditorWindow
         {
             if (response.ErrorException != null)
             {
-                Debug.Log($"Error: {response.ErrorException.Message}");
+                Debug.LogError($"Error: {response.ErrorException.Message}");
             }
             else
             {
                 Debug.Log($"Response: {response.Content}");
 
-                string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-                byte[] pngBytes = Convert.FromBase64String(response.Content);
-                DownloadImage(fileName, pngBytes);
+                try
+                {
+                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
+                    string imageUrl = jsonResponse.asset.url;
+
+                    EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageFromUrl(imageUrl));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
+                }
             }
         });
+    }
+
+    IEnumerator DownloadImageFromUrl(string imageUrl)
+    {
+        using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            yield return www.SendWebRequest();
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError(www.error);
+            }
+            else
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(www);
+                byte[] pngBytes = texture.EncodeToPNG();
+                
+                string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+                DownloadImage(fileName, pngBytes);
+            }
+        }
     }
 }

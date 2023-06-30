@@ -624,6 +624,14 @@ public class PromptWindowUI
 
             GUILayout.BeginHorizontal();
 
+            if (isControlNet || isImageToImage)
+            {
+                if (GUILayout.Button("Create Image"))
+                {
+                    ImageEditor.ShowWindow(imageUpload);
+                }
+            }
+
             if (isControlNet)
             {
                 if (GUILayout.Button("Add Control"))
@@ -636,7 +644,7 @@ public class PromptWindowUI
             {
                 if (GUILayout.Button("Add Mask"))
                 {
-                    promptWindow.OpenInpaintingEditorWindow(imageUpload);
+                    InpaintingEditor.ShowWindow(imageUpload);
                 }
             }
 

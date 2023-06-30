@@ -68,7 +68,7 @@ public class ModelsUI
         EditorPrefs.SetString(Models.paginationTokenKey, Models.paginationToken);
     }
 
-    public void UpdatePage()
+    public async Task UpdatePage()
     {
         pageList.Clear();
         if (models.Count < pageImageCount)
@@ -89,7 +89,7 @@ public class ModelsUI
         {
             Models.loadedModels.Add(item.id);
         }
-        UpdateTextures();
+        await UpdateTextures();
     }
 
     public void ResetTabSelection()

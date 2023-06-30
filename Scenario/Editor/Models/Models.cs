@@ -166,6 +166,7 @@ public class Models : EditorWindow
         public string privacy { get; set; }
         public string status { get; set; }
         public List<TrainingImageData> trainingImages { get; set; }
+        public ThumbnailData thumbnail { get; set; } // Assuming you have a ThumbnailData class.
     }
 
     public class ClassData
@@ -176,6 +177,11 @@ public class Models : EditorWindow
     public class TrainingImageData
     {
         public string downloadUrl { get; set; }
+    }
+
+    public class ThumbnailData
+    {
+        public string url { get; set; }
     }
 
     private class TokenResponse

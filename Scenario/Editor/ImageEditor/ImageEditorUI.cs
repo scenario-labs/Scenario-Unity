@@ -201,10 +201,6 @@ public class ImageEditorUI
         EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
 
         GUILayout.Space(18);
-        GUIStyle labelStyle = new GUIStyle(EditorStyles.boldLabel);
-        labelStyle.alignment = TextAnchor.MiddleCenter;
-        labelStyle.fontSize = 20;
-        GUILayout.Label("IMAGE PAINTER", labelStyle);
 
         if (uploadedImage != null)
         {

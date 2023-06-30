@@ -37,7 +37,7 @@ jobs:
         echo "VERSION=$new_version" >> $GITHUB_ENV
 
     - name: Archive code
-      run: zip -r Scenario-v${{ env.VERSION }}.zip .
+      run: zip -r Scenario-v${{ env.VERSION }}.zip Scenario Textures README.md Scenario.wlt
 
     - name: Create Release
       id: create_release

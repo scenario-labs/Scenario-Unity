@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using static Models;
 
 public class ModelsUI
@@ -183,13 +185,28 @@ public class ModelsUI
         GUILayout.EndArea();
     }
 
-    public async void UpdateTextures()
+    public async Task UpdateTextures()
     {
         textures.Clear();
+        
         foreach (var item in pageList)
         {
-            Texture2D texture = await Models.LoadTexture(item.trainingImages[0].downloadUrl);
-            textures.Add((texture, item.name));
+            string downloadUrl = null;
+            
+            if (item.trainingImages != null && item.trainingImages.Count > 0)
+            {
+                downloadUrl = item.trainingImages[0].downloadUrl;
+            }
+            else if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
+            {
+                downloadUrl = item.thumbnail.url;
+            }
+
+            if (!string.IsNullOrEmpty(downloadUrl))
+            {
+                Texture2D texture = await Models.LoadTexture(downloadUrl);
+                textures.Add((texture, item.name));
+            }
         }
     }
 }

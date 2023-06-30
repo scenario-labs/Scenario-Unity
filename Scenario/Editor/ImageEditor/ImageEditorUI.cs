@@ -22,7 +22,7 @@ public class ImageEditorUI
     internal ImageEditor imageEditor;
     private float selectedOpacity = 1.0f;
 
-    private enum DrawingMode { Draw, Erase, Fill, Picker, Expand, Crop }
+    private enum DrawingMode { Draw, Erase,/* Fill, Picker,*/ Expand, Crop }
     private DrawingMode currentDrawingMode = DrawingMode.Draw;
     private int[] allowedSizes = { 256, 384, 512, 570, 640, 704, 768, 912, 1024 };
 
@@ -59,8 +59,8 @@ public class ImageEditorUI
         {
             new ToolButton { Text = "✎", Tooltip = "Draw tool", Mode = DrawingMode.Draw },
             new ToolButton { Text = "✐", Tooltip = "Erase tool", Mode = DrawingMode.Erase },
-            new ToolButton { Text = "◉", Tooltip = "Fill tool", Mode = DrawingMode.Fill },
-            new ToolButton { Text = "✚", Tooltip = "Picker tool", Mode = DrawingMode.Picker },
+            /*new ToolButton { Text = "◉", Tooltip = "Fill tool", Mode = DrawingMode.Fill },
+            new ToolButton { Text = "✚", Tooltip = "Picker tool", Mode = DrawingMode.Picker },*/
             new ToolButton { Text = "[]", Tooltip = "To expand the image", Mode = DrawingMode.Expand },
             new ToolButton { Text = "-", Tooltip = "To crop the image", Mode = DrawingMode.Crop }
         };
@@ -112,20 +112,20 @@ public class ImageEditorUI
         for (int i = 0; i < toolButtons.Length; i++)
         {
             ToolButton button = toolButtons[i];
-            if (i % 3 == 0)
+            if (i % 4 == 0)
             {
                 EditorGUILayout.BeginHorizontal();
             }
 
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
             buttonStyle.fontSize = 25;
-            if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), buttonStyle, GUILayout.Width(50), GUILayout.Height(50)))
+            if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), buttonStyle, GUILayout.Width(45), GUILayout.Height(45)))
             {
                 currentDrawingMode = button.Mode;
                 button.OnClick?.Invoke();
             }
 
-            if (i % 3 == 2 || i == toolButtons.Length - 1)
+            if (i % 4 == 3 || i == toolButtons.Length - 1)
             {
                 EditorGUILayout.EndHorizontal();
             }

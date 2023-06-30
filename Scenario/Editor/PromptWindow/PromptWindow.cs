@@ -146,11 +146,6 @@ public class PromptWindow : EditorWindow
         }
     }
 
-    public void OpenInpaintingEditorWindow(Texture2D texture2D)
-    {
-        InpaintingEditor.ShowInpaintingWindow(texture2D);
-    }
-
     private void OnGUI()
     {
         promptWindowUI.Render(this.position);

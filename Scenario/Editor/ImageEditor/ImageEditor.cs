@@ -9,14 +9,13 @@ public class ImageEditor : EditorWindow
     private static float minimumWidth = 1775f;
 
     [MenuItem("Window/Scenario/Image Editor")]
-    public static void ShowImageWindow()
+    public static void ShowWindow()
     {
-        EditorWindow.GetWindow(typeof(ImageEditor), false, "Image Editor");
         ImageEditor window = GetWindow<ImageEditor>("Image Editor");
         window.minSize = new Vector2(minimumWidth, window.minSize.y);
     }
 
-    public static void ShowImageWindow(Texture2D texture2D)
+    public static void ShowWindow(Texture2D texture2D)
     {
         EditorWindow.GetWindow(typeof(ImageEditor), false, "Image Editor");
         imageTexture = texture2D;

@@ -22,9 +22,9 @@ public class ImageEditorUI
     internal ImageEditor imageEditor;
     private float selectedOpacity = 1.0f;
 
-    private enum DrawingMode { Draw, Erase, Fill, Picker, Expand }
+    private enum DrawingMode { Draw, Erase, Fill, Picker, Expand, Crop }
     private DrawingMode currentDrawingMode = DrawingMode.Draw;
-    private int[] allowedSizes = { 512, 570, 640, 704, 768, 912, 1024 };
+    private int[] allowedSizes = { 256, 384, 512, 570, 640, 704, 768, 912, 1024 };
 
     private struct ToolButton
     {
@@ -61,7 +61,8 @@ public class ImageEditorUI
             new ToolButton { Text = "✐", Tooltip = "Erase tool", Mode = DrawingMode.Erase },
             new ToolButton { Text = "◉", Tooltip = "Fill tool", Mode = DrawingMode.Fill },
             new ToolButton { Text = "✚", Tooltip = "Picker tool", Mode = DrawingMode.Picker },
-            new ToolButton { Text = "[]", Tooltip = "To expand the image", Mode = DrawingMode.Expand }
+            new ToolButton { Text = "[]", Tooltip = "To expand the image", Mode = DrawingMode.Expand },
+            new ToolButton { Text = "-", Tooltip = "To crop the image", Mode = DrawingMode.Crop }
         };
 
         actionButtons = new ActionButton[]
@@ -311,6 +312,50 @@ public class ImageEditorUI
                 EditorGUILayout.EndVertical();
                 EditorGUILayout.EndHorizontal();
             }
+            else if (currentDrawingMode == DrawingMode.Crop)
+            {
+                EditorGUILayout.BeginHorizontal();
+                EditorGUILayout.Space();
+                EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+
+                float centerX = position.width * 0.5f;
+                float centerY = position.height / 2f;
+                float imageWidth = uploadedImage.width;
+                float imageHeight = uploadedImage.height;
+                float buttonSize = 50f;
+
+                GUI.DrawTexture(new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight), uploadedImage);
+
+                if (GUI.Button(new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize, buttonSize), "-"))
+                {
+                    int newWidth = FindPreviousSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
+                }
+
+                // Right button
+                if (GUI.Button(new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize), "-"))
+                {
+                    int newWidth = FindPreviousSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
+                }
+
+                // Top button
+                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize, buttonSize), "-"))
+                {
+                    int newHeight = FindPreviousSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
+                }
+
+                // Bottom button
+                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize), "-"))
+                {
+                    int newHeight = FindPreviousSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
+                }
+
+                EditorGUILayout.EndVertical();
+                EditorGUILayout.EndHorizontal();
+            }
         }
         else
         {
@@ -518,6 +563,16 @@ public class ImageEditorUI
         {
             if (size > currentSize)
                 return size;
+        }
+        return currentSize;
+    }
+
+    private int FindPreviousSize(int currentSize)
+    {
+        for (int i = allowedSizes.Length - 1; i >= 0; i--)
+        {
+            if (allowedSizes[i] < currentSize)
+                return allowedSizes[i];
         }
         return currentSize;
     }

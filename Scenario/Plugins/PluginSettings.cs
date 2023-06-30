@@ -15,7 +15,7 @@ public class PluginSettings : EditorWindow
     private readonly string[] imageFormats = { "JPEG", "PNG" };
     private readonly string[] imageFormatExtensions = { "jpeg", "png" };
 
-    private static string version = "Scenario Beta Version 0.1.0";
+    private static string version = "Scenario Beta Version 0.1.1";
 
     public static string EncodedAuth
     {

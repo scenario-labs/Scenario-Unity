@@ -30,11 +30,11 @@ public class Models : EditorWindow
         window.minSize = new Vector2(minimumWidth, window.minSize.y);
     }
 
-    public static void ShowWindow(string privacySetting)
+    public static async void ShowWindow(string privacySetting)
     {
         privacy = privacySetting;
-        GetModelsData(0);
-        GetPaginationToken();
+        await GetModelsData(0);
+        await GetPaginationToken();
         EditorWindow.GetWindow(typeof(Models));
     }
 
@@ -44,7 +44,7 @@ public class Models : EditorWindow
         modelsUI.ClearData();
     }
 
-    internal static async void GetModelsData(int updateType = 0)
+    internal static async Task GetModelsData(int updateType = 0)
     {
         models.Clear();
 
@@ -99,7 +99,7 @@ public class Models : EditorWindow
             modelsUI.SetPreviousPage();
         }
 
-        modelsUI.UpdatePage();
+        await modelsUI.UpdatePage();
         EditorWindow.GetWindow(typeof(Models)).Repaint();
     }
 
@@ -120,7 +120,7 @@ public class Models : EditorWindow
         }
     }
 
-    private static async void GetPaginationToken()
+    private static async Task GetPaginationToken()
     {
         try
         {

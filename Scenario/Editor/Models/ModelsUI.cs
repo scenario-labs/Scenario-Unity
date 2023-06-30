@@ -106,7 +106,7 @@ public class ModelsUI
     {
         Color backgroundColor = new Color32(18, 18, 18, 255);
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
-        
+
         string[] tabs = new string[] { "Private Models", "Public Models" };
         int previousTab = selectedTab;
         selectedTab = GUILayout.Toolbar(selectedTab, tabs);
@@ -173,16 +173,21 @@ public class ModelsUI
 
         if (showPreviousButton && GUILayout.Button("Previous Page"))
         {
-            Models.GetModelsData(-1);
+            RunModelsDataOperation(-1);
         }
 
         if (showNextButton && GUILayout.Button("Next Page"))
         {
-            Models.GetModelsData(1);
+            RunModelsDataOperation(1);
         }
 
         GUILayout.EndHorizontal();
         GUILayout.EndArea();
+    }
+
+    private async void RunModelsDataOperation(int direction)
+    {
+        await Models.GetModelsData(direction).ConfigureAwait(false);
     }
 
     public async Task UpdateTextures()

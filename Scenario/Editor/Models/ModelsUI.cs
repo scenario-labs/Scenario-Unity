@@ -198,13 +198,13 @@ public class ModelsUI
         {
             string downloadUrl = null;
             
-            if (item.trainingImages != null && item.trainingImages.Count > 0)
-            {
-                downloadUrl = item.trainingImages[0].downloadUrl;
-            }
-            else if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
+            if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
             {
                 downloadUrl = item.thumbnail.url;
+            }
+            else if (item.trainingImages != null && item.trainingImages.Count > 0)
+            {
+                downloadUrl = item.trainingImages[0].downloadUrl;
             }
 
             if (!string.IsNullOrEmpty(downloadUrl))

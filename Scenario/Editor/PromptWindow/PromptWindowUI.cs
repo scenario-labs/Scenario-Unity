@@ -170,7 +170,7 @@ public class PromptWindowUI
                             if (Event.current.button == 0 && Event.current.clickCount == 2 && tagRect.Contains(Event.current.mousePosition))
                             {
                                 int plusCount = tag.Count(c => c == '+');
-                                if (plusCount < 2)
+                                if (plusCount < 3)
                                 {
                                     tags[currentTagIndex] += "+";
                                 }
@@ -308,7 +308,7 @@ public class PromptWindowUI
                             if (Event.current.button == 0 && Event.current.clickCount == 2 && tagRect.Contains(Event.current.mousePosition))
                             {
                                 int plusCount = tag.Split('+').Length - 1;
-                                if (plusCount < 2)
+                                if (plusCount < 3)
                                 {
                                     negativeTags[currentTagIndex] += "+";
                                 }

@@ -6,12 +6,12 @@ using UnityEditor.PackageManager.Requests;
 using System.IO;
 using System.Collections.Generic;
 
-public class ScenarioPackageInstaller : EditorWindow
+public class Scenario3DPackageInstaller : EditorWindow
 {
-    [MenuItem("Window/Scenario Package Installer")]
+    [MenuItem("Window/Scenario3D Package Installer")]
     public static void ShowWindow()
     {
-        var window = GetWindow<ScenarioPackageInstaller>("Scenario Package Installer");
+        var window = GetWindow<Scenario3DPackageInstaller>("Scenario3D Package Installer");
 
         var settings = LoadSettings();
 

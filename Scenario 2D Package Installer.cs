@@ -6,12 +6,12 @@ using UnityEditor.PackageManager.Requests;
 using System.IO;
 using System.Collections.Generic;
 
-public class Scenario2DPackageInstaller : EditorWindow
+public class ScenarioPackageInstaller : EditorWindow
 {
     [MenuItem("Window/Scenario2D Package Installer")]
     public static void ShowWindow()
     {
-        var window = GetWindow<Scenario2DPackageInstaller>("Scenario2D Package Installer");
+        var window = GetWindow<ScenarioPackageInstaller>("Scenario2D Package Installer");
 
         var settings = LoadSettings();
 

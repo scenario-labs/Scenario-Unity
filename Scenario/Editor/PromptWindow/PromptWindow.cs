@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using OpenCover.Framework.Model;
 using RestSharp;
 using System;
 using System.Collections;

@@ -482,15 +482,21 @@ public class PromptWindowUI
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Seed", GUILayout.Width(labelWidth));
 
-            if (shouldAutoGenerateSeed) {
+            if (shouldAutoGenerateSeed)
+            {
                 GUI.enabled = false;
                 GUILayout.TextArea("-1", GUILayout.Height(20), GUILayout.Width(sliderWidth));
-            } else {
+            }
+            else
+            {
                 GUI.enabled = true;
-                seedinputText = GUILayout.TextField(seedinputText, GUILayout.Height(20), GUILayout.Width(sliderWidth));
-                if (seedinputText == "-1") {
+                seedinputText = GUILayout.TextField(seedinputText, 20, GUILayout.Height(20), GUILayout.Width(sliderWidth));
+                if (seedinputText == "-1")
+                {
                     promptWindow.SetSeed(null);
-                } else {
+                }
+                else
+                {
                     promptWindow.SetSeed(seedinputText);
                 }
             }

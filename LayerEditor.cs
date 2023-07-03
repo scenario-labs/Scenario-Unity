@@ -95,6 +95,13 @@ public class MyEditorWindow : EditorWindow
                     imagePositions.Add(Event.current.mousePosition - canvasRect.position);
                     isDraggingList.Add(false);
                     imageSizes.Add(new Vector2(uploadedImage.width, uploadedImage.height));
+
+                    // Create a corresponding Sprite
+                    Sprite sprite = Sprite.Create(uploadedImage, new Rect(0, 0, uploadedImage.width, uploadedImage.height), Vector2.one * 0.5f);
+                    GameObject spriteObj = new GameObject("Sprite");
+                    SpriteRenderer spriteRenderer = spriteObj.AddComponent<SpriteRenderer>();
+                    spriteRenderer.sprite = sprite;
+                    spriteObj.transform.position = new Vector3(Event.current.mousePosition.x, canvasRect.height - Event.current.mousePosition.y, 0f);
                 }
             }
             Event.current.Use();
@@ -167,6 +174,14 @@ public class MyEditorWindow : EditorWindow
                     newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - imageSize.x);
                     newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
                     imagePosition = newPosition;
+
+                    // Update the position of the corresponding Sprite
+                    GameObject spriteObj = GameObject.Find("Sprite");
+                    if (spriteObj != null)
+                    {
+                        spriteObj.transform.position = new Vector3(imageRect.x + imageRect.width * 0.5f, canvasRect.height - (imageRect.y + imageRect.height * 0.5f), 0f);
+                    }
+
                     Event.current.Use();
                 }
                 else if (Event.current.type == EventType.MouseUp && isDragging)

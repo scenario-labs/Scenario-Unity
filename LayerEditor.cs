@@ -11,6 +11,7 @@ public class MyEditorWindow : EditorWindow
     private List<Texture2D> uploadedImages = new List<Texture2D>();
     private List<Vector2> imagePositions = new List<Vector2>();
     private List<bool> isDraggingList = new List<bool>();
+    private List<Vector2> imageSizes = new List<Vector2>();
 
     private GUIStyle imageStyle;
 
@@ -29,6 +30,7 @@ public class MyEditorWindow : EditorWindow
     {
         imageStyle = new GUIStyle();
         imageStyle.alignment = TextAnchor.MiddleCenter;
+        imageSizes = new List<Vector2>();
     }
 
     private void OnGUI()
@@ -93,6 +95,7 @@ public class MyEditorWindow : EditorWindow
                     uploadedImages.Add(uploadedImage);
                     imagePositions.Add(Event.current.mousePosition - canvasRect.position);
                     isDraggingList.Add(false);
+                    imageSizes.Add(new Vector2(uploadedImage.width, uploadedImage.height));
                 }
             }
             Event.current.Use();
@@ -104,87 +107,105 @@ public class MyEditorWindow : EditorWindow
 
             Texture2D uploadedImage = uploadedImages[i];
             Vector2 imagePosition = imagePositions[i];
-            bool isDragging = isDraggingList[i];
 
-            Rect imageRect = new Rect(canvasRect.position + imagePosition, new Vector2(uploadedImage.width, uploadedImage.height));
-
-            // Draw a white border around the selected image
-            if (selectedLayerIndex == i)
+            if (i < imageSizes.Count)
             {
-                EditorGUI.DrawRect(imageRect, Color.white);
-            }
+                Vector2 imageSize = imageSizes[i];
+                bool isDragging = isDraggingList[i];
 
-            GUI.DrawTexture(imageRect, uploadedImage);
+                Rect imageRect = new Rect(canvasRect.position + imagePosition, imageSize);
 
-            EditorGUIUtility.AddCursorRect(canvasRect, MouseCursor.MoveArrow);
-
-            if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
-            {
-                if (Event.current.button == 0)
+                if (selectedLayerIndex == i)
                 {
-                    isDragging = true;
-                    selectedLayerIndex = i;
-                    Event.current.Use();
+                    EditorGUI.DrawRect(imageRect, Color.white);
                 }
-                else if (Event.current.button == 1)
+
+                GUI.DrawTexture(imageRect, uploadedImage);
+
+                EditorGUIUtility.AddCursorRect(canvasRect, MouseCursor.MoveArrow);
+
+                if (Event.current.control && Event.current.type == EventType.ScrollWheel)
                 {
-                    GenericMenu menu = new GenericMenu();
-
-                    menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
-                    menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
-                    menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
-                    menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
-                    menu.AddSeparator("");
-                    menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
-                    menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
-
-                    menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-                    Event.current.Use();
-                }
-            }
-            else if (Event.current.type == EventType.MouseDrag && isDragging)
-            {
-                Vector2 newPosition = imagePosition + Event.current.delta;
-                newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - uploadedImage.width);
-                newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - uploadedImage.height);
-                imagePosition = newPosition;
-                Event.current.Use();
-            }
-            else if (Event.current.type == EventType.MouseUp && isDragging)
-            {
-                isDragging = false;
-                selectedLayerIndex = -1;
-                Event.current.Use();
-            }
-
-            imagePositions[i] = imagePosition;
-            isDraggingList[i] = isDragging;
-
-            // Render red lines for pixel alignment and horizontal alignment when actively moving the images
-            if (isDragging)
-            {
-                if (showPixelAlignment && i < uploadedImages.Count - 1)
-                {
-                    Rect nextImageRect = new Rect(canvasRect.position + imagePositions[i + 1], new Vector2(uploadedImages[i + 1].width, uploadedImages[i + 1].height));
-                    Rect lineRect = new Rect(imageRect.xMax, imageRect.y, nextImageRect.xMin - imageRect.xMax, imageRect.height);
-                    if (lineRect.width > 0 && lineRect.height > 0)
+                    if (imageRect.Contains(Event.current.mousePosition))
                     {
-                        EditorGUI.DrawRect(lineRect, Color.red);
+                        float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
+                        imageSize *= scaleFactor;
+                        imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
+                        imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
+
+                        imageSizes[i] = imageSize;
+                        Event.current.Use();
                     }
                 }
 
-                if (showHorizontalAlignment && i < uploadedImages.Count - 1 && Mathf.Approximately(imagePositions[i].y, imagePositions[i + 1].y))
+                if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
                 {
-                    Rect nextImageRect = new Rect(canvasRect.position + imagePositions[i + 1], new Vector2(uploadedImages[i + 1].width, uploadedImages[i + 1].height));
-                    Rect lineRect = new Rect(imageRect.xMin, imageRect.y, Mathf.Max(imageRect.width, nextImageRect.width), 1f);
-                    if (lineRect.width > 0 && lineRect.height > 0)
+                    if (Event.current.button == 0)
                     {
-                        EditorGUI.DrawRect(lineRect, Color.red);
+                        isDragging = true;
+                        selectedLayerIndex = i;
+                        Event.current.Use();
+                    }
+                    else if (Event.current.button == 1)
+                    {
+                        GenericMenu menu = new GenericMenu();
+
+                        menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
+                        menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
+                        menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
+                        menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
+                        menu.AddSeparator("");
+                        menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
+                        menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
+
+                        menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+                        Event.current.Use();
+                    }
+                }
+                else if (Event.current.type == EventType.MouseDrag && isDragging)
+                {
+                    Vector2 newPosition = imagePosition + Event.current.delta;
+                    newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - imageSize.x);
+                    newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
+                    imagePosition = newPosition;
+                    Event.current.Use();
+                }
+                else if (Event.current.type == EventType.MouseUp && isDragging)
+                {
+                    isDragging = false;
+                    selectedLayerIndex = -1;
+                    Event.current.Use();
+                }
+
+                imagePositions[i] = imagePosition;
+                isDraggingList[i] = isDragging;
+
+                if (isDragging)
+                {
+                    if (showPixelAlignment && i < uploadedImages.Count - 1)
+                    {
+                        Rect nextImageRect = new Rect(canvasRect.position + imagePositions[i + 1], imageSizes[i + 1]);
+                        Rect lineRect = new Rect(imageRect.xMax, imageRect.y, nextImageRect.xMin - imageRect.xMax, imageRect.height);
+                        if (lineRect.width > 0 && lineRect.height > 0)
+                        {
+                            EditorGUI.DrawRect(lineRect, Color.red);
+                        }
+                    }
+
+                    if (showHorizontalAlignment && i < uploadedImages.Count - 1 && Mathf.Approximately(imagePositions[i].y, imagePositions[i + 1].y))
+                    {
+                        Rect nextImageRect = new Rect(canvasRect.position + imagePositions[i + 1], imageSizes[i + 1]);
+                        Rect lineRect = new Rect(imageRect.xMin, imageRect.y, Mathf.Max(imageRect.width, nextImageRect.width), 1f);
+                        if (lineRect.width > 0 && lineRect.height > 0)
+                        {
+                            EditorGUI.DrawRect(lineRect, Color.red);
+                        }
                     }
                 }
             }
         }
     }
+
 
     private Texture2D LoadImageFromPath(string path)
     {
@@ -220,14 +241,17 @@ public class MyEditorWindow : EditorWindow
             Texture2D image = uploadedImages[index];
             Vector2 position = imagePositions[index];
             bool isDragging = isDraggingList[index];
+            Vector2 size = imageSizes[index];
 
             uploadedImages.RemoveAt(index);
             imagePositions.RemoveAt(index);
             isDraggingList.RemoveAt(index);
+            imageSizes.RemoveAt(index);
 
             uploadedImages.Insert(index + 1, image);
             imagePositions.Insert(index + 1, position);
             isDraggingList.Insert(index + 1, isDragging);
+            imageSizes.Insert(index + 1, size);
 
             selectedLayerIndex = index + 1;
         }
@@ -242,14 +266,17 @@ public class MyEditorWindow : EditorWindow
             Texture2D image = uploadedImages[index];
             Vector2 position = imagePositions[index];
             bool isDragging = isDraggingList[index];
+            Vector2 size = imageSizes[index];
 
             uploadedImages.RemoveAt(index);
             imagePositions.RemoveAt(index);
             isDraggingList.RemoveAt(index);
+            imageSizes.RemoveAt(index);
 
             uploadedImages.Insert(index - 1, image);
             imagePositions.Insert(index - 1, position);
             isDraggingList.Insert(index - 1, isDragging);
+            imageSizes.Insert(index - 1, size);
 
             selectedLayerIndex = index - 1;
         }
@@ -262,16 +289,14 @@ public class MyEditorWindow : EditorWindow
         if (index >= 0 && index < uploadedImages.Count)
         {
             Texture2D originalImage = uploadedImages[index];
-
-            // Create a new Texture2D and copy the original image data to it
             Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
             clonedImage.SetPixels(originalImage.GetPixels());
             clonedImage.Apply();
 
-            // Add the cloned image to the layer list
             uploadedImages.Insert(index + 1, clonedImage);
             imagePositions.Insert(index + 1, imagePositions[index]);
             isDraggingList.Insert(index + 1, false);
+            imageSizes.Insert(index + 1, imageSizes[index]);
         }
     }
 
@@ -282,6 +307,7 @@ public class MyEditorWindow : EditorWindow
             uploadedImages.RemoveAt(index);
             imagePositions.RemoveAt(index);
             isDraggingList.RemoveAt(index);
+            imageSizes.RemoveAt(index);
 
             if (selectedLayerIndex == index)
             {
@@ -318,7 +344,6 @@ public class MyEditorWindow : EditorWindow
             flippedImage.SetPixels(flippedPixels);
             flippedImage.Apply();
 
-            // Update the flipped image in the lists
             uploadedImages[index] = flippedImage;
         }
     }
@@ -347,7 +372,6 @@ public class MyEditorWindow : EditorWindow
             flippedImage.SetPixels(flippedPixels);
             flippedImage.Apply();
 
-            // Update the flipped image in the lists
             uploadedImages[index] = flippedImage;
         }
     }

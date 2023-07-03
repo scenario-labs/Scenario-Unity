@@ -5,8 +5,8 @@ using System.Collections.Generic;
 
 public class MyEditorWindow : EditorWindow
 {
-    private float rightWidthRatio = 0.1f;
-    private float leftWidthRatio = 0.9f;
+    [SerializeField] private float rightWidthRatio = 0.1f;
+    [SerializeField] private float leftWidthRatio = 0.9f;
 
     private List<Texture2D> uploadedImages = new List<Texture2D>();
     private List<Vector2> imagePositions = new List<Vector2>();
@@ -15,8 +15,6 @@ public class MyEditorWindow : EditorWindow
     private GUIStyle imageStyle;
 
     private int selectedLayerIndex = -1;
-
-    private Texture2D flippedImage;
 
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
@@ -40,43 +38,42 @@ public class MyEditorWindow : EditorWindow
         float rightWidth = totalWidth * rightWidthRatio;
         float middleWidth = totalWidth - leftWidth - rightWidth;
 
-        // left section
-        GUILayout.BeginHorizontal();
+        // Left section
+        EditorGUILayout.BeginHorizontal();
 
-        GUILayout.BeginVertical(GUILayout.Width(leftWidth));
+        EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
         DrawCanvas(leftWidth);
-        GUILayout.EndVertical();
+        EditorGUILayout.EndVertical();
 
-        //right section
-        GUILayout.BeginVertical(GUILayout.Width(rightWidth));
+        // Right section
+        EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth));
 
         for (int i = 0; i < uploadedImages.Count; i++)
         {
             Texture2D uploadedImage = uploadedImages[i];
-            GUILayout.BeginHorizontal();
-            GUILayout.Label(uploadedImage, GUILayout.Width(50), GUILayout.Height(50));
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Label(uploadedImage, GUILayout.MinWidth(50), GUILayout.MinHeight(50));
 
             if (selectedLayerIndex == i)
             {
                 GUI.backgroundColor = Color.yellow;
             }
-            if (GUILayout.Button($"Layer {i + 1}", GUILayout.Width(100)))
+            if (GUILayout.Button($"Layer {i + 1}", GUILayout.MinWidth(100)))
             {
                 selectedLayerIndex = i;
             }
             GUI.backgroundColor = Color.white;
-            GUILayout.EndHorizontal();
+            EditorGUILayout.EndHorizontal();
         }
 
-        GUILayout.EndVertical();
+        EditorGUILayout.EndVertical();
 
-        GUILayout.EndHorizontal();
+        EditorGUILayout.EndHorizontal();
     }
 
     private void DrawCanvas(float canvasWidth)
     {
         Rect canvasRect = GUILayoutUtility.GetRect(canvasWidth, position.height);
-
         GUI.Box(canvasRect, GUIContent.none);
 
         if (Event.current.type == EventType.DragUpdated && canvasRect.Contains(Event.current.mousePosition))

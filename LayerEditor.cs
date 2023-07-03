@@ -38,11 +38,10 @@ public class MyEditorWindow : EditorWindow
         float totalWidth = position.width;
         float leftWidth = totalWidth * leftWidthRatio;
         float rightWidth = totalWidth * rightWidthRatio;
-        float middleWidth = totalWidth - leftWidth - rightWidth;
 
-        // Left section
         EditorGUILayout.BeginHorizontal();
 
+        // Left section
         EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
         DrawCanvas(leftWidth);
         EditorGUILayout.EndVertical();

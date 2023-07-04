@@ -1,13 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 using UnityEditor;
-using UnityEngine.UI;
+using UnityEngine;
+using UnityEngine.Networking;
 using RestSharp;
 using Newtonsoft.Json;
 using UnityEditor.EditorTools;
-using UnityEngine.Networking;
 using Unity.EditorCoroutines.Editor;
 
 public class MyEditorWindow : EditorWindow
@@ -30,6 +29,9 @@ public class MyEditorWindow : EditorWindow
 
     private bool isCropping = false;
     private Rect cropRect;
+
+    private double lastClickTime = 0;
+    private const double DoubleClickTimeThreshold = 0.3;
 
     [MenuItem("Window/My Editor Window")]
     public static void ShowWindow()
@@ -82,6 +84,23 @@ public class MyEditorWindow : EditorWindow
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.EndHorizontal();
+
+        // Check if a mouse click event occurs outside of the image rectangle
+        if (Event.current.type == EventType.MouseDown && selectedImageIndex != -1)
+        {
+            Texture2D selectedImage = uploadedImages[selectedImageIndex];
+            Vector2 selectedImagePosition = imagePositions[selectedImageIndex];
+            Vector2 selectedImageSize = imageSizes[selectedImageIndex];
+            Rect selectedImageRect = new Rect(selectedImagePosition, selectedImageSize);
+
+            if (!selectedImageRect.Contains(Event.current.mousePosition))
+            {
+                isCropping = false;
+                cropRect = Rect.zero;
+                selectedImageIndex = -1;
+                Repaint();
+            }
+        }
     }
 
     private void DrawCanvas(float canvasWidth)
@@ -154,8 +173,32 @@ public class MyEditorWindow : EditorWindow
                 {
                     if (Event.current.button == 0)
                     {
-                        selectedImageIndex = i;
-                        isDragging = false;
+                        double clickTime = EditorApplication.timeSinceStartup;
+                        if (clickTime - lastClickTime < DoubleClickTimeThreshold)
+                        {
+                            // Double-click event
+                            if (selectedImageIndex == i && isCropping)
+                            {
+                                CropImage(i, cropRect);
+                            }
+                            else
+                            {
+                                selectedImageIndex = i;
+                                isDragging = false;
+                                isCropping = true;
+                                cropRect = imageRect;
+                            }
+                        }
+                        else
+                        {
+                            // Single-click event
+                            selectedImageIndex = i;
+                            isDragging = true;
+                            isCropping = false;
+                            cropRect = Rect.zero;
+                        }
+
+                        lastClickTime = clickTime;
                         Event.current.Use();
                     }
                     else if (Event.current.button == 1)
@@ -175,6 +218,14 @@ public class MyEditorWindow : EditorWindow
                         Event.current.Use();
                     }
                 }
+                else if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
+                {
+                    Vector2 newPosition = imagePosition + Event.current.delta;
+                    newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - imageSize.x);
+                    newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
+                    imagePosition = newPosition;
+                    Event.current.Use();
+                }
                 else if (Event.current.type == EventType.MouseUp && selectedImageIndex == i)
                 {
                     if (Event.current.button == 0)
@@ -184,19 +235,30 @@ public class MyEditorWindow : EditorWindow
                         Event.current.Use();
                     }
                 }
-                else if (Event.current.type == EventType.MouseDrag && isDragging)
-                {
-                    Vector2 newPosition = imagePosition + Event.current.delta;
-                    newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - imageSize.x);
-                    newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
-                    imagePosition = newPosition;
-                    Event.current.Use();
-                }
                 else if (Event.current.type == EventType.MouseDrag && isCropping)
                 {
-                    Vector2 mousePosition = Event.current.mousePosition;
-                    cropRect.width = Mathf.Min(mousePosition.x - cropRect.x, imageRect.width);
-                    cropRect.height = Mathf.Min(mousePosition.y - cropRect.y, imageRect.height);
+                    if (Event.current.button == 0)
+                    {
+                        // Resize the cropping rectangle
+                        cropRect.width += Event.current.delta.x;
+                        cropRect.height += Event.current.delta.y;
+
+                        // Clamp the size to a minimum of 10x10 pixels
+                        cropRect.width = Mathf.Max(cropRect.width, 10f);
+                        cropRect.height = Mathf.Max(cropRect.height, 10f);
+                    }
+                    else if (Event.current.button == 2)
+                    {
+                        // Move the cropping rectangle
+                        cropRect.position += Event.current.delta;
+                    }
+
+                    // Clamp the cropping rectangle within the image boundaries
+                    cropRect.width = Mathf.Clamp(cropRect.width, 0f, imageRect.width);
+                    cropRect.height = Mathf.Clamp(cropRect.height, 0f, imageRect.height);
+                    cropRect.x = Mathf.Clamp(cropRect.x, imageRect.x, imageRect.xMax - cropRect.width);
+                    cropRect.y = Mathf.Clamp(cropRect.y, imageRect.y, imageRect.yMax - cropRect.height);
+
                     Event.current.Use();
                 }
                 else if (Event.current.type == EventType.MouseUp && isDragging)
@@ -240,7 +302,7 @@ public class MyEditorWindow : EditorWindow
 
                 if (isCropping)
                 {
-                    float borderThickness = 10f; // Adjust this to change the thickness of the border
+                    float borderThickness = 2f; // Adjust this to change the thickness of the border
                     Color borderColor = Color.red; // Adjust this to change the color of the border
 
                     // Draw the cropping rectangle with a semi-transparent white color
@@ -255,6 +317,7 @@ public class MyEditorWindow : EditorWindow
             }
         }
     }
+
 
     private Texture2D LoadImageFromPath(string path)
     {

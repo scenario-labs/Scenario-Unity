@@ -1,7 +1,14 @@
-using UnityEditor;
-using UnityEngine;
-using UnityEngine.UI;
+using System;
+using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEditor;
+using UnityEngine.UI;
+using RestSharp;
+using Newtonsoft.Json;
+using UnityEditor.EditorTools;
+using UnityEngine.Networking;
+using Unity.EditorCoroutines.Editor;
 
 public class MyEditorWindow : EditorWindow
 {
@@ -16,9 +23,13 @@ public class MyEditorWindow : EditorWindow
     private GUIStyle imageStyle;
 
     private int selectedLayerIndex = -1;
+    private int selectedImageIndex = -1;
 
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
+
+    private bool isCropping = false;
+    private Rect cropRect;
 
     [MenuItem("Window/My Editor Window")]
     public static void ShowWindow()
@@ -38,10 +49,11 @@ public class MyEditorWindow : EditorWindow
         float totalWidth = position.width;
         float leftWidth = totalWidth * leftWidthRatio;
         float rightWidth = totalWidth * rightWidthRatio;
-
-        EditorGUILayout.BeginHorizontal();
+        float middleWidth = totalWidth - leftWidth - rightWidth;
 
         // Left section
+        EditorGUILayout.BeginHorizontal();
+
         EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
         DrawCanvas(leftWidth);
         EditorGUILayout.EndVertical();
@@ -86,22 +98,16 @@ public class MyEditorWindow : EditorWindow
         {
             DragAndDrop.AcceptDrag();
             DragAndDrop.paths = FilterImagePaths(DragAndDrop.paths);
+            Vector2 canvasCenter = new Vector2(canvasRect.width / 2f, canvasRect.height / 2f);
             foreach (string imagePath in DragAndDrop.paths)
             {
                 Texture2D uploadedImage = LoadImageFromPath(imagePath);
                 if (uploadedImage != null)
                 {
                     uploadedImages.Add(uploadedImage);
-                    imagePositions.Add(Event.current.mousePosition - canvasRect.position);
+                    imagePositions.Add(canvasCenter - new Vector2(uploadedImage.width / 2f, uploadedImage.height / 2f));
                     isDraggingList.Add(false);
                     imageSizes.Add(new Vector2(uploadedImage.width, uploadedImage.height));
-
-                    // Create a corresponding Sprite
-                    Sprite sprite = Sprite.Create(uploadedImage, new Rect(0, 0, uploadedImage.width, uploadedImage.height), Vector2.one * 0.5f);
-                    GameObject spriteObj = new GameObject("Sprite");
-                    SpriteRenderer spriteRenderer = spriteObj.AddComponent<SpriteRenderer>();
-                    spriteRenderer.sprite = sprite;
-                    spriteObj.transform.position = new Vector3(Event.current.mousePosition.x, canvasRect.height - Event.current.mousePosition.y, 0f);
                 }
             }
             Event.current.Use();
@@ -121,7 +127,7 @@ public class MyEditorWindow : EditorWindow
 
                 Rect imageRect = new Rect(canvasRect.position + imagePosition, imageSize);
 
-                if (selectedLayerIndex == i)
+                if (i == selectedImageIndex && isCropping)
                 {
                     EditorGUI.DrawRect(imageRect, Color.white);
                 }
@@ -148,8 +154,8 @@ public class MyEditorWindow : EditorWindow
                 {
                     if (Event.current.button == 0)
                     {
-                        isDragging = true;
-                        selectedLayerIndex = i;
+                        selectedImageIndex = i;
+                        isDragging = false;
                         Event.current.Use();
                     }
                     else if (Event.current.button == 1)
@@ -163,8 +169,18 @@ public class MyEditorWindow : EditorWindow
                         menu.AddSeparator("");
                         menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
                         menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
+                        menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
 
                         menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+                        Event.current.Use();
+                    }
+                }
+                else if (Event.current.type == EventType.MouseUp && selectedImageIndex == i)
+                {
+                    if (Event.current.button == 0)
+                    {
+                        isCropping = true;
+                        cropRect = new Rect(imageRect);
                         Event.current.Use();
                     }
                 }
@@ -174,20 +190,25 @@ public class MyEditorWindow : EditorWindow
                     newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - imageSize.x);
                     newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
                     imagePosition = newPosition;
-
-                    // Update the position of the corresponding Sprite
-                    GameObject spriteObj = GameObject.Find("Sprite");
-                    if (spriteObj != null)
-                    {
-                        spriteObj.transform.position = new Vector3(imageRect.x + imageRect.width * 0.5f, canvasRect.height - (imageRect.y + imageRect.height * 0.5f), 0f);
-                    }
-
+                    Event.current.Use();
+                }
+                else if (Event.current.type == EventType.MouseDrag && isCropping)
+                {
+                    Vector2 mousePosition = Event.current.mousePosition;
+                    cropRect.width = Mathf.Min(mousePosition.x - cropRect.x, imageRect.width);
+                    cropRect.height = Mathf.Min(mousePosition.y - cropRect.y, imageRect.height);
                     Event.current.Use();
                 }
                 else if (Event.current.type == EventType.MouseUp && isDragging)
                 {
                     isDragging = false;
-                    selectedLayerIndex = -1;
+                    selectedImageIndex = -1;
+                    Event.current.Use();
+                }
+                else if (Event.current.type == EventType.MouseUp && isCropping)
+                {
+                    CropImage(i, cropRect);
+                    isCropping = false;
                     Event.current.Use();
                 }
 
@@ -216,10 +237,24 @@ public class MyEditorWindow : EditorWindow
                         }
                     }
                 }
+
+                if (isCropping)
+                {
+                    float borderThickness = 10f; // Adjust this to change the thickness of the border
+                    Color borderColor = Color.red; // Adjust this to change the color of the border
+
+                    // Draw the cropping rectangle with a semi-transparent white color
+                    EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.5f));
+
+                    // Draw the border rectangles
+                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor); // Top border
+                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor); // Bottom border
+                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor); // Left border
+                    EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor); // Right border
+                }
             }
         }
     }
-
 
     private Texture2D LoadImageFromPath(string path)
     {
@@ -318,10 +353,18 @@ public class MyEditorWindow : EditorWindow
     {
         if (index >= 0 && index < uploadedImages.Count)
         {
-            uploadedImages.RemoveAt(index);
-            imagePositions.RemoveAt(index);
-            isDraggingList.RemoveAt(index);
-            imageSizes.RemoveAt(index);
+            try
+            {
+                uploadedImages.RemoveAt(index);
+                imagePositions.RemoveAt(index);
+                isDraggingList.RemoveAt(index);
+                imageSizes.RemoveAt(index);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError("Error deleting layer: " + ex.Message);
+                return;
+            }
 
             if (selectedLayerIndex == index)
             {
@@ -388,5 +431,92 @@ public class MyEditorWindow : EditorWindow
 
             uploadedImages[index] = flippedImage;
         }
+    }
+
+    internal void RemoveBackground(int index)
+    {
+        if (index >= 0 && index < uploadedImages.Count)
+        {
+            Texture2D texture2D = uploadedImages[index];
+            var imgBytes = texture2D.EncodeToPNG();
+            string base64String = Convert.ToBase64String(imgBytes);
+            string dataUrl = $"data:image/png;base64,{base64String}";
+            EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl, index));
+        }
+    }
+
+    IEnumerator PutRemoveBackground(string dataUrl, int index)
+    {
+        string name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+
+        string url = $"{PluginSettings.ApiUrl}/images/erase-background";
+
+        RestClient client = new RestClient(url);
+        RestRequest request = new RestRequest(Method.PUT);
+
+        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
+        Debug.Log(param);
+
+        request.AddHeader("accept", "application/json");
+        request.AddHeader("content-type", "application/json");
+        request.AddHeader("Authorization", $"Basic {PluginSettings.EncodedAuth}");
+        request.AddParameter("application/json", param, ParameterType.RequestBody);
+
+        yield return client.ExecuteAsync(request, response =>
+        {
+            if (response.ErrorException != null)
+            {
+                Debug.Log($"Error: {response.ErrorException.Message}");
+            }
+            else
+            {
+                try
+                {
+                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
+                    string imageUrl = jsonResponse.asset.url;
+
+                    EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageIntoMemory(imageUrl, index));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
+                }
+            }
+        });
+    }
+
+    IEnumerator DownloadImageIntoMemory(string imageUrl, int index)
+    {
+        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            yield return uwr.SendWebRequest();
+
+            if (uwr.result != UnityWebRequest.Result.Success)
+            {
+                Debug.Log(uwr.error);
+            }
+            else
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+                uploadedImages[index] = texture;
+            }
+        }
+    }
+
+    private void CropImage(int index, Rect cropRect)
+    {
+        Texture2D originalImage = uploadedImages[index];
+        int x = Mathf.RoundToInt(cropRect.x - imagePositions[index].x);
+        int y = Mathf.RoundToInt(cropRect.y - imagePositions[index].y);
+        int width = Mathf.RoundToInt(cropRect.width);
+        int height = Mathf.RoundToInt(cropRect.height);
+
+        Texture2D croppedImage = new Texture2D(width, height);
+        Color[] pixels = originalImage.GetPixels(x, y, width, height);
+        croppedImage.SetPixels(pixels);
+        croppedImage.Apply();
+
+        uploadedImages[index] = croppedImage;
+        imageSizes[index] = new Vector2(width, height);
     }
 }

@@ -23,6 +23,8 @@ public class MyEditorWindow : EditorWindow
 
     private int selectedLayerIndex = -1;
     private int selectedImageIndex = -1;
+    private const float ResizeHandleSize = 5f;
+
 
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
@@ -84,23 +86,6 @@ public class MyEditorWindow : EditorWindow
         EditorGUILayout.EndVertical();
 
         EditorGUILayout.EndHorizontal();
-
-        // Check if a mouse click event occurs outside of the image rectangle
-        if (Event.current.type == EventType.MouseDown && selectedImageIndex != -1)
-        {
-            Texture2D selectedImage = uploadedImages[selectedImageIndex];
-            Vector2 selectedImagePosition = imagePositions[selectedImageIndex];
-            Vector2 selectedImageSize = imageSizes[selectedImageIndex];
-            Rect selectedImageRect = new Rect(selectedImagePosition, selectedImageSize);
-
-            if (!selectedImageRect.Contains(Event.current.mousePosition))
-            {
-                isCropping = false;
-                cropRect = Rect.zero;
-                selectedImageIndex = -1;
-                Repaint();
-            }
-        }
     }
 
     private void DrawCanvas(float canvasWidth)
@@ -239,13 +224,39 @@ public class MyEditorWindow : EditorWindow
                 {
                     if (Event.current.button == 0)
                     {
-                        // Resize the cropping rectangle
-                        cropRect.width += Event.current.delta.x;
-                        cropRect.height += Event.current.delta.y;
+                        // Determine which border is being dragged
+                        bool resizeRight = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMax) < ResizeHandleSize;
+                        bool resizeLeft = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMin) < ResizeHandleSize;
+                        bool resizeBottom = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMax) < ResizeHandleSize;
+                        bool resizeTop = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMin) < ResizeHandleSize;
 
-                        // Clamp the size to a minimum of 10x10 pixels
-                        cropRect.width = Mathf.Max(cropRect.width, 10f);
-                        cropRect.height = Mathf.Max(cropRect.height, 10f);
+                        if (resizeRight)
+                        {
+                            // Resize right border
+                            cropRect.width += Event.current.delta.x;
+                            cropRect.width = Mathf.Max(cropRect.width, 10f);
+                        }
+                        else if (resizeLeft)
+                        {
+                            // Resize left border
+                            cropRect.x += Event.current.delta.x;
+                            cropRect.width -= Event.current.delta.x;
+                            cropRect.width = Mathf.Max(cropRect.width, 10f);
+                        }
+
+                        if (resizeBottom)
+                        {
+                            // Resize bottom border
+                            cropRect.height += Event.current.delta.y;
+                            cropRect.height = Mathf.Max(cropRect.height, 10f);
+                        }
+                        else if (resizeTop)
+                        {
+                            // Resize top border
+                            cropRect.y += Event.current.delta.y;
+                            cropRect.height -= Event.current.delta.y;
+                            cropRect.height = Mathf.Max(cropRect.height, 10f);
+                        }
                     }
                     else if (Event.current.button == 2)
                     {
@@ -302,11 +313,11 @@ public class MyEditorWindow : EditorWindow
 
                 if (isCropping)
                 {
-                    float borderThickness = 2f; // Adjust this to change the thickness of the border
+                    float borderThickness = 10f; // Adjust this to change the thickness of the border
                     Color borderColor = Color.red; // Adjust this to change the color of the border
 
                     // Draw the cropping rectangle with a semi-transparent white color
-                    EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.5f));
+                    EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
 
                     // Draw the border rectangles
                     EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor); // Top border

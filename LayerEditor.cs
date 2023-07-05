@@ -31,7 +31,9 @@ public class MyEditorWindow : EditorWindow
 
     private bool isCropping = false;
     private Rect cropRect;
+    private bool isCroppingActive = false;
 
+    private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
 
     [MenuItem("Window/My Editor Window")]
@@ -130,7 +132,7 @@ public class MyEditorWindow : EditorWindow
 
                 Rect imageRect = new Rect(canvasRect.position + imagePosition, imageSize);
 
-                if (i == selectedImageIndex && isCropping)
+                if (i == selectedImageIndex && isCropping && isCroppingActive)
                 {
                     EditorGUI.DrawRect(imageRect, Color.white);
                 }
@@ -155,31 +157,41 @@ public class MyEditorWindow : EditorWindow
 
                 if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
                 {
-                    if (Event.current.button == 0 && Event.current.clickCount == 2)
+                    if (Event.current.button == 0)
                     {
-                        // Double-click event
-                        if (selectedImageIndex == i && isCropping)
+                        double clickTime = EditorApplication.timeSinceStartup;
+                        if (clickTime - lastClickTime < DoubleClickTimeThreshold)
                         {
-                            CropImage(i, cropRect);
+                            // Double-click event
+                            if (selectedImageIndex == i && isCropping && isCroppingActive)
+                            {
+                                CropImage(i, cropRect);
+                                isCroppingActive = false; // Disable cropping after completing the crop
+                            }
+                            else
+                            {
+                                selectedImageIndex = i;
+                                isDragging = false;
+                                isCropping = true;
+                                isCroppingActive = true; // Enable cropping
+                                cropRect = imageRect;
+                            }
                         }
                         else
                         {
+                            // Single-click event
                             selectedImageIndex = i;
-                            isDragging = false;
-                            isCropping = true;
-                            cropRect = imageRect;
+                            isDragging = true;
+                            isCropping = false; // Disable cropping when dragging starts
+                            isCroppingActive = false; // Disable cropping
+                            cropRect = Rect.zero;
                         }
 
+                        lastClickTime = clickTime;
                         Event.current.Use();
                     }
                     else if (Event.current.button == 1)
                     {
-                        // Single-click event
-                        selectedImageIndex = i;
-                        isDragging = true;
-                        isCropping = false;
-                        cropRect = Rect.zero;
-
                         GenericMenu menu = new GenericMenu();
 
                         menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
@@ -202,15 +214,6 @@ public class MyEditorWindow : EditorWindow
                     newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
                     imagePosition = newPosition;
                     Event.current.Use();
-                }
-                else if (Event.current.type == EventType.MouseUp && selectedImageIndex == i)
-                {
-                    if (Event.current.button == 0)
-                    {
-                        isCropping = true;
-                        cropRect = new Rect(imageRect);
-                        Event.current.Use();
-                    }
                 }
                 else if (Event.current.type == EventType.MouseDrag && isCropping)
                 {
@@ -270,10 +273,10 @@ public class MyEditorWindow : EditorWindow
                     selectedImageIndex = -1;
                     Event.current.Use();
                 }
-                else if (Event.current.type == EventType.MouseUp && isCropping)
+                else if (Event.current.type == EventType.MouseUp && isCroppingActive)
                 {
                     CropImage(i, cropRect);
-                    isCropping = false;
+                    isCroppingActive = false; // Disable cropping after completing the crop
                     Event.current.Use();
                 }
 

@@ -132,11 +132,6 @@ public class MyEditorWindow : EditorWindow
 
                 Rect imageRect = new Rect(canvasRect.position + imagePosition, imageSize);
 
-                if (i == selectedImageIndex && isCropping && isCroppingActive)
-                {
-                    EditorGUI.DrawRect(imageRect, Color.white);
-                }
-
                 GUI.DrawTexture(imageRect, uploadedImage);
 
                 EditorGUIUtility.AddCursorRect(canvasRect, MouseCursor.MoveArrow);
@@ -219,7 +214,6 @@ public class MyEditorWindow : EditorWindow
                 {
                     if (Event.current.button == 0)
                     {
-                        // Determine which border is being dragged
                         bool resizeRight = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMax) < ResizeHandleSize;
                         bool resizeLeft = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMin) < ResizeHandleSize;
                         bool resizeBottom = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMax) < ResizeHandleSize;
@@ -227,39 +221,45 @@ public class MyEditorWindow : EditorWindow
 
                         if (resizeRight)
                         {
-                            // Resize right border
+                            int prevWidth = Mathf.RoundToInt(cropRect.width);
                             cropRect.width += Event.current.delta.x;
                             cropRect.width = Mathf.Max(cropRect.width, 10f);
+                            int newWidth = Mathf.RoundToInt(cropRect.width);
+                            DeletePixelsHorizontal(index, prevWidth, newWidth);
                         }
                         else if (resizeLeft)
                         {
-                            // Resize left border
+                            int prevWidth = Mathf.RoundToInt(cropRect.width);
                             cropRect.x += Event.current.delta.x;
                             cropRect.width -= Event.current.delta.x;
                             cropRect.width = Mathf.Max(cropRect.width, 10f);
+                            int newWidth = Mathf.RoundToInt(cropRect.width);
+                            DeletePixelsHorizontal(index, newWidth, prevWidth);
                         }
 
                         if (resizeBottom)
                         {
-                            // Resize bottom border
+                            int prevHeight = Mathf.RoundToInt(cropRect.height);
                             cropRect.height += Event.current.delta.y;
                             cropRect.height = Mathf.Max(cropRect.height, 10f);
+                            int newHeight = Mathf.RoundToInt(cropRect.height);
+                            DeletePixelsVertical(index, prevHeight, newHeight);
                         }
                         else if (resizeTop)
                         {
-                            // Resize top border
+                            int prevHeight = Mathf.RoundToInt(cropRect.height);
                             cropRect.y += Event.current.delta.y;
                             cropRect.height -= Event.current.delta.y;
                             cropRect.height = Mathf.Max(cropRect.height, 10f);
+                            int newHeight = Mathf.RoundToInt(cropRect.height);
+                            DeletePixelsVertical(index, newHeight, prevHeight);
                         }
                     }
                     else if (Event.current.button == 2)
                     {
-                        // Move the cropping rectangle
                         cropRect.position += Event.current.delta;
                     }
 
-                    // Clamp the cropping rectangle within the image boundaries
                     cropRect.width = Mathf.Clamp(cropRect.width, 0f, imageRect.width);
                     cropRect.height = Mathf.Clamp(cropRect.height, 0f, imageRect.height);
                     cropRect.x = Mathf.Clamp(cropRect.x, imageRect.x, imageRect.xMax - cropRect.width);
@@ -276,7 +276,7 @@ public class MyEditorWindow : EditorWindow
                 else if (Event.current.type == EventType.MouseUp && isCroppingActive)
                 {
                     CropImage(i, cropRect);
-                    isCroppingActive = false; // Disable cropping after completing the crop
+                    isCroppingActive = false;
                     Event.current.Use();
                 }
 
@@ -308,17 +308,15 @@ public class MyEditorWindow : EditorWindow
 
                 if (isCropping)
                 {
-                    float borderThickness = 10f; // Adjust this to change the thickness of the border
-                    Color borderColor = Color.red; // Adjust this to change the color of the border
+                    float borderThickness = 10f;
+                    Color borderColor = Color.red;
 
-                    // Draw the cropping rectangle with a semi-transparent white color
                     EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
 
-                    // Draw the border rectangles
-                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor); // Top border
-                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor); // Bottom border
-                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor); // Left border
-                    EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor); // Right border
+                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
+                    EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
                 }
             }
         }
@@ -572,6 +570,69 @@ public class MyEditorWindow : EditorWindow
         }
     }
 
+    private void DeletePixelsHorizontal(int index, int prevWidth, int newWidth)
+    {
+        Texture2D image = uploadedImages[index];
+        int startX = Mathf.Min(prevWidth, newWidth);
+        int endX = Mathf.Max(prevWidth, newWidth);
+
+        if (newWidth < prevWidth)
+        {
+            for (int x = startX; x < endX; x++)
+            {
+                for (int y = 0; y < image.height; y++)
+                {
+                    image.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+        else
+        {
+            for (int x = startX; x < endX; x++)
+            {
+                for (int y = 0; y < image.height; y++)
+                {
+                    int reversedX = image.width - 1 - x;
+                    image.SetPixel(reversedX, y, Color.clear);
+                }
+            }
+        }
+
+        image.Apply();
+    }
+
+    private void DeletePixelsVertical(int index, int prevHeight, int newHeight)
+    {
+        Texture2D image = uploadedImages[index];
+        int startY = Mathf.Min(prevHeight, newHeight);
+        int endY = Mathf.Max(prevHeight, newHeight);
+
+        if (newHeight < prevHeight)
+        {
+            for (int y = startY; y < endY; y++)
+            {
+                for (int x = 0; x < image.width; x++)
+                {
+                    int reversedY = image.height - 1 - y;
+                    image.SetPixel(x, reversedY, Color.clear);
+                }
+            }
+        }
+        else
+        {
+            for (int y = startY; y < endY; y++)
+            {
+                for (int x = 0; x < image.width; x++)
+                {
+                    image.SetPixel(x, y, Color.clear);
+                }
+            }
+        }
+
+        image.Apply();
+    }
+
+
     private void CropImage(int index, Rect cropRect)
     {
         Texture2D originalImage = uploadedImages[index];
@@ -580,12 +641,25 @@ public class MyEditorWindow : EditorWindow
         int width = Mathf.RoundToInt(cropRect.width);
         int height = Mathf.RoundToInt(cropRect.height);
 
+        int modifiedY = (y < 0) ? -y : originalImage.height - 1 - y;
+
+        if (y < 0)
+        {
+            height += y;
+            y = 0;
+        }
+        if (y + height > originalImage.height)
+        {
+            height = originalImage.height - y;
+        }
+
         Texture2D croppedImage = new Texture2D(width, height);
-        Color[] pixels = originalImage.GetPixels(x, y, width, height);
+        Color[] pixels = originalImage.GetPixels(x, modifiedY, width, height);
         croppedImage.SetPixels(pixels);
         croppedImage.Apply();
 
         uploadedImages[index] = croppedImage;
+        imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + y);
         imageSizes[index] = new Vector2(width, height);
     }
 }

@@ -32,7 +32,6 @@ public class MyEditorWindow : EditorWindow
     private bool isCropping = false;
     private Rect cropRect;
 
-    private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
 
     [MenuItem("Window/My Editor Window")]
@@ -156,38 +155,31 @@ public class MyEditorWindow : EditorWindow
 
                 if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
                 {
-                    if (Event.current.button == 0)
+                    if (Event.current.button == 0 && Event.current.clickCount == 2)
                     {
-                        double clickTime = EditorApplication.timeSinceStartup;
-                        if (clickTime - lastClickTime < DoubleClickTimeThreshold)
+                        // Double-click event
+                        if (selectedImageIndex == i && isCropping)
                         {
-                            // Double-click event
-                            if (selectedImageIndex == i && isCropping)
-                            {
-                                CropImage(i, cropRect);
-                            }
-                            else
-                            {
-                                selectedImageIndex = i;
-                                isDragging = false;
-                                isCropping = true;
-                                cropRect = imageRect;
-                            }
+                            CropImage(i, cropRect);
                         }
                         else
                         {
-                            // Single-click event
                             selectedImageIndex = i;
-                            isDragging = true;
-                            isCropping = false;
-                            cropRect = Rect.zero;
+                            isDragging = false;
+                            isCropping = true;
+                            cropRect = imageRect;
                         }
 
-                        lastClickTime = clickTime;
                         Event.current.Use();
                     }
                     else if (Event.current.button == 1)
                     {
+                        // Single-click event
+                        selectedImageIndex = i;
+                        isDragging = true;
+                        isCropping = false;
+                        cropRect = Rect.zero;
+
                         GenericMenu menu = new GenericMenu();
 
                         menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));

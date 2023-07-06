@@ -25,7 +25,6 @@ public class LayerEditor : EditorWindow
     private int selectedImageIndex = -1;
     private const float ResizeHandleSize = 5f;
 
-
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
 
@@ -35,6 +34,8 @@ public class LayerEditor : EditorWindow
 
     private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
+
+    private Texture2D backgroundImage; // Added variable for the background image
 
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
@@ -93,6 +94,12 @@ public class LayerEditor : EditorWindow
     {
         Rect canvasRect = GUILayoutUtility.GetRect(canvasWidth, position.height);
         GUI.Box(canvasRect, GUIContent.none);
+
+        // Draw the background image if it exists
+        if (backgroundImage != null)
+        {
+            GUI.DrawTexture(canvasRect, backgroundImage, ScaleMode.ScaleToFit);
+        }
 
         if (Event.current.type == EventType.DragUpdated && canvasRect.Contains(Event.current.mousePosition))
         {
@@ -183,6 +190,9 @@ public class LayerEditor : EditorWindow
                         menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
                         menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
                         menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
+
+                        // Add "Set as Background" option
+                        menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
 
                         menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                         Event.current.Use();
@@ -305,6 +315,15 @@ public class LayerEditor : EditorWindow
                     EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
                 }
             }
+        }
+    }
+
+    private void SetAsBackground(int index)
+    {
+        if (index >= 0 && index < uploadedImages.Count)
+        {
+            Texture2D selectedImage = uploadedImages[index];
+            backgroundImage = selectedImage; // Set the selected image as the background for the canvas
         }
     }
 

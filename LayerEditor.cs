@@ -9,7 +9,7 @@ using Newtonsoft.Json;
 using UnityEditor.EditorTools;
 using Unity.EditorCoroutines.Editor;
 
-public class MyEditorWindow : EditorWindow
+public class LayerEditor : EditorWindow
 {
     [SerializeField] private float rightWidthRatio = 0.1f;
     [SerializeField] private float leftWidthRatio = 0.9f;
@@ -36,10 +36,10 @@ public class MyEditorWindow : EditorWindow
     private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
 
-    [MenuItem("Window/My Editor Window")]
+    [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
     {
-        GetWindow<MyEditorWindow>("My Window");
+        GetWindow<LayerEditor>("Layer Editor");
     }
 
     private void OnEnable()
@@ -135,20 +135,6 @@ public class MyEditorWindow : EditorWindow
                 GUI.DrawTexture(imageRect, uploadedImage);
 
                 EditorGUIUtility.AddCursorRect(canvasRect, MouseCursor.MoveArrow);
-
-                if (Event.current.control && Event.current.type == EventType.ScrollWheel)
-                {
-                    if (imageRect.Contains(Event.current.mousePosition))
-                    {
-                        float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
-                        imageSize *= scaleFactor;
-                        imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
-                        imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
-
-                        imageSizes[i] = imageSize;
-                        Event.current.Use();
-                    }
-                }
 
                 if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
                 {
@@ -321,7 +307,6 @@ public class MyEditorWindow : EditorWindow
             }
         }
     }
-
 
     private Texture2D LoadImageFromPath(string path)
     {

@@ -37,6 +37,9 @@ public class LayerEditor : EditorWindow
 
     private Texture2D backgroundImage;
 
+    private Vector2 panOffset = Vector2.zero;
+    private float zoomFactor = 1f;
+
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
     {
@@ -57,14 +60,25 @@ public class LayerEditor : EditorWindow
         float rightWidth = totalWidth * rightWidthRatio;
         float middleWidth = totalWidth - leftWidth - rightWidth;
 
-        // Left section
+        if (Event.current.type == EventType.ScrollWheel)
+        {
+            zoomFactor -= Event.current.delta.y * 0.01f;
+            zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 10f); 
+            Event.current.Use();
+        }
+
+        if (Event.current.type == EventType.MouseDrag && Event.current.button == 2)
+        {
+            panOffset += Event.current.delta;
+            Event.current.Use();
+        }
+
         EditorGUILayout.BeginHorizontal();
 
         EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
         DrawCanvas(leftWidth);
         EditorGUILayout.EndVertical();
 
-        // Right section
         EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth));
 
         for (int i = 0; i < uploadedImages.Count; i++)
@@ -95,10 +109,11 @@ public class LayerEditor : EditorWindow
         Rect canvasRect = GUILayoutUtility.GetRect(canvasWidth, position.height);
         GUI.Box(canvasRect, GUIContent.none);
 
-        // Draw the background image if it exists
+        GUI.BeginGroup(new Rect(canvasRect.position + panOffset, canvasRect.size * zoomFactor));
+
         if (backgroundImage != null)
         {
-            GUI.DrawTexture(canvasRect, backgroundImage, ScaleMode.ScaleToFit);
+            GUI.DrawTexture(new Rect(Vector2.zero, new Vector2(canvasWidth, position.height) * zoomFactor), backgroundImage, ScaleMode.ScaleToFit);
         }
 
         if (Event.current.type == EventType.DragUpdated && canvasRect.Contains(Event.current.mousePosition))
@@ -125,195 +140,201 @@ public class LayerEditor : EditorWindow
             Event.current.Use();
         }
 
+        GUI.EndGroup();
+
+        GUI.BeginGroup(canvasRect);
+
         for (int i = 0; i < uploadedImages.Count; i++)
         {
             int index = i;
 
             Texture2D uploadedImage = uploadedImages[i];
             Vector2 imagePosition = imagePositions[i];
+            Vector2 imageSize = imageSizes[i];
+            bool isDragging = isDraggingList[i];
 
-            if (i < imageSizes.Count)
+            Vector2 transformedPosition = imagePosition * zoomFactor;
+            Vector2 transformedSize = imageSize * zoomFactor;
+
+            Rect imageRect = new Rect(transformedPosition, transformedSize);
+
+            GUI.DrawTexture(imageRect, uploadedImage);
+
+            Vector2 transformedMousePosition = (Event.current.mousePosition - panOffset) / zoomFactor;
+
+            if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
             {
-                Vector2 imageSize = imageSizes[i];
-                bool isDragging = isDraggingList[i];
-
-                Rect imageRect = new Rect(canvasRect.position + imagePosition, imageSize);
-
-                GUI.DrawTexture(imageRect, uploadedImage);
-
-                EditorGUIUtility.AddCursorRect(canvasRect, MouseCursor.MoveArrow);
-
-                if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
+                if (Event.current.button == 0)
                 {
-                    if (Event.current.button == 0)
+                    double clickTime = EditorApplication.timeSinceStartup;
+                    if (clickTime - lastClickTime < DoubleClickTimeThreshold)
                     {
-                        double clickTime = EditorApplication.timeSinceStartup;
-                        if (clickTime - lastClickTime < DoubleClickTimeThreshold)
+                        if (selectedImageIndex == i && isCropping && isCroppingActive)
                         {
-                            if (selectedImageIndex == i && isCropping && isCroppingActive)
-                            {
-                                CropImage(i, cropRect);
-                                isCroppingActive = false;
-                            }
-                            else
-                            {
-                                selectedImageIndex = i;
-                                isDragging = false;
-                                isCropping = true;
-                                isCroppingActive = true;
-                                cropRect = imageRect;
-                            }
+                            CropImage(i, cropRect);
+                            isCroppingActive = false;
                         }
                         else
                         {
                             selectedImageIndex = i;
-                            isDragging = true;
-                            isCropping = false;
-                            isCroppingActive = false;
-                            cropRect = Rect.zero;
+                            isDragging = false;
+                            isCropping = true;
+                            isCroppingActive = true;
+                            cropRect = imageRect;
                         }
-
-                        lastClickTime = clickTime;
-                        Event.current.Use();
                     }
-                    else if (Event.current.button == 1)
+                    else
                     {
-                        GenericMenu menu = new GenericMenu();
-
-                        menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
-                        menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
-                        menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
-                        menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
-                        menu.AddSeparator("");
-                        menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
-                        menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
-                        menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
-
-                        // Add "Set as Background" option
-                        menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
-
-                        menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-                        Event.current.Use();
+                        selectedImageIndex = i;
+                        isDragging = true;
+                        isCropping = false;
+                        isCroppingActive = false;
+                        cropRect = Rect.zero;
                     }
-                }
-                else if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
-                {
-                    Vector2 newPosition = imagePosition + Event.current.delta;
-                    newPosition.x = Mathf.Clamp(newPosition.x, 0f, canvasRect.width - imageSize.x);
-                    newPosition.y = Mathf.Clamp(newPosition.y, 0f, canvasRect.height - imageSize.y);
-                    imagePosition = newPosition;
+
+                    lastClickTime = clickTime;
                     Event.current.Use();
                 }
-                else if (Event.current.type == EventType.MouseDrag && isCropping)
+                else if (Event.current.button == 1)
                 {
-                    if (Event.current.button == 0)
-                    {
-                        bool croppingResizeRight = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMax) < ResizeHandleSize;
-                        bool croppingResizeLeft = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMin) < ResizeHandleSize;
-                        bool croppingResizeBottom = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMax) < ResizeHandleSize;
-                        bool croppingResizeTop = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMin) < ResizeHandleSize;
+                    GenericMenu menu = new GenericMenu();
 
-                        if (croppingResizeRight)
-                        {
-                            int prevWidth = Mathf.RoundToInt(cropRect.width);
-                            cropRect.width += Event.current.delta.x;
-                            cropRect.width = Mathf.Max(cropRect.width, 10f);
-                            int newWidth = Mathf.RoundToInt(cropRect.width);
-                            DeletePixelsHorizontal(index, prevWidth, newWidth);
-                        }
-                        else if (croppingResizeLeft)
-                        {
-                            int prevWidth = Mathf.RoundToInt(cropRect.width);
-                            cropRect.x += Event.current.delta.x;
-                            cropRect.width -= Event.current.delta.x;
-                            cropRect.width = Mathf.Max(cropRect.width, 10f);
-                            int newWidth = Mathf.RoundToInt(cropRect.width);
-                            DeletePixelsHorizontal(index, newWidth, prevWidth);
-                        }
+                    menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
+                    menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
+                    menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
+                    menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
+                    menu.AddSeparator("");
+                    menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
+                    menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
+                    menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
 
-                        if (croppingResizeBottom)
-                        {
-                            int prevHeight = Mathf.RoundToInt(cropRect.height);
-                            cropRect.height += Event.current.delta.y;
-                            cropRect.height = Mathf.Max(cropRect.height, 10f);
-                            int newHeight = Mathf.RoundToInt(cropRect.height);
-                            DeletePixelsVertical(index, prevHeight, newHeight);
-                        }
-                        else if (croppingResizeTop)
-                        {
-                            int prevHeight = Mathf.RoundToInt(cropRect.height);
-                            cropRect.y += Event.current.delta.y;
-                            cropRect.height -= Event.current.delta.y;
-                            cropRect.height = Mathf.Max(cropRect.height, 10f);
-                            int newHeight = Mathf.RoundToInt(cropRect.height);
-                            DeletePixelsVertical(index, newHeight, prevHeight);
-                        }
-                    }
-                    else if (Event.current.button == 2)
-                    {
-                        cropRect.position += Event.current.delta;
-                    }
+                    menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
 
-                    cropRect.width = Mathf.Clamp(cropRect.width, 0f, imageRect.width);
-                    cropRect.height = Mathf.Clamp(cropRect.height, 0f, imageRect.height);
-                    cropRect.x = Mathf.Clamp(cropRect.x, imageRect.x, imageRect.xMax - cropRect.width);
-                    cropRect.y = Mathf.Clamp(cropRect.y, imageRect.y, imageRect.yMax - cropRect.height);
-
+                    menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
                     Event.current.Use();
-                }
-                else if (Event.current.type == EventType.MouseUp && isDragging)
-                {
-                    isDragging = false;
-                    selectedImageIndex = -1;
-                    Event.current.Use();
-                }
-                else if (Event.current.type == EventType.MouseUp && isCroppingActive)
-                {
-                    CropImage(i, cropRect);
-                    isCroppingActive = false;
-                    Event.current.Use();
-                }
-
-                imagePositions[i] = imagePosition;
-                isDraggingList[i] = isDragging;
-
-                if (isDragging)
-                {
-                    if (showPixelAlignment && i < uploadedImages.Count - 1)
-                    {
-                        Rect nextImageRect = new Rect(canvasRect.position + imagePositions[i + 1], imageSizes[i + 1]);
-                        Rect lineRect = new Rect(imageRect.xMax, imageRect.y, nextImageRect.xMin - imageRect.xMax, imageRect.height);
-                        if (lineRect.width > 0 && lineRect.height > 0)
-                        {
-                            EditorGUI.DrawRect(lineRect, Color.red);
-                        }
-                    }
-
-                    if (showHorizontalAlignment && i < uploadedImages.Count - 1 && Mathf.Approximately(imagePositions[i].y, imagePositions[i + 1].y))
-                    {
-                        Rect nextImageRect = new Rect(canvasRect.position + imagePositions[i + 1], imageSizes[i + 1]);
-                        Rect lineRect = new Rect(imageRect.xMin, imageRect.y, Mathf.Max(imageRect.width, nextImageRect.width), 1f);
-                        if (lineRect.width > 0 && lineRect.height > 0)
-                        {
-                            EditorGUI.DrawRect(lineRect, Color.red);
-                        }
-                    }
-                }
-
-                if (isCropping)
-                {
-                    float borderThickness = 10f;
-                    Color borderColor = Color.red;
-
-                    EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
-
-                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-                    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
-                    EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
                 }
             }
+            else if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
+            {
+                Vector2 transformedDelta = Event.current.delta / zoomFactor;
+
+                Vector2 newPosition = imagePosition + transformedDelta;
+                newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
+                newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
+                imagePosition = newPosition;
+                Event.current.Use();
+            }
+            else if (Event.current.type == EventType.MouseDrag && isCropping)
+            {
+                if (Event.current.button == 0)
+                {
+                bool croppingResizeRight = Mathf.Abs(transformedMousePosition.x - cropRect.xMax) < ResizeHandleSize;
+                    bool croppingResizeLeft = Mathf.Abs(transformedMousePosition.x - cropRect.xMin) < ResizeHandleSize;
+                    bool croppingResizeBottom = Mathf.Abs(transformedMousePosition.y - cropRect.yMax) < ResizeHandleSize;
+                    bool croppingResizeTop = Mathf.Abs(transformedMousePosition.y - cropRect.yMin) < ResizeHandleSize;
+
+                    if (croppingResizeRight)
+                    {
+                        int prevWidth = Mathf.RoundToInt(cropRect.width);
+                        cropRect.width += Event.current.delta.x;
+                        cropRect.width = Mathf.Max(cropRect.width, 10f);
+                        int newWidth = Mathf.RoundToInt(cropRect.width);
+                        DeletePixelsHorizontal(index, prevWidth, newWidth);
+                    }
+                    else if (croppingResizeLeft)
+                    {
+                        int prevWidth = Mathf.RoundToInt(cropRect.width);
+                        cropRect.x += Event.current.delta.x;
+                        cropRect.width -= Event.current.delta.x;
+                        cropRect.width = Mathf.Max(cropRect.width, 10f);
+                        int newWidth = Mathf.RoundToInt(cropRect.width);
+                        DeletePixelsHorizontal(index, newWidth, prevWidth);
+                    }
+
+                    if (croppingResizeBottom)
+                    {
+                        int prevHeight = Mathf.RoundToInt(cropRect.height);
+                        cropRect.height += Event.current.delta.y;
+                        cropRect.height = Mathf.Max(cropRect.height, 10f);
+                        int newHeight = Mathf.RoundToInt(cropRect.height);
+                        DeletePixelsVertical(index, prevHeight, newHeight);
+                    }
+                    else if (croppingResizeTop)
+                    {
+                        int prevHeight = Mathf.RoundToInt(cropRect.height);
+                        cropRect.y += Event.current.delta.y;
+                        cropRect.height -= Event.current.delta.y;
+                        cropRect.height = Mathf.Max(cropRect.height, 10f);
+                        int newHeight = Mathf.RoundToInt(cropRect.height);
+                        DeletePixelsVertical(index, newHeight, prevHeight);
+                    }
+                }
+                else if (Event.current.button == 2)
+                {
+                    cropRect.position += Event.current.delta;
+                }
+
+                cropRect.width = Mathf.Clamp(cropRect.width, 0f, imageRect.width);
+                cropRect.height = Mathf.Clamp(cropRect.height, 0f, imageRect.height);
+                cropRect.x = Mathf.Clamp(cropRect.x, imageRect.x, imageRect.xMax - cropRect.width);
+                cropRect.y = Mathf.Clamp(cropRect.y, imageRect.y, imageRect.yMax - cropRect.height);
+
+                Event.current.Use();
+            }
+            else if (Event.current.type == EventType.MouseUp && isDragging)
+            {
+                isDragging = false;
+                selectedImageIndex = -1;
+                Event.current.Use();
+            }
+            else if (Event.current.type == EventType.MouseUp && isCroppingActive)
+            {
+                CropImage(i, cropRect);
+                isCroppingActive = false;
+                Event.current.Use();
+            }
+
+            imagePositions[i] = imagePosition;
+            isDraggingList[i] = isDragging;
+
+            if (isDragging)
+            {
+                if (showPixelAlignment && i < uploadedImages.Count - 1)
+                {
+                    Rect nextImageRect = new Rect(imagePositions[i + 1] * zoomFactor, imageSizes[i + 1] * zoomFactor);
+                    Rect lineRect = new Rect(imageRect.xMax, imageRect.y, nextImageRect.xMin - imageRect.xMax, imageRect.height);
+                    if (lineRect.width > 0 && lineRect.height > 0)
+                    {
+                        EditorGUI.DrawRect(lineRect, Color.red);
+                    }
+                }
+
+                if (showHorizontalAlignment && i < uploadedImages.Count - 1 && Mathf.Approximately(imagePositions[i].y, imagePositions[i + 1].y))
+                {
+                    Rect nextImageRect = new Rect(imagePositions[i + 1] * zoomFactor, imageSizes[i + 1] * zoomFactor);
+                    Rect lineRect = new Rect(imageRect.xMin, imageRect.y, Mathf.Max(imageRect.width, nextImageRect.width), 1f);
+                    if (lineRect.width > 0 && lineRect.height > 0)
+                    {
+                        EditorGUI.DrawRect(lineRect, Color.red);
+                    }
+                }
+            }
+
+            if (isCropping)
+            {
+                float borderThickness = 10f;
+                Color borderColor = Color.red;
+
+                EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
+
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
+            }
         }
+
+        GUI.EndGroup();
     }
 
     private void SetAsBackground(int index)

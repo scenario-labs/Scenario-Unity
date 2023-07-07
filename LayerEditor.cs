@@ -35,7 +35,7 @@ public class LayerEditor : EditorWindow
     private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
 
-    private Texture2D backgroundImage; // Added variable for the background image
+    private Texture2D backgroundImage;
 
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
@@ -150,28 +150,26 @@ public class LayerEditor : EditorWindow
                         double clickTime = EditorApplication.timeSinceStartup;
                         if (clickTime - lastClickTime < DoubleClickTimeThreshold)
                         {
-                            // Double-click event
                             if (selectedImageIndex == i && isCropping && isCroppingActive)
                             {
                                 CropImage(i, cropRect);
-                                isCroppingActive = false; // Disable cropping after completing the crop
+                                isCroppingActive = false;
                             }
                             else
                             {
                                 selectedImageIndex = i;
                                 isDragging = false;
                                 isCropping = true;
-                                isCroppingActive = true; // Enable cropping
+                                isCroppingActive = true;
                                 cropRect = imageRect;
                             }
                         }
                         else
                         {
-                            // Single-click event
                             selectedImageIndex = i;
                             isDragging = true;
-                            isCropping = false; // Disable cropping when dragging starts
-                            isCroppingActive = false; // Disable cropping
+                            isCropping = false;
+                            isCroppingActive = false;
                             cropRect = Rect.zero;
                         }
 
@@ -210,12 +208,12 @@ public class LayerEditor : EditorWindow
                 {
                     if (Event.current.button == 0)
                     {
-                        bool resizeRight = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMax) < ResizeHandleSize;
-                        bool resizeLeft = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMin) < ResizeHandleSize;
-                        bool resizeBottom = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMax) < ResizeHandleSize;
-                        bool resizeTop = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMin) < ResizeHandleSize;
+                        bool croppingResizeRight = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMax) < ResizeHandleSize;
+                        bool croppingResizeLeft = Mathf.Abs(Event.current.mousePosition.x - cropRect.xMin) < ResizeHandleSize;
+                        bool croppingResizeBottom = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMax) < ResizeHandleSize;
+                        bool croppingResizeTop = Mathf.Abs(Event.current.mousePosition.y - cropRect.yMin) < ResizeHandleSize;
 
-                        if (resizeRight)
+                        if (croppingResizeRight)
                         {
                             int prevWidth = Mathf.RoundToInt(cropRect.width);
                             cropRect.width += Event.current.delta.x;
@@ -223,7 +221,7 @@ public class LayerEditor : EditorWindow
                             int newWidth = Mathf.RoundToInt(cropRect.width);
                             DeletePixelsHorizontal(index, prevWidth, newWidth);
                         }
-                        else if (resizeLeft)
+                        else if (croppingResizeLeft)
                         {
                             int prevWidth = Mathf.RoundToInt(cropRect.width);
                             cropRect.x += Event.current.delta.x;
@@ -233,7 +231,7 @@ public class LayerEditor : EditorWindow
                             DeletePixelsHorizontal(index, newWidth, prevWidth);
                         }
 
-                        if (resizeBottom)
+                        if (croppingResizeBottom)
                         {
                             int prevHeight = Mathf.RoundToInt(cropRect.height);
                             cropRect.height += Event.current.delta.y;
@@ -241,7 +239,7 @@ public class LayerEditor : EditorWindow
                             int newHeight = Mathf.RoundToInt(cropRect.height);
                             DeletePixelsVertical(index, prevHeight, newHeight);
                         }
-                        else if (resizeTop)
+                        else if (croppingResizeTop)
                         {
                             int prevHeight = Mathf.RoundToInt(cropRect.height);
                             cropRect.y += Event.current.delta.y;
@@ -323,7 +321,7 @@ public class LayerEditor : EditorWindow
         if (index >= 0 && index < uploadedImages.Count)
         {
             Texture2D selectedImage = uploadedImages[index];
-            backgroundImage = selectedImage; // Set the selected image as the background for the canvas
+            backgroundImage = selectedImage;
         }
     }
 
@@ -636,7 +634,6 @@ public class LayerEditor : EditorWindow
         image.Apply();
     }
 
-
     private void CropImage(int index, Rect cropRect)
     {
         Texture2D originalImage = uploadedImages[index];
@@ -645,20 +642,13 @@ public class LayerEditor : EditorWindow
         int width = Mathf.RoundToInt(cropRect.width);
         int height = Mathf.RoundToInt(cropRect.height);
 
-        int modifiedY = (y < 0) ? -y : originalImage.height - 1 - y;
-
-        if (y < 0)
-        {
-            height += y;
-            y = 0;
-        }
-        if (y + height > originalImage.height)
-        {
-            height = originalImage.height - y;
-        }
+        x = Mathf.Clamp(x, 0, originalImage.width);
+        y = Mathf.Clamp(y, 0, originalImage.height);
+        width = Mathf.Clamp(width, 0, originalImage.width - x);
+        height = Mathf.Clamp(height, 0, originalImage.height - y);
 
         Texture2D croppedImage = new Texture2D(width, height);
-        Color[] pixels = originalImage.GetPixels(x, modifiedY, width, height);
+        Color[] pixels = originalImage.GetPixels(x, y, width, height);
         croppedImage.SetPixels(pixels);
         croppedImage.Apply();
 

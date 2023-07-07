@@ -27,7 +27,7 @@ public class LayerEditor : EditorWindow
 
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
-
+    private Vector2 canvasScrollPosition;
     private bool isCropping = false;
     private Rect cropRect;
     private bool isCroppingActive = false;
@@ -37,7 +37,6 @@ public class LayerEditor : EditorWindow
 
     private Texture2D backgroundImage;
 
-    private Vector2 panOffset = Vector2.zero;
     private float zoomFactor = 1f;
 
     [MenuItem("Window/Layer Editor")]
@@ -64,12 +63,6 @@ public class LayerEditor : EditorWindow
         {
             zoomFactor -= Event.current.delta.y * 0.01f;
             zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 10f); 
-            Event.current.Use();
-        }
-
-        if (Event.current.type == EventType.MouseDrag && Event.current.button == 2)
-        {
-            panOffset += Event.current.delta;
             Event.current.Use();
         }
 
@@ -109,7 +102,14 @@ public class LayerEditor : EditorWindow
         Rect canvasRect = GUILayoutUtility.GetRect(canvasWidth, position.height);
         GUI.Box(canvasRect, GUIContent.none);
 
-        GUI.BeginGroup(new Rect(canvasRect.position + panOffset, canvasRect.size * zoomFactor));
+        // Calculate the size of the zoomed-in canvas
+        Vector2 canvasContentSize = new Vector2(canvasWidth * zoomFactor, position.height * zoomFactor);
+
+        // Begin a scroll view with scrollbars based on the canvas size
+        canvasScrollPosition = GUI.BeginScrollView(canvasRect, canvasScrollPosition, new Rect(Vector2.zero, canvasContentSize));
+
+        // Draw the canvas content
+        GUI.BeginGroup(new Rect(Vector2.zero, canvasContentSize));
 
         if (backgroundImage != null)
         {
@@ -160,7 +160,7 @@ public class LayerEditor : EditorWindow
 
             GUI.DrawTexture(imageRect, uploadedImage);
 
-            Vector2 transformedMousePosition = (Event.current.mousePosition - panOffset) / zoomFactor;
+            Vector2 transformedMousePosition = Event.current.mousePosition / zoomFactor;
 
             if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
             {
@@ -335,6 +335,7 @@ public class LayerEditor : EditorWindow
         }
 
         GUI.EndGroup();
+        GUI.EndScrollView();
     }
 
     private void SetAsBackground(int index)

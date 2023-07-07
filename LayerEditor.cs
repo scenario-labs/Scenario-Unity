@@ -374,54 +374,38 @@ public class LayerEditor : EditorWindow
         return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".gif" || extension == ".bmp";
     }
 
+    private void MoveLayer(int fromIndex, int toIndex)
+    {
+        if (fromIndex >= 0 && fromIndex < uploadedImages.Count && toIndex >= 0 && toIndex < uploadedImages.Count)
+        {
+            Texture2D image = uploadedImages[fromIndex];
+            Vector2 position = imagePositions[fromIndex];
+            bool isDragging = isDraggingList[fromIndex];
+            Vector2 size = imageSizes[fromIndex];
+
+            uploadedImages.RemoveAt(fromIndex);
+            imagePositions.RemoveAt(fromIndex);
+            isDraggingList.RemoveAt(fromIndex);
+            imageSizes.RemoveAt(fromIndex);
+
+            uploadedImages.Insert(toIndex, image);
+            imagePositions.Insert(toIndex, position);
+            isDraggingList.Insert(toIndex, isDragging);
+            imageSizes.Insert(toIndex, size);
+
+            selectedLayerIndex = toIndex;
+        }
+        Repaint();
+    }
+
     private void MoveLayerUp(int index)
     {
-        if (index >= 0 && index < uploadedImages.Count - 1)
-        {
-            Texture2D image = uploadedImages[index];
-            Vector2 position = imagePositions[index];
-            bool isDragging = isDraggingList[index];
-            Vector2 size = imageSizes[index];
-
-            uploadedImages.RemoveAt(index);
-            imagePositions.RemoveAt(index);
-            isDraggingList.RemoveAt(index);
-            imageSizes.RemoveAt(index);
-
-            uploadedImages.Insert(index + 1, image);
-            imagePositions.Insert(index + 1, position);
-            isDraggingList.Insert(index + 1, isDragging);
-            imageSizes.Insert(index + 1, size);
-
-            selectedLayerIndex = index + 1;
-        }
-
-        Repaint();
+        MoveLayer(index, index + 1);
     }
 
     private void MoveLayerDown(int index)
     {
-        if (index > 0 && index < uploadedImages.Count)
-        {
-            Texture2D image = uploadedImages[index];
-            Vector2 position = imagePositions[index];
-            bool isDragging = isDraggingList[index];
-            Vector2 size = imageSizes[index];
-
-            uploadedImages.RemoveAt(index);
-            imagePositions.RemoveAt(index);
-            isDraggingList.RemoveAt(index);
-            imageSizes.RemoveAt(index);
-
-            uploadedImages.Insert(index - 1, image);
-            imagePositions.Insert(index - 1, position);
-            isDraggingList.Insert(index - 1, isDragging);
-            imageSizes.Insert(index - 1, size);
-
-            selectedLayerIndex = index - 1;
-        }
-
-        Repaint();
+        MoveLayer(index, index - 1);
     }
 
     private void CloneLayer(int index)

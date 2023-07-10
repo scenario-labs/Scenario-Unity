@@ -197,38 +197,18 @@ public class LayerEditor : EditorWindow
                 }
                 else if (Event.current.button == 1)
                 {
-                    GenericMenu menu = new GenericMenu();
-
-                    menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
-                    menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
-                    menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
-                    menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
-                    menu.AddSeparator("");
-                    menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
-                    menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
-                    menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
-
-                    menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
-
-                    menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-                    Event.current.Use();
+                    CreateContextMenu(index);
                 }
             }
-            else if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
+            if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
             {
-                Vector2 transformedDelta = Event.current.delta / zoomFactor;
-
-                Vector2 newPosition = imagePosition + transformedDelta;
-                newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
-                newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
-                imagePosition = newPosition;
-                Event.current.Use();
+                HandleMouseDrag(Event.current, imagePosition, zoomFactor, canvasRect, imageSize);
             }
             else if (Event.current.type == EventType.MouseDrag && isCropping)
             {
                 if (Event.current.button == 0)
                 {
-                bool croppingResizeRight = Mathf.Abs(transformedMousePosition.x - cropRect.xMax) < ResizeHandleSize;
+                    bool croppingResizeRight = Mathf.Abs(transformedMousePosition.x - cropRect.xMax) < ResizeHandleSize;
                     bool croppingResizeLeft = Mathf.Abs(transformedMousePosition.x - cropRect.xMin) < ResizeHandleSize;
                     bool croppingResizeBottom = Mathf.Abs(transformedMousePosition.y - cropRect.yMax) < ResizeHandleSize;
                     bool croppingResizeTop = Mathf.Abs(transformedMousePosition.y - cropRect.yMin) < ResizeHandleSize;
@@ -338,6 +318,36 @@ public class LayerEditor : EditorWindow
         GUI.EndScrollView();
     }
 
+    private void HandleMouseDrag(Event currentEvent, Vector2 imagePosition, float zoomFactor, Rect canvasRect, Vector2 imageSize) 
+    {
+        Vector2 transformedDelta = currentEvent.delta / zoomFactor;
+
+        Vector2 newPosition = imagePosition + transformedDelta;
+        newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
+        newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
+        imagePosition = newPosition;
+        currentEvent.Use();
+    }
+
+    private void CreateContextMenu(int index) 
+    {
+        GenericMenu menu = new GenericMenu();
+
+        menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
+        menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
+        menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
+        menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
+        menu.AddSeparator("");
+        menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
+        menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
+        menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
+
+        menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
+
+        menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
+        Event.current.Use();
+    }
+
     private void SetAsBackground(int index)
     {
         if (index >= 0 && index < uploadedImages.Count)
@@ -407,6 +417,7 @@ public class LayerEditor : EditorWindow
     {
         MoveLayer(index, index - 1);
     }
+
 
     private void CloneLayer(int index)
     {

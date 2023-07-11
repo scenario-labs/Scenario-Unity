@@ -39,6 +39,34 @@ public class LayerEditor : EditorWindow
 
     private float zoomFactor = 1f;
 
+    // Create an instance of ContextMenuActions
+    private ContextMenuActions contextMenuActions;
+
+    // Create public properties to access private fields
+    public List<Texture2D> UploadedImages => uploadedImages;
+    public List<Vector2> ImagePositions => imagePositions;
+    public List<bool> IsDraggingList => isDraggingList;
+    public List<Vector2> ImageSizes => imageSizes;
+    public int SelectedLayerIndex
+    {
+        get => selectedLayerIndex;
+        set
+        {
+            if (value >= -1 && value < UploadedImages.Count)
+            {
+                selectedLayerIndex = value;
+            }
+        }
+    }
+    public Texture2D BackgroundImage
+    {
+        get => backgroundImage;
+        set
+        {
+            backgroundImage = value;
+        }
+    }
+
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
     {
@@ -50,6 +78,9 @@ public class LayerEditor : EditorWindow
         imageStyle = new GUIStyle();
         imageStyle.alignment = TextAnchor.MiddleCenter;
         imageSizes = new List<Vector2>();
+        
+        // Instantiate the ContextMenuActions class
+        contextMenuActions = new ContextMenuActions(this);
     }
 
     private void OnGUI()
@@ -74,19 +105,19 @@ public class LayerEditor : EditorWindow
 
         EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth));
 
-        for (int i = 0; i < uploadedImages.Count; i++)
+        for (int i = 0; i < UploadedImages.Count; i++)
         {
-            Texture2D uploadedImage = uploadedImages[i];
+            Texture2D uploadedImage = UploadedImages[i];
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(uploadedImage, GUILayout.MinWidth(50), GUILayout.MinHeight(50));
 
-            if (selectedLayerIndex == i)
+            if (SelectedLayerIndex == i)
             {
                 GUI.backgroundColor = Color.yellow;
             }
             if (GUILayout.Button($"Layer {i + 1}", GUILayout.MinWidth(100)))
             {
-                selectedLayerIndex = i;
+                SelectedLayerIndex = i;
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
@@ -200,9 +231,15 @@ public class LayerEditor : EditorWindow
                     CreateContextMenu(index);
                 }
             }
-            if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
+            else if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
             {
-                HandleMouseDrag(Event.current, imagePosition, zoomFactor, canvasRect, imageSize);
+                Vector2 transformedDelta = Event.current.delta / zoomFactor;
+
+                Vector2 newPosition = imagePosition + transformedDelta;
+                newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
+                newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
+                imagePosition = newPosition;
+                Event.current.Use();
             }
             else if (Event.current.type == EventType.MouseDrag && isCropping)
             {
@@ -318,43 +355,9 @@ public class LayerEditor : EditorWindow
         GUI.EndScrollView();
     }
 
-    private void HandleMouseDrag(Event currentEvent, Vector2 imagePosition, float zoomFactor, Rect canvasRect, Vector2 imageSize) 
-    {
-        Vector2 transformedDelta = currentEvent.delta / zoomFactor;
-
-        Vector2 newPosition = imagePosition + transformedDelta;
-        newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
-        newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
-        imagePosition = newPosition;
-        currentEvent.Use();
-    }
-
     private void CreateContextMenu(int index) 
     {
-        GenericMenu menu = new GenericMenu();
-
-        menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
-        menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
-        menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
-        menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
-        menu.AddSeparator("");
-        menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
-        menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
-        menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
-
-        menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
-
-        menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-        Event.current.Use();
-    }
-
-    private void SetAsBackground(int index)
-    {
-        if (index >= 0 && index < uploadedImages.Count)
-        {
-            Texture2D selectedImage = uploadedImages[index];
-            backgroundImage = selectedImage;
-        }
+        contextMenuActions.CreateContextMenu(index);
     }
 
     private Texture2D LoadImageFromPath(string path)
@@ -382,211 +385,6 @@ public class LayerEditor : EditorWindow
     {
         string extension = System.IO.Path.GetExtension(path).ToLower();
         return extension == ".png" || extension == ".jpg" || extension == ".jpeg" || extension == ".gif" || extension == ".bmp";
-    }
-
-    private void MoveLayer(int fromIndex, int toIndex)
-    {
-        if (fromIndex >= 0 && fromIndex < uploadedImages.Count && toIndex >= 0 && toIndex < uploadedImages.Count)
-        {
-            Texture2D image = uploadedImages[fromIndex];
-            Vector2 position = imagePositions[fromIndex];
-            bool isDragging = isDraggingList[fromIndex];
-            Vector2 size = imageSizes[fromIndex];
-
-            uploadedImages.RemoveAt(fromIndex);
-            imagePositions.RemoveAt(fromIndex);
-            isDraggingList.RemoveAt(fromIndex);
-            imageSizes.RemoveAt(fromIndex);
-
-            uploadedImages.Insert(toIndex, image);
-            imagePositions.Insert(toIndex, position);
-            isDraggingList.Insert(toIndex, isDragging);
-            imageSizes.Insert(toIndex, size);
-
-            selectedLayerIndex = toIndex;
-        }
-        Repaint();
-    }
-
-    private void MoveLayerUp(int index)
-    {
-        MoveLayer(index, index + 1);
-    }
-
-    private void MoveLayerDown(int index)
-    {
-        MoveLayer(index, index - 1);
-    }
-
-
-    private void CloneLayer(int index)
-    {
-        if (index >= 0 && index < uploadedImages.Count)
-        {
-            Texture2D originalImage = uploadedImages[index];
-            Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
-            clonedImage.SetPixels(originalImage.GetPixels());
-            clonedImage.Apply();
-
-            uploadedImages.Insert(index + 1, clonedImage);
-            imagePositions.Insert(index + 1, imagePositions[index]);
-            isDraggingList.Insert(index + 1, false);
-            imageSizes.Insert(index + 1, imageSizes[index]);
-        }
-    }
-
-    private void DeleteLayer(int index)
-    {
-        if (index >= 0 && index < uploadedImages.Count)
-        {
-            try
-            {
-                uploadedImages.RemoveAt(index);
-                imagePositions.RemoveAt(index);
-                isDraggingList.RemoveAt(index);
-                imageSizes.RemoveAt(index);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Error deleting layer: " + ex.Message);
-                return;
-            }
-
-            if (selectedLayerIndex == index)
-            {
-                selectedLayerIndex = -1;
-            }
-            else if (selectedLayerIndex > index)
-            {
-                selectedLayerIndex--;
-            }
-        }
-    }
-
-    private void FlipImageHorizontal(int index)
-    {
-        if (index >= 0 && index < uploadedImages.Count)
-        {
-            Texture2D originalImage = uploadedImages[index];
-            Texture2D flippedImage = new Texture2D(originalImage.width, originalImage.height);
-
-            Color[] originalPixels = originalImage.GetPixels();
-            Color[] flippedPixels = new Color[originalPixels.Length];
-
-            int width = originalImage.width;
-            int height = originalImage.height;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    flippedPixels[y * width + x] = originalPixels[y * width + (width - x - 1)];
-                }
-            }
-
-            flippedImage.SetPixels(flippedPixels);
-            flippedImage.Apply();
-
-            uploadedImages[index] = flippedImage;
-        }
-    }
-
-    private void FlipImageVertical(int index)
-    {
-        if (index >= 0 && index < uploadedImages.Count)
-        {
-            Texture2D originalImage = uploadedImages[index];
-            Texture2D flippedImage = new Texture2D(originalImage.width, originalImage.height);
-
-            Color[] originalPixels = originalImage.GetPixels();
-            Color[] flippedPixels = new Color[originalPixels.Length];
-
-            int width = originalImage.width;
-            int height = originalImage.height;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    flippedPixels[y * width + x] = originalPixels[(height - y - 1) * width + x];
-                }
-            }
-
-            flippedImage.SetPixels(flippedPixels);
-            flippedImage.Apply();
-
-            uploadedImages[index] = flippedImage;
-        }
-    }
-
-    internal void RemoveBackground(int index)
-    {
-        if (index >= 0 && index < uploadedImages.Count)
-        {
-            Texture2D texture2D = uploadedImages[index];
-            var imgBytes = texture2D.EncodeToPNG();
-            string base64String = Convert.ToBase64String(imgBytes);
-            string dataUrl = $"data:image/png;base64,{base64String}";
-            EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl, index));
-        }
-    }
-
-    IEnumerator PutRemoveBackground(string dataUrl, int index)
-    {
-        string name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-
-        string url = $"{PluginSettings.ApiUrl}/images/erase-background";
-
-        RestClient client = new RestClient(url);
-        RestRequest request = new RestRequest(Method.PUT);
-
-        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
-        Debug.Log(param);
-
-        request.AddHeader("accept", "application/json");
-        request.AddHeader("content-type", "application/json");
-        request.AddHeader("Authorization", $"Basic {PluginSettings.EncodedAuth}");
-        request.AddParameter("application/json", param, ParameterType.RequestBody);
-
-        yield return client.ExecuteAsync(request, response =>
-        {
-            if (response.ErrorException != null)
-            {
-                Debug.Log($"Error: {response.ErrorException.Message}");
-            }
-            else
-            {
-                try
-                {
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
-                    string imageUrl = jsonResponse.asset.url;
-
-                    EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageIntoMemory(imageUrl, index));
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
-                }
-            }
-        });
-    }
-
-    IEnumerator DownloadImageIntoMemory(string imageUrl, int index)
-    {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageUrl))
-        {
-            yield return uwr.SendWebRequest();
-
-            if (uwr.result != UnityWebRequest.Result.Success)
-            {
-                Debug.Log(uwr.error);
-            }
-            else
-            {
-                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                uploadedImages[index] = texture;
-            }
-        }
     }
 
     private void DeletePixelsHorizontal(int index, int prevWidth, int newWidth)

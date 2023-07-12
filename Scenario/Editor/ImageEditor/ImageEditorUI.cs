@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-public class InpaintingEditorUI
+public class ImageEditorUI
 {
     private Texture2D uploadedImage;
     private Texture2D brushCursor;
@@ -19,11 +19,10 @@ public class InpaintingEditorUI
     private bool newStroke = true;
     public string uploadedImagePath;
 
-    internal Texture2D maskBuffer;
-    internal InpaintingEditor inpaintingEditor;
+    internal ImageEditor imageEditor;
     private float selectedOpacity = 1.0f;
 
-    private enum DrawingMode { Draw, Erase, Fill, Picker, Expand, Crop }
+    private enum DrawingMode { Draw, Erase,/* Fill, Picker,*/ Expand, Crop }
     private DrawingMode currentDrawingMode = DrawingMode.Draw;
     private int[] allowedSizes = { 256, 384, 512, 570, 640, 704, 768, 912, 1024 };
 
@@ -46,9 +45,9 @@ public class InpaintingEditorUI
 
     private ActionButton[] actionButtons;
 
-    public InpaintingEditorUI(InpaintingEditor inpaintingEditor)
+    public ImageEditorUI(ImageEditor imageEditor)
     {
-        this.inpaintingEditor = inpaintingEditor;
+        this.imageEditor = imageEditor;
 
         transparentImage = new Texture2D(1, 1);
         selectedBrushSize = 6;
@@ -58,17 +57,20 @@ public class InpaintingEditorUI
 
         toolButtons = new ToolButton[]
         {
-            new ToolButton { Text = "✎", Tooltip = "To draw the mask", Mode = DrawingMode.Draw },
-            new ToolButton { Text = "✐", Tooltip = "To erase mask marks.", Mode = DrawingMode.Erase },
+            new ToolButton { Text = "✎", Tooltip = "Draw tool", Mode = DrawingMode.Draw },
+            new ToolButton { Text = "✐", Tooltip = "Erase tool", Mode = DrawingMode.Erase },
+            /*new ToolButton { Text = "◉", Tooltip = "Fill tool", Mode = DrawingMode.Fill },
+            new ToolButton { Text = "✚", Tooltip = "Picker tool", Mode = DrawingMode.Picker },*/
             new ToolButton { Text = "[]", Tooltip = "To expand the image", Mode = DrawingMode.Expand },
             new ToolButton { Text = "-", Tooltip = "To crop the image", Mode = DrawingMode.Crop }
         };
 
         actionButtons = new ActionButton[]
         {
-            new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },
+            /*new ActionButton { Text = "Load mask from file", Tooltip = "Load mask from file", OnClick = LoadMaskFromFile },
             new ActionButton { Text = "Save mask to file", Tooltip = "Save mask to file", OnClick = SaveMaskToFile },
-            /*new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
+            new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
+            new ActionButton { Text = "Create Image", Tooltip = "Create a new image", OnClick = CreateImage },
             new ActionButton { Text = "Clear", Tooltip = "Clear", OnClick = Clear },
             new ActionButton { Text = "Undo", Tooltip = "Undo", OnClick = UndoCanvas },
             new ActionButton { Text = "Redo", Tooltip = "Redo", OnClick = RedoCanvas },
@@ -85,10 +87,6 @@ public class InpaintingEditorUI
         canvasImage = new Texture2D(uploadedImage.width, uploadedImage.height, TextureFormat.RGBA32, false, true);
         canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
         canvasImage.Apply();
-
-        maskBuffer = new Texture2D(uploadedImage.width, uploadedImage.height, TextureFormat.RGBA32, false, true);
-        maskBuffer.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-        maskBuffer.Apply();
 
         canvasHistory.Clear();
         canvasHistoryIndex = -1;
@@ -121,7 +119,6 @@ public class InpaintingEditorUI
 
             GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
             buttonStyle.fontSize = 25;
-
             if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), buttonStyle, GUILayout.Width(45), GUILayout.Height(45)))
             {
                 currentDrawingMode = button.Mode;
@@ -132,6 +129,31 @@ public class InpaintingEditorUI
             {
                 EditorGUILayout.EndHorizontal();
             }
+        }
+
+        GUILayout.Space(10);
+
+        GUILayout.Label("Color", EditorStyles.boldLabel);
+
+        Color customColor = EditorGUILayout.ColorField(Color.white);
+
+        int colorButtonSize = 40;
+        int numColumns = Mathf.FloorToInt((leftSectionWidth - 0) / colorButtonSize);
+
+        for (int i = 0; i < 35; i++)
+        {
+            if (i % numColumns == 0) EditorGUILayout.BeginHorizontal();
+
+            GUIStyle colorButtonStyle = new GUIStyle(GUI.skin.button);
+            Color color = Color.HSVToRGB((float)i / 35, 1, 1);
+            colorButtonStyle.normal.background = MakeTex(2, 2, color);
+
+            if (GUILayout.Button("", colorButtonStyle, GUILayout.Width(colorButtonSize), GUILayout.Height(colorButtonSize)))
+            {
+                selectedColor = color;
+            }
+
+            if (i % numColumns == numColumns - 1 || i == 34) EditorGUILayout.EndHorizontal();
         }
 
         GUILayout.Space(10);
@@ -178,6 +200,7 @@ public class InpaintingEditorUI
 
         // Middle Section
         EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
+
         GUILayout.Space(18);
 
         if (uploadedImage != null)
@@ -203,10 +226,6 @@ public class InpaintingEditorUI
                     canvasImage = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
                     canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
                     canvasImage.Apply();
-
-                    maskBuffer = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
-                    maskBuffer.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-                    maskBuffer.Apply();
                 }
                 GUI.DrawTexture(rect, canvasImage, ScaleMode.ScaleToFit);
 
@@ -231,12 +250,10 @@ public class InpaintingEditorUI
                         if (currentDrawingMode == DrawingMode.Draw)
                         {
                             DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
-                            DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
                         }
                         else if (currentDrawingMode == DrawingMode.Erase)
                         {
                             DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
-                            DrawOnTexture(maskBuffer, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
                         }
 
                         Event.current.Use();
@@ -269,7 +286,6 @@ public class InpaintingEditorUI
                 {
                     int newWidth = FindNextSize((int)imageWidth);
                     uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
-                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight, addLeft: true);
                 }
 
                 // Right button
@@ -277,7 +293,6 @@ public class InpaintingEditorUI
                 {
                     int newWidth = FindNextSize((int)imageWidth);
                     uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
-                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight);
                 }
 
                 // Top button
@@ -285,7 +300,6 @@ public class InpaintingEditorUI
                 {
                     int newHeight = FindNextSize((int)imageHeight);
                     uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
-                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight);
                 }
 
                 // Bottom button
@@ -293,7 +307,6 @@ public class InpaintingEditorUI
                 {
                     int newHeight = FindNextSize((int)imageHeight);
                     uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
-                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight, addBottom: true);
                 }
 
                 EditorGUILayout.EndVertical();
@@ -317,7 +330,6 @@ public class InpaintingEditorUI
                 {
                     int newWidth = FindPreviousSize((int)imageWidth);
                     uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
-                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight, addLeft: true);
                 }
 
                 // Right button
@@ -325,7 +337,6 @@ public class InpaintingEditorUI
                 {
                     int newWidth = FindPreviousSize((int)imageWidth);
                     uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
-                    maskBuffer = ResizeImage(maskBuffer, newWidth, (int)imageHeight);
                 }
 
                 // Top button
@@ -333,7 +344,6 @@ public class InpaintingEditorUI
                 {
                     int newHeight = FindPreviousSize((int)imageHeight);
                     uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
-                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight);
                 }
 
                 // Bottom button
@@ -341,7 +351,6 @@ public class InpaintingEditorUI
                 {
                     int newHeight = FindPreviousSize((int)imageHeight);
                     uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
-                    maskBuffer = ResizeImage(maskBuffer, (int)imageWidth, newHeight, addBottom: true);
                 }
 
                 EditorGUILayout.EndVertical();
@@ -397,7 +406,6 @@ public class InpaintingEditorUI
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
         }
-
 
         EditorGUILayout.EndVertical();
         GUILayout.FlexibleSpace();
@@ -506,6 +514,7 @@ public class InpaintingEditorUI
     {
         if (newStroke && (currentDrawingMode == DrawingMode.Draw || currentDrawingMode == DrawingMode.Erase))
         {
+            // Clear the redo history
             if (canvasHistoryIndex < canvasHistory.Count - 1)
             {
                 canvasHistory.RemoveRange(canvasHistoryIndex + 1, canvasHistory.Count - canvasHistoryIndex - 1);
@@ -573,10 +582,8 @@ public class InpaintingEditorUI
         Texture2D resizedImage = new Texture2D(newWidth, newHeight);
         Color[] originalPixels = original.GetPixels();
         Color[] newPixels = new Color[newWidth * newHeight];
-
         int xOffset = addLeft ? newWidth - original.width : 0;
         int yOffset = addBottom ? newHeight - original.height : 0;
-
         for (int y = 0; y < newHeight; y++)
         {
             for (int x = 0; x < newWidth; x++)
@@ -591,10 +598,8 @@ public class InpaintingEditorUI
                 }
             }
         }
-
         resizedImage.SetPixels(newPixels);
         resizedImage.Apply();
-
         return resizedImage;
     }
 
@@ -634,17 +639,16 @@ public class InpaintingEditorUI
     {
         if (canvasHistoryIndex > 0)
         {
+            // Save the current state to the redo stack
             Texture2D redoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
             redoImage.SetPixels(canvasImage.GetPixels());
             redoImage.Apply();
             redoHistory.Add(redoImage);
 
+            // Revert to the previous state
             canvasHistoryIndex--;
             canvasImage.SetPixels(canvasHistory[canvasHistoryIndex].GetPixels());
             canvasImage.Apply();
-
-            maskBuffer.SetPixels(canvasHistory[canvasHistoryIndex].GetPixels());
-            maskBuffer.Apply();
         }
     }
 
@@ -652,23 +656,39 @@ public class InpaintingEditorUI
     {
         if (redoHistory.Count > 0)
         {
+            // Save the current state to the undo stack
             Texture2D undoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
             undoImage.SetPixels(canvasImage.GetPixels());
             undoImage.Apply();
             canvasHistory.Add(undoImage);
             canvasHistoryIndex++;
 
+            // Update to the next state
             Texture2D redoImage = redoHistory[redoHistory.Count - 1];
             redoHistory.RemoveAt(redoHistory.Count - 1);
             canvasImage.SetPixels(redoImage.GetPixels());
             canvasImage.Apply();
-
-            maskBuffer.SetPixels(redoImage.GetPixels());
-            maskBuffer.Apply();
         }
     }
 
-    private void LoadMaskFromFile()
+    // Add the corresponding methods for the action buttons
+    private void CreateImage()
+    {
+        int width = 512;
+        int height = 512;
+        uploadedImage = new Texture2D(width, height, TextureFormat.RGBA32, false);
+        Color[] pixels = new Color[width * height];
+
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i] = Color.white;
+        }
+
+        uploadedImage.SetPixels(pixels);
+        uploadedImage.Apply();
+    }
+
+    /*private void LoadMaskFromFile()
     {
         string filePath = EditorUtility.OpenFilePanel("Load mask image", "", "png,jpg,jpeg");
         if (!string.IsNullOrEmpty(filePath))
@@ -701,7 +721,7 @@ public class InpaintingEditorUI
         {
             File.WriteAllBytes(savePath, maskBuffer.EncodeToPNG());
         }
-    }
+    }*/
 
     /*private void FillAll()
     {
@@ -718,19 +738,33 @@ public class InpaintingEditorUI
 
     private void Cancel()
     {
-        inpaintingEditor.Close();
+        imageEditor.Close();
     }
 
     private void Use()
     {
-        if (uploadedImage == null)
+        if (uploadedImage == null || canvasImage == null)
         {
-            Debug.Log("MUST HAVE AN UPLOADED IMAGE FOR MASKING");
+            Debug.Log("MUST HAVE AN UPLOADED IMAGE AND A CANVAS IMAGE FOR MASKING");
             return;
         }
 
-        PromptWindowUI.imageUpload = uploadedImage;
-        PromptWindowUI.imageMask = maskBuffer;
-        inpaintingEditor.Close();
+        // Create a new texture that combines the uploaded image and the canvas image
+        Texture2D combinedImage = new Texture2D(uploadedImage.width, uploadedImage.height, TextureFormat.RGBA32, false);
+        for (int y = 0; y < combinedImage.height; y++)
+        {
+            for (int x = 0; x < combinedImage.width; x++)
+            {
+                Color backgroundColor = uploadedImage.GetPixel(x, y);
+                Color foregroundColor = canvasImage.GetPixel(x, y);
+                Color combinedColor = Color.Lerp(backgroundColor, foregroundColor, foregroundColor.a);
+                combinedImage.SetPixel(x, y, combinedColor);
+            }
+        }
+        combinedImage.Apply();
+
+        PromptWindowUI.imageUpload = combinedImage;
+        imageEditor.Close();
     }
+
 }

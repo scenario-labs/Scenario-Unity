@@ -170,7 +170,7 @@ public class PromptWindowUI
                             if (Event.current.button == 0 && Event.current.clickCount == 2 && tagRect.Contains(Event.current.mousePosition))
                             {
                                 int plusCount = tag.Count(c => c == '+');
-                                if (plusCount < 2)
+                                if (plusCount < 3)
                                 {
                                     tags[currentTagIndex] += "+";
                                 }
@@ -308,7 +308,7 @@ public class PromptWindowUI
                             if (Event.current.button == 0 && Event.current.clickCount == 2 && tagRect.Contains(Event.current.mousePosition))
                             {
                                 int plusCount = tag.Split('+').Length - 1;
-                                if (plusCount < 2)
+                                if (plusCount < 3)
                                 {
                                     negativeTags[currentTagIndex] += "+";
                                 }
@@ -472,7 +472,7 @@ public class PromptWindowUI
             guidancesliderValue = Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) * 10) / 10f;
             EditorGUILayout.EndHorizontal();
 
-            if (isImageToImage || isInpainting || isControlNet) {
+            if (isImageToImage || isControlNet) {
                 EditorGUILayout.BeginHorizontal();
                 GUILayout.Label("Influence: " + influncesliderValue.ToString("0.00"), GUILayout.Width(labelWidth));
                 influncesliderValue = GUILayout.HorizontalSlider(influncesliderValue, 0f, 1f, GUILayout.Width(sliderWidth));
@@ -624,6 +624,14 @@ public class PromptWindowUI
 
             GUILayout.BeginHorizontal();
 
+            if (isControlNet || isImageToImage)
+            {
+                if (GUILayout.Button("Create Image"))
+                {
+                    ImageEditor.ShowWindow(imageUpload);
+                }
+            }
+
             if (isControlNet)
             {
                 if (GUILayout.Button("Add Control"))
@@ -636,7 +644,7 @@ public class PromptWindowUI
             {
                 if (GUILayout.Button("Add Mask"))
                 {
-                    promptWindow.OpenInpaintingEditorWindow(imageUpload);
+                    InpaintingEditor.ShowWindow(imageUpload);
                 }
             }
 

@@ -8,10 +8,10 @@ using System.Collections.Generic;
 
 public class ScenarioPackageInstaller : EditorWindow
 {
-    [MenuItem("Window/Scenario Package Installer")]
+    [MenuItem("Window/Scenario2D Package Installer")]
     public static void ShowWindow()
     {
-        var window = GetWindow<ScenarioPackageInstaller>("Scenario Package Installer");
+        var window = GetWindow<ScenarioPackageInstaller>("Scenario2D Package Installer");
 
         var settings = LoadSettings();
 
@@ -52,17 +52,10 @@ public class ScenarioPackageInstaller : EditorWindow
         },
         new PackageData
         {
-            name = "2D Tilemap",
-            url = "optional",
+            name = "Editor Coroutines",
+            url = "",
             scopes = new string[] {""},
-            gitUrl = "com.unity.2d.tilemap"
-        },
-        new PackageData
-        {
-            name = "2D Tilemap extras",
-            url = "optional",
-            scopes = new string[] {""},
-            gitUrl = "com.unity.2d.tilemap.extras"
+            gitUrl = "com.unity.editorcoroutines"
         }
     };
 

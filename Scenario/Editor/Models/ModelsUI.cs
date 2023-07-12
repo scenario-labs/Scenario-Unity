@@ -1,6 +1,8 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 using static Models;
 
 public class ModelsUI
@@ -66,7 +68,7 @@ public class ModelsUI
         EditorPrefs.SetString(Models.paginationTokenKey, Models.paginationToken);
     }
 
-    public void UpdatePage()
+    public async Task UpdatePage()
     {
         pageList.Clear();
         if (models.Count < pageImageCount)
@@ -87,7 +89,7 @@ public class ModelsUI
         {
             Models.loadedModels.Add(item.id);
         }
-        UpdateTextures();
+        await UpdateTextures();
     }
 
     public void ResetTabSelection()
@@ -104,7 +106,7 @@ public class ModelsUI
     {
         Color backgroundColor = new Color32(18, 18, 18, 255);
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
-        
+
         string[] tabs = new string[] { "Private Models", "Public Models" };
         int previousTab = selectedTab;
         selectedTab = GUILayout.Toolbar(selectedTab, tabs);
@@ -171,25 +173,45 @@ public class ModelsUI
 
         if (showPreviousButton && GUILayout.Button("Previous Page"))
         {
-            Models.GetModelsData(-1);
+            RunModelsDataOperation(-1);
         }
 
         if (showNextButton && GUILayout.Button("Next Page"))
         {
-            Models.GetModelsData(1);
+            RunModelsDataOperation(1);
         }
 
         GUILayout.EndHorizontal();
         GUILayout.EndArea();
     }
 
-    public async void UpdateTextures()
+    private async void RunModelsDataOperation(int direction)
+    {
+        await Models.GetModelsData(direction).ConfigureAwait(false);
+    }
+
+    public async Task UpdateTextures()
     {
         textures.Clear();
+        
         foreach (var item in pageList)
         {
-            Texture2D texture = await Models.LoadTexture(item.trainingImages[0].downloadUrl);
-            textures.Add((texture, item.name));
+            string downloadUrl = null;
+            
+            if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
+            {
+                downloadUrl = item.thumbnail.url;
+            }
+            else if (item.trainingImages != null && item.trainingImages.Count > 0)
+            {
+                downloadUrl = item.trainingImages[0].downloadUrl;
+            }
+
+            if (!string.IsNullOrEmpty(downloadUrl))
+            {
+                Texture2D texture = await Models.LoadTexture(downloadUrl);
+                textures.Add((texture, item.name));
+            }
         }
     }
 }

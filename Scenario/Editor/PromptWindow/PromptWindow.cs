@@ -1,5 +1,4 @@
 using Newtonsoft.Json;
-using OpenCover.Framework.Model;
 using RestSharp;
 using System;
 using System.Collections;
@@ -52,30 +51,25 @@ public class PromptWindow : EditorWindow
         EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl));
     }
 
-    private void Callback_BackgroundRemoved(byte[] textureBytes)
-    {
-        PromptWindowUI.imageUpload.LoadImage(textureBytes);
-        Debug.Log("Upload image updated");
-    }
-    
     IEnumerator PutRemoveBackground(string dataUrl)
     {
+        string name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+
         Debug.Log("Requesting background removal, please wait..");
 
-        string url = $"{PluginSettings.ApiUrl}/images/remove-background";
+        string url = $"{PluginSettings.ApiUrl}/images/erase-background";
         Debug.Log(url);
 
         RestClient client = new RestClient(url);
         RestRequest request = new RestRequest(Method.PUT);
 
-        string param = $"{{\"data\":\"{dataUrl}\",\"backgroundColor\":\"transparent\",\"format\":\"png\"}}";
+        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
         Debug.Log(param);
 
         request.AddHeader("accept", "application/json");
         request.AddHeader("content-type", "application/json");
         request.AddHeader("Authorization", $"Basic {PluginSettings.EncodedAuth}");
-        request.AddParameter("application/json",
-            param, ParameterType.RequestBody);
+        request.AddParameter("application/json", param, ParameterType.RequestBody);
 
         yield return client.ExecuteAsync(request, response =>
         {
@@ -86,10 +80,45 @@ public class PromptWindow : EditorWindow
             else
             {
                 Debug.Log($"Response: {response.Content}");
-                pngBytesUploadImage = Convert.FromBase64String(response.Content);
-                processReceivedUploadImage = true;
+
+                try
+                {
+                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
+                    string imageUrl = jsonResponse.asset.url;
+
+                    EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageIntoMemory(imageUrl));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
+                }
             }
         });
+    }
+
+    IEnumerator DownloadImageIntoMemory(string imageUrl)
+    {
+        using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUrl))
+        {
+            yield return www.SendWebRequest();
+
+            if (www.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError(www.error);
+            }
+            else
+            {
+                Texture2D texture = DownloadHandlerTexture.GetContent(www);
+                byte[] textureBytes = texture.EncodeToPNG();
+
+                Callback_BackgroundRemoved(textureBytes);
+            }
+        }
+    }
+
+    private void Callback_BackgroundRemoved(byte[] textureBytes)
+    {
+        PromptWindowUI.imageUpload.LoadImage(textureBytes);
     }
 
     private void Update()
@@ -116,11 +145,6 @@ public class PromptWindow : EditorWindow
         }
     }
 
-    public void OpenInpaintingEditorWindow(Texture2D texture2D)
-    {
-        InpaintingEditor.ShowInpaintingWindow(texture2D);
-    }
-
     private void OnGUI()
     {
         promptWindowUI.Render(this.position);
@@ -130,7 +154,7 @@ public class PromptWindow : EditorWindow
     {
         Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.SelectedModelName + ", Seed: " + seed);
 
-        string modelId = promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : EditorPrefs.GetString("SelectedModelId");
+        string modelId = EditorPrefs.GetString("SelectedModelId");
 
         EditorCoroutineUtility.StartCoroutineOwnerless(PostInferenceRequest(modelId));
     }
@@ -239,13 +263,28 @@ public class PromptWindow : EditorWindow
             }
             else
             {
-                var maskBytes = PromptWindowUI.imageMask.EncodeToPNG();
+                Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
+
+                Color[] pixels = processedMask.GetPixels();
+
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    if (pixels[i].a == 0)
+                    {
+                        pixels[i] = Color.black;
+                    }
+                }
+
+                processedMask.SetPixels(pixels);
+                processedMask.Apply();
+
+                var maskBytes = processedMask.EncodeToPNG();
                 string maskBase64String = Convert.ToBase64String(maskBytes);
                 maskDataUrl = $"data:image/png;base64,{maskBase64String}";
             }
         }
 
-        bool enableSafetyCheck = false;
+        bool hideResults = false;
         string type = operationType;
         string image = $"\"{dataUrl}\"";
         string mask = $"\"{maskDataUrl}\"";
@@ -261,7 +300,7 @@ public class PromptWindow : EditorWindow
 
         string inputData = $@"{{
             ""parameters"": {{
-                ""enableSafetyCheck"": {enableSafetyCheck.ToString().ToLower()},
+                ""hideResults"": {hideResults.ToString().ToLower()},
                 ""type"": ""{type}"",
                 {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}
                 {(promptWindowUI.isControlNet || promptWindowUI.isAdvancedSettings ? $@"""modality"": ""{modality}""," : "")}
@@ -314,7 +353,7 @@ public class PromptWindow : EditorWindow
         yield return new WaitForSecondsRealtime(1.0f);
 
         string baseUrl = ApiClient.apiUrl + "/models";
-        string modelId = promptWindowUI.isInpainting ? "stable-diffusion-inpainting" : UnityEditor.EditorPrefs.GetString("postedModelName");
+        string modelId = UnityEditor.EditorPrefs.GetString("postedModelName");
 
         string url = $"{baseUrl}/{modelId}/inferences/{inferenceId}";
         RestClient client = new RestClient(url);

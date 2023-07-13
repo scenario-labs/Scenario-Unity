@@ -24,7 +24,7 @@ public class LayerEditor : EditorWindow
 
     private int selectedLayerIndex = -1;
     private int selectedImageIndex = -1;
-    private const float ResizeHandleSize = 5f;
+    private const float HandleSize = 5f;
 
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
@@ -194,6 +194,16 @@ public class LayerEditor : EditorWindow
 
             Vector2 transformedMousePosition = Event.current.mousePosition / zoomFactor;
 
+            if (Event.current.control && Event.current.type == EventType.ScrollWheel && imageRect.Contains(Event.current.mousePosition))
+        {
+            float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
+            imageSize *= scaleFactor;
+            imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
+            imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
+            imageSizes[i] = imageSize;
+            Event.current.Use();
+        }
+
             if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
             {
                 if (Event.current.button == 0)
@@ -246,12 +256,12 @@ public class LayerEditor : EditorWindow
             {
                 if (Event.current.button == 0)
                 {
-                    bool croppingResizeRight = Mathf.Abs(transformedMousePosition.x - cropRect.xMax) < ResizeHandleSize;
-                    bool croppingResizeLeft = Mathf.Abs(transformedMousePosition.x - cropRect.xMin) < ResizeHandleSize;
-                    bool croppingResizeBottom = Mathf.Abs(transformedMousePosition.y - cropRect.yMax) < ResizeHandleSize;
-                    bool croppingResizeTop = Mathf.Abs(transformedMousePosition.y - cropRect.yMin) < ResizeHandleSize;
+                    bool croppingRight = Mathf.Abs(transformedMousePosition.x - cropRect.xMax) < HandleSize;
+                    bool croppingLeft = Mathf.Abs(transformedMousePosition.x - cropRect.xMin) < HandleSize;
+                    bool croppingBottom = Mathf.Abs(transformedMousePosition.y - cropRect.yMax) < HandleSize;
+                    bool croppingTop = Mathf.Abs(transformedMousePosition.y - cropRect.yMin) < HandleSize;
 
-                    if (croppingResizeRight)
+                    if (croppingRight)
                     {
                         int prevWidth = Mathf.RoundToInt(cropRect.width);
                         cropRect.width += Event.current.delta.x;
@@ -259,7 +269,7 @@ public class LayerEditor : EditorWindow
                         int newWidth = Mathf.RoundToInt(cropRect.width);
                         DeletePixelsHorizontal(index, prevWidth, newWidth);
                     }
-                    else if (croppingResizeLeft)
+                    else if (croppingLeft)
                     {
                         int prevWidth = Mathf.RoundToInt(cropRect.width);
                         cropRect.x += Event.current.delta.x;
@@ -269,7 +279,7 @@ public class LayerEditor : EditorWindow
                         DeletePixelsHorizontal(index, newWidth, prevWidth);
                     }
 
-                    if (croppingResizeBottom)
+                    if (croppingBottom)
                     {
                         int prevHeight = Mathf.RoundToInt(cropRect.height);
                         cropRect.height += Event.current.delta.y;
@@ -277,7 +287,7 @@ public class LayerEditor : EditorWindow
                         int newHeight = Mathf.RoundToInt(cropRect.height);
                         DeletePixelsVertical(index, prevHeight, newHeight);
                     }
-                    else if (croppingResizeTop)
+                    else if (croppingTop)
                     {
                         int prevHeight = Mathf.RoundToInt(cropRect.height);
                         cropRect.y += Event.current.delta.y;
@@ -339,17 +349,24 @@ public class LayerEditor : EditorWindow
             }
 
             if (isCropping)
-            {
-                float borderThickness = 10f;
-                Color borderColor = Color.red;
+        {
+            float borderThickness = 1f;
+            Color borderColor = Color.red;
 
-                EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
+            EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
 
-                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
-                EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
-            }
+            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
+            EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
+            
+            // Add handles at the corners
+            float handleSize = 10f;
+            EditorGUIUtility.AddCursorRect(new Rect(cropRect.x - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpLeft);
+            EditorGUIUtility.AddCursorRect(new Rect(cropRect.xMax - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpRight);
+            EditorGUIUtility.AddCursorRect(new Rect(cropRect.x - handleSize / 2, cropRect.yMax - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpRight);
+            EditorGUIUtility.AddCursorRect(new Rect(cropRect.xMax - handleSize / 2, cropRect.yMax - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpLeft);
+        }
         }
 
         GUI.EndGroup();

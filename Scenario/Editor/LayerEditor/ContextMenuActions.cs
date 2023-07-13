@@ -25,10 +25,9 @@ public class ContextMenuActions {
       menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
       menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
       menu.AddSeparator("");
-
       menu.AddItem(new GUIContent("Flip/Horizontal"), false, () => FlipHorizontal(index));
       menu.AddItem(new GUIContent("Flip/Vertical"), false, () => FlipVertical(index));
-
+      menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
       menu.AddItem(new GUIContent("Set As Background"), false, () => SetAsBackground(index));
       
       menu.ShowAsContext();

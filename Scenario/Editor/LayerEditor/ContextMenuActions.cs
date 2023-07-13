@@ -1,183 +1,180 @@
 using System;
 using System.Collections;
-using Newtonsoft.Json;
-using RestSharp;
-using UnityEditor;
 using UnityEngine;
-using Unity.EditorCoroutines.Editor;
 using UnityEngine.Networking;
+using UnityEditor;
+using Unity.EditorCoroutines.Editor;
+using UnityEditor.UIElements;
+using RestSharp;
+using Newtonsoft.Json;
 
-public class ContextMenuActions
-{
+public class ContextMenuActions {
+
     private LayerEditor layerEditor;
 
-    public ContextMenuActions(LayerEditor layerEditor)
-    {
-        this.layerEditor = layerEditor;
+    public ContextMenuActions(LayerEditor layerEditor) {
+      this.layerEditor = layerEditor;  
     }
 
-    public void CreateContextMenu(int index)
-    {
-        GenericMenu menu = new GenericMenu();
+    public void CreateContextMenu(int index) {
+      
+      GenericMenu menu = new GenericMenu();
 
-        menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
-        menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
-        menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
-        menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
-        menu.AddSeparator("");
-        menu.AddItem(new GUIContent("Flip/Horizontal Flip"), false, () => FlipImageHorizontal(index));
-        menu.AddItem(new GUIContent("Flip/Vertical Flip"), false, () => FlipImageVertical(index));
-        menu.AddItem(new GUIContent("Remove/Background"), false, () => RemoveBackground(index));
+      menu.AddItem(new GUIContent("Move Up"), false, () => MoveLayerUp(index));
+      menu.AddItem(new GUIContent("Move Down"), false, () => MoveLayerDown(index));
+      menu.AddItem(new GUIContent("Clone"), false, () => CloneLayer(index));
+      menu.AddItem(new GUIContent("Delete"), false, () => DeleteLayer(index));
+      menu.AddSeparator("");
 
-        menu.AddItem(new GUIContent("Set as Background"), false, () => SetAsBackground(index));
+      menu.AddItem(new GUIContent("Flip/Horizontal"), false, () => FlipHorizontal(index));
+      menu.AddItem(new GUIContent("Flip/Vertical"), false, () => FlipVertical(index));
 
-        menu.DropDown(new Rect(Event.current.mousePosition, Vector2.zero));
-        Event.current.Use();
+      menu.AddItem(new GUIContent("Set As Background"), false, () => SetAsBackground(index));
+      
+      menu.ShowAsContext();
     }
 
-    private void MoveLayer(int fromIndex, int toIndex)
-    {
-        if (fromIndex >= 0 && fromIndex < layerEditor.UploadedImages.Count && toIndex >= 0 && toIndex < layerEditor.UploadedImages.Count)
-        {
-            Texture2D image = layerEditor.UploadedImages[fromIndex];
-            Vector2 position = layerEditor.ImagePositions[fromIndex];
-            bool isDragging = layerEditor.IsDraggingList[fromIndex];
-            Vector2 size = layerEditor.ImageSizes[fromIndex];
+    private void MoveLayer(int fromIndex, int toIndex) {
+      
+      if (fromIndex >= 0 && fromIndex < layerEditor.UploadedImages.Count && 
+          toIndex >= 0 && toIndex < layerEditor.UploadedImages.Count) {
+          
+        Texture2D image = layerEditor.UploadedImages[fromIndex];
+        Vector2 position = layerEditor.ImagePositions[fromIndex];
+        bool isDragging = layerEditor.IsDraggingList[fromIndex];
+        Vector2 size = layerEditor.ImageSizes[fromIndex];
 
-            layerEditor.UploadedImages.RemoveAt(fromIndex);
-            layerEditor.ImagePositions.RemoveAt(fromIndex);
-            layerEditor.IsDraggingList.RemoveAt(fromIndex);
-            layerEditor.ImageSizes.RemoveAt(fromIndex);
+        layerEditor.UploadedImages.RemoveAt(fromIndex);
+        layerEditor.ImagePositions.RemoveAt(fromIndex);
+        layerEditor.IsDraggingList.RemoveAt(fromIndex);
+        layerEditor.ImageSizes.RemoveAt(fromIndex);
 
-            layerEditor.UploadedImages.Insert(toIndex, image);
-            layerEditor.ImagePositions.Insert(toIndex, position);
-            layerEditor.IsDraggingList.Insert(toIndex, isDragging);
-            layerEditor.ImageSizes.Insert(toIndex, size);
+        layerEditor.UploadedImages.Insert(toIndex, image);
+        layerEditor.ImagePositions.Insert(toIndex, position);
+        layerEditor.IsDraggingList.Insert(toIndex, isDragging);  
+        layerEditor.ImageSizes.Insert(toIndex, size);
 
-            layerEditor.SelectedLayerIndex = toIndex;
+        layerEditor.SelectedLayerIndex = toIndex;
+      }
+      
+      layerEditor.Repaint();
+    }
+
+    private void SetAsBackground(int index) {
+      
+      if (index >= 0 && index < layerEditor.UploadedImages.Count) {
+      
+        Texture2D selectedImage = layerEditor.UploadedImages[index];
+        layerEditor.BackgroundImage = selectedImage;
+      
+      }
+    }
+
+    private void MoveLayerUp(int index) {
+      
+      MoveLayer(index, index + 1);
+    
+    }
+
+    private void MoveLayerDown(int index) {
+    
+      MoveLayer(index, index - 1);
+    
+    }
+
+    private void CloneLayer(int index) {
+    
+      if (index >= 0 && index < layerEditor.UploadedImages.Count) {
+      
+        Texture2D originalImage = layerEditor.UploadedImages[index];
+      
+        Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
+        clonedImage.SetPixels(originalImage.GetPixels());
+        clonedImage.Apply();
+
+        layerEditor.UploadedImages.Insert(index + 1, clonedImage);
+        layerEditor.ImagePositions.Insert(index + 1, layerEditor.ImagePositions[index]);
+        layerEditor.IsDraggingList.Insert(index + 1, false);
+        layerEditor.ImageSizes.Insert(index + 1, layerEditor.ImageSizes[index]);
+      
+      }
+    
+    }
+
+    private void DeleteLayer(int index) {
+
+      if (index >= 0 && index < layerEditor.UploadedImages.Count) {
+
+        try {
+        
+          layerEditor.UploadedImages.RemoveAt(index);
+          layerEditor.ImagePositions.RemoveAt(index);
+          layerEditor.IsDraggingList.RemoveAt(index);
+          layerEditor.ImageSizes.RemoveAt(index);
+        
+        } catch (Exception ex) {
+        
+          Debug.LogError("Error deleting layer: " + ex.Message);
+          return;
+        
         }
-        layerEditor.Repaint();
-    }
 
-    private void SetAsBackground(int index)
-    {
-        if (index >= 0 && index < layerEditor.UploadedImages.Count)
-        {
-            Texture2D selectedImage = layerEditor.UploadedImages[index];
-            layerEditor.BackgroundImage = selectedImage;
+        if (layerEditor.SelectedLayerIndex == index) {
+        
+          layerEditor.SelectedLayerIndex = -1;
+        
+        } else if (layerEditor.SelectedLayerIndex > index) {
+        
+          layerEditor.SelectedLayerIndex--;
+        
         }
+
+      }
+
     }
 
-    private void MoveLayerUp(int index)
-    {
-        MoveLayer(index, index + 1);
-    }
+    private void FlipHorizontal(int index) {
 
-    private void MoveLayerDown(int index)
-    {
-        MoveLayer(index, index - 1);
-    }
+      Texture2D texture = layerEditor.UploadedImages[index];
 
-    private void CloneLayer(int index)
-    {
-        if (index >= 0 && index < layerEditor.UploadedImages.Count)
-        {
-            Texture2D originalImage = layerEditor.UploadedImages[index];
-            Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
-            clonedImage.SetPixels(originalImage.GetPixels());
-            clonedImage.Apply();
+      Texture2D flipped = new Texture2D(texture.width, texture.height);
 
-            layerEditor.UploadedImages.Insert(index + 1, clonedImage);
-            layerEditor.ImagePositions.Insert(index + 1, layerEditor.ImagePositions[index]);
-            layerEditor.IsDraggingList.Insert(index + 1, false);
-            layerEditor.ImageSizes.Insert(index + 1, layerEditor.ImageSizes[index]);
+      for (int y = 0; y < texture.height; y++) {
+      
+        for (int x = 0; x < texture.width; x++) {
+        
+          flipped.SetPixel(x, y, texture.GetPixel(texture.width - x - 1, y));  
+        
         }
+      
+      }
+
+      flipped.Apply();
+      layerEditor.UploadedImages[index] = flipped;
+
     }
 
-    private void DeleteLayer(int index)
-    {
-        if (index >= 0 && index < layerEditor.UploadedImages.Count)
-        {
-            try
-            {
-                layerEditor.UploadedImages.RemoveAt(index);
-                layerEditor.ImagePositions.RemoveAt(index);
-                layerEditor.IsDraggingList.RemoveAt(index);
-                layerEditor.ImageSizes.RemoveAt(index);
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError("Error deleting layer: " + ex.Message);
-                return;
-            }
+    private void FlipVertical(int index) {
 
-            if (layerEditor.SelectedLayerIndex == index)
-            {
-                layerEditor.SelectedLayerIndex = -1;
-            }
-            else if (layerEditor.SelectedLayerIndex > index)
-            {
-                layerEditor.SelectedLayerIndex--;
-            }
+      Texture2D texture = layerEditor.UploadedImages[index];
+
+      Texture2D flipped = new Texture2D(texture.width, texture.height);
+
+      for (int y = 0; y < texture.height; y++) {
+      
+        for (int x = 0; x < texture.width; x++) {
+        
+          flipped.SetPixel(x, y, texture.GetPixel(x, texture.height - y - 1));
+        
         }
+      
+      }
+
+      flipped.Apply();
+      layerEditor.UploadedImages[index] = flipped;
+
     }
-
-    private void FlipImageHorizontal(int index)
-    {
-        if (index >= 0 && index < layerEditor.UploadedImages.Count)
-        {
-            Texture2D originalImage = layerEditor.UploadedImages[index];
-            Texture2D flippedImage = new Texture2D(originalImage.width, originalImage.height);
-
-            Color[] originalPixels = originalImage.GetPixels();
-            Color[] flippedPixels = new Color[originalPixels.Length];
-
-            int width = originalImage.width;
-            int height = originalImage.height;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    flippedPixels[y * width + x] = originalPixels[y * width + (width - x - 1)];
-                }
-            }
-
-            flippedImage.SetPixels(flippedPixels);
-            flippedImage.Apply();
-
-            layerEditor.UploadedImages[index] = flippedImage;
-        }
-    }
-
-    private void FlipImageVertical(int index)
-    {
-        if (index >= 0 && index < layerEditor.UploadedImages.Count)
-        {
-            Texture2D originalImage = layerEditor.UploadedImages[index];
-            Texture2D flippedImage = new Texture2D(originalImage.width, originalImage.height);
-
-            Color[] originalPixels = originalImage.GetPixels();
-            Color[] flippedPixels = new Color[originalPixels.Length];
-
-            int width = originalImage.width;
-            int height = originalImage.height;
-
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    flippedPixels[y * width + x] = originalPixels[(height - y - 1) * width + x];
-                }
-            }
-
-            flippedImage.SetPixels(flippedPixels);
-            flippedImage.Apply();
-
-            layerEditor.UploadedImages[index] = flippedImage;
-        }
-    }
-
+    
     internal void RemoveBackground(int index)
     {
         if (index >= 0 && index < layerEditor.UploadedImages.Count)

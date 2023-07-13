@@ -91,13 +91,6 @@ public class LayerEditor : EditorWindow
         float rightWidth = totalWidth * rightWidthRatio;
         float middleWidth = totalWidth - leftWidth - rightWidth;
 
-        if (Event.current.type == EventType.ScrollWheel)
-        {
-            zoomFactor -= Event.current.delta.y * 0.01f;
-            zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 10f);
-            Event.current.Use();
-        }
-
         EditorGUILayout.BeginHorizontal();
         
         EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
@@ -195,14 +188,21 @@ public class LayerEditor : EditorWindow
             Vector2 transformedMousePosition = Event.current.mousePosition / zoomFactor;
 
             if (Event.current.control && Event.current.type == EventType.ScrollWheel && imageRect.Contains(Event.current.mousePosition))
-        {
-            float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
-            imageSize *= scaleFactor;
-            imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
-            imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
-            imageSizes[i] = imageSize;
-            Event.current.Use();
-        }
+            {
+                float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
+                imageSize *= scaleFactor;
+                imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
+                imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
+                imageSizes[i] = imageSize;
+                Event.current.Use();
+            }
+
+            if (!Event.current.control && Event.current.type == EventType.ScrollWheel)
+            {
+                zoomFactor -= Event.current.delta.y * 0.01f;
+                zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 10f);
+                Event.current.Use();
+            }
 
             if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
             {

@@ -6,23 +6,17 @@ on:
       - development  
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
     steps:
+
     - uses: actions/checkout@v3
 
-    - name: Get Latest Tag
-      id: latest_tag
-      run: echo "::set-output name=tag::$(git describe --tags --abbrev=0)"
-
     - name: Set initial version
-      run: |
-        if [[ -n "${{ steps.latest_tag.outputs.tag }}" ]]; then
-          echo "version=${{ steps.latest_tag.outputs.tag | sed -n -e 's/^v//p' }}" >> $GITHUB_ENV
-        else
-          echo "version=0.1.1" >> $GITHUB_ENV
-        fi
+      run: echo "version=0.1.1" >> $GITHUB_ENV
 
     - name: Check minor version
       run: |

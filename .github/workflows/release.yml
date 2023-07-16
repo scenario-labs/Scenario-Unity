@@ -82,7 +82,7 @@ jobs:
       if: steps.check.outputs.minor_change == 'true'
       uses: actions/upload-release-asset@v1
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./Scenario-v${{steps.get_version.outputs.version}}.zip

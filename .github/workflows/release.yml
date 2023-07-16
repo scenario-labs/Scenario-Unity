@@ -19,7 +19,7 @@ jobs:
     - name: Set initial version
       run: |
         if [[ -n "${{ steps.latest_tag.outputs.tag }}" ]]; then
-          echo "version=${{ steps.latest_tag.outputs.tag | sed -n -e 's/^v//p' }}" >> $GITHUB_ENV
+          echo "version=$(echo "${{ steps.latest_tag.outputs.tag }}" | sed -n -e 's/^v//p')" >> $GITHUB_ENV
         else
           echo "version=0.1.1" >> $GITHUB_ENV
         fi

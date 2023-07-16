@@ -14,10 +14,12 @@ jobs:
     steps:
 
     - uses: actions/checkout@v2
+      with:
+        node-version: 16
 
     - name: Get latest release
       id: get_release
-      uses: octokit/request-action@v2.0.0
+      uses: octokit/request-action@v2.17.0
       with:
         route: GET /repos/:repository/releases/latest
 

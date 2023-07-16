@@ -6,18 +6,19 @@ on:
       - development  
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
     steps:
+
     - uses: actions/checkout@v3
 
     - name: Set initial version
-      id: set_version
       run: echo "version=0.1.1" >> $GITHUB_ENV
 
     - name: Check minor version
-      id: check_minor_version
       run: |
         if [[ $(echo "${{ env.version }}" | awk -F. '{print $2}') == 0 ]]; then
           echo "minor_change=false" >> $GITHUB_ENV
@@ -25,30 +26,19 @@ jobs:
           echo "minor_change=true" >> $GITHUB_ENV
         fi
 
-    - name: Read Manifest File
-      if: env.minor_change == 'true'
-      id: read_manifest
-      run: |
-        manifest=$(cat path/to/manifest.json)
-        version=$(echo "$manifest" | jq -r '.version')
-        echo "::set-output name=version::$version"
-
     - name: Zip 2D version
       if: env.minor_change == 'true'
-      needs: [check_minor_version]
       run: |
         zip -r Scenario2D-v${{ env.version }}.zip Scenario README.md Scenario2DPackageInstaller.cs Scenario2D.wlt ScenarioPackageInstaller2.cs
 
     - name: Zip 3D version
       if: env.minor_change == 'true'
-      needs: [check_minor_version]
       run: |
         zip -r Scenario3D-v${{ env.version }}.zip Scenario README.md Scenario3DPackageInstaller.cs Scenario3D.wlt ScenarioPackageInstaller2.cs
 
     - name: Create Release
       id: create_release
       if: env.minor_change == 'true'
-      needs: [Zip 2D version, Zip 3D version]
       uses: actions/create-release@v1
       env: 
         GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}
@@ -60,7 +50,6 @@ jobs:
 
     - name: Upload 2D Asset
       if: env.minor_change == 'true'
-      needs: [Create Release]
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}
@@ -72,7 +61,6 @@ jobs:
 
     - name: Upload 3D Asset 
       if: env.minor_change == 'true'
-      needs: [Create Release]
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}

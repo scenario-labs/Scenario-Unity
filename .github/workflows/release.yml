@@ -13,80 +13,59 @@ jobs:
 
     steps:
 
-    - uses: actions/checkout@v2
-      with:
-        node-version: 16
-
-    - name: Get latest release
-      id: get_release
-      uses: octokit/request-action@v2.17.0
-      with:
-        route: GET /repos/:repository/releases/latest
+    - uses: actions/checkout@v3
 
     - name: Set initial version
-      if: steps.get_release.outputs.data == ''
-      run: |
-        echo "VERSION=0.1.2" >> $GITHUB_ENV
-
-    - name: Get version
-      id: get_version
-      run: |
-        version=${VERSION:-${{ env.VERSION }}}
-        echo ::set-output name=version::${version} 
+      run: echo "version=0.1.2" >> $GITHUB_ENV
 
     - name: Check minor version
-      id: check
       run: |
-        if [[ $(echo "${{ steps.get_version.outputs.version }}" | awk -F. '{print $2}') == 0 ]]; then
-          echo ::set-output name=minor_change::false
+        if [[ $(echo "${{ env.version }}" | awk -F. '{print $2}') == 0 ]]; then
+          echo "minor_change=false" >> $GITHUB_ENV
         else
-          echo ::set-output name=minor_change::true
+          echo "minor_change=true" >> $GITHUB_ENV
         fi
 
-    - name: Zip Scenario folder
-      if: steps.check.outputs.minor_change == 'true'
-      run: |
-        zip -r scenario.zip Scenario
-        
     - name: Zip 2D version
-      if: steps.check.outputs.minor_change == 'true'  
+      if: env.minor_change == 'true'
       run: |
-        zip Scenario-v${{steps.get_version.outputs.version}}.zip 2D README.md Scenario2DPackageInstaller.cs Scenario2D.wlt scenario.zip
+        zip -r Scenario2D-v${{ env.version }}.zip README.md Scenario2DPackageInstaller.cs Scenario2D.wlt Scenario ScenarioPackageInstaller2.cs
 
     - name: Zip 3D version
-      if: steps.check.outputs.minor_change == 'true'
+      if: env.minor_change == 'true'
       run: |
-        zip Scenario-v${{steps.get_version.outputs.version}}.zip 3D README.md Scenario3DPackageInstaller.cs Scenario3D.wlt scenario.zip
+        zip -r Scenario3D-v${{ env.version }}.zip README.md Scenario3DPackageInstaller.cs Scenario3D.wlt Scenario ScenarioPackageInstaller2.cs
     
     - name: Create Release
-      if: steps.check.outputs.minor_change == 'true'
+      id: create_release
+      if: env.minor_change == 'true'
       uses: actions/create-release@v1
       env: 
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}
       with:
-        tag_name: ${{ steps.get_version.outputs.version }}
-        release_name: Release ${{ steps.get_version.outputs.version }}
+        tag_name: v${{ env.version }}
+        release_name: Release ${{ env.version }}
         draft: false
         prerelease: false
 
     - name: Upload 2D Asset
-      if: steps.check.outputs.minor_change == 'true'
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./Scenario-v${{steps.get_version.outputs.version}}.zip
-        asset_name: Scenario2D-v${{steps.get_version.outputs.version}}.zip
-        asset_content_type: application/zip
-
-    - name: Upload 3D Asset 
-      if: steps.check.outputs.minor_change == 'true'
+      if: env.minor_change == 'true'
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./Scenario-v${{steps.get_version.outputs.version}}.zip
-        asset_name: Scenario3D-v${{steps.get_version.outputs.version}}.zip
+        asset_path: ./Scenario2D-v${{ env.version }}.zip
+        asset_name: Scenario2D-v${{ env.version }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload 3D Asset 
+      if: env.minor_change == 'true'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.NOT_GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./Scenario3D-v${{ env.version }}.zip
+        asset_name: Scenario3D-v${{ env.version }}.zip
         asset_content_type: application/zip

@@ -29,12 +29,12 @@ jobs:
     - name: Zip 2D version
       if: env.minor_change == 'true'
       run: |
-        zip -r Scenario2D-v${{ env.version }}.zip 2D README.md "Scenario 2D Package Installer.cs" Scenario2D.wlt "Scenario Package Installer2.cs" Scenario
+        zip -r Scenario2D-v${{ env.version }}.zip Scenario README.md Scenario2DPackageInstaller.cs Scenario2D.wlt ScenarioPackageInstaller2.cs
 
     - name: Zip 3D version
       if: env.minor_change == 'true'
       run: |
-        zip -r Scenario3D-v${{ env.version }}.zip 3D README.md "Scenario 3D Package Installer.cs" Scenario3D.wlt "Scenario Package Installer2.cs" Scenario
+        zip -r Scenario3D-v${{ env.version }}.zip Scenario README.md Scenario3DPackageInstaller.cs Scenario3D.wlt ScenarioPackageInstaller2.cs
 
     - name: Create Release
       id: create_release

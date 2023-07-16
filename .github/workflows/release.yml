@@ -29,7 +29,7 @@ jobs:
       if: env.minor_change == 'true'
       id: read_manifest
       run: |
-        manifest=$(cat path/to/manifest.json)
+        manifest=$(cat manifest.json)
         version=$(echo "$manifest" | jq -r '.version')
         echo "::set-output name=version::$version"
 

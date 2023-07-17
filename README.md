@@ -2,6 +2,8 @@
 
 # Scenario Unity Plugin
 
+[Installation guide](https://help.scenario.com/installing-the-unity-plugin) | [Troubleshooting guide](https://github.com/scenario-labs/Scenario-Unity/wiki/TroubleShooting) | <sub>[![Discord Server](https://img.shields.io/discord/1042738264639012864?label=Discord)](https://discord.gg/scenario)</sub> <sup>(for support queries, and development discussions)</sup>
+
 🎉 Welcome to the Scenario Unity Plugin Open Source Project! 🎉
 
 We are thrilled to welcome you to our innovative endeavor. This plugin stands at the crossroads of creativity and technology, uniting Unity developers and AI-powered game asset generation via [Scenario.com's unique API](https://docs.scenario.com/docs).
@@ -13,10 +15,6 @@ Whether you're an expert Unity developer or just venturing into the world of gam
 With an open dialogue and shared passion for innovation, we look forward to the outstanding contributions we can make to the gaming community together. Let's redefine asset creation, and happy coding!
 
 Learn more about Scenario on our [website](https://scenario.com/).
-
-## Installation
-
-Please review documentation [here](https://help.scenario.com/installing-the-unity-plugin).
 
 ## License
 

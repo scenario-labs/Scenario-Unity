@@ -12,7 +12,7 @@ using Unity.EditorCoroutines.Editor;
 
 public class LayerEditor : EditorWindow
 {
-    [SerializeField] private float rightWidthRatio = 0.1f; 
+    [SerializeField] private float rightWidthRatio = 0.1f;
     [SerializeField] private float leftWidthRatio = 0.9f;
 
     public List<Texture2D> uploadedImages = new List<Texture2D>();
@@ -29,7 +29,7 @@ public class LayerEditor : EditorWindow
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
     private Vector2 canvasScrollPosition;
-    private bool isCropping = false; 
+    private bool isCropping = false;
     private Rect cropRect;
     private bool isCroppingActive = false;
 
@@ -40,8 +40,8 @@ public class LayerEditor : EditorWindow
 
     private float zoomFactor = 1f;
 
-    // Create an instance of ContextMenuActions
     private ContextMenuActions contextMenuActions;
+
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
     {
@@ -52,9 +52,21 @@ public class LayerEditor : EditorWindow
     {
         imageStyle = new GUIStyle();
         imageStyle.alignment = TextAnchor.MiddleCenter;
+
+        uploadedImages = new List<Texture2D>();
+        imagePositions = new List<Vector2>();
+        isDraggingList = new List<bool>();
         imageSizes = new List<Vector2>();
-        
+
         contextMenuActions = new ContextMenuActions(this);
+    }
+
+    private void OnDestroy()
+    {
+        uploadedImages.Clear();
+        imagePositions.Clear();
+        isDraggingList.Clear();
+        imageSizes.Clear();
     }
 
     private void OnGUI()
@@ -100,13 +112,10 @@ public class LayerEditor : EditorWindow
         Rect canvasRect = GUILayoutUtility.GetRect(canvasWidth, position.height);
         GUI.Box(canvasRect, GUIContent.none);
 
-        // Calculate the size of the zoomed-in canvas
         Vector2 canvasContentSize = new Vector2(canvasWidth * zoomFactor, position.height * zoomFactor);
 
-        // Begin a scroll view with scrollbars based on the canvas size
         canvasScrollPosition = GUI.BeginScrollView(canvasRect, canvasScrollPosition, new Rect(Vector2.zero, canvasContentSize));
         
-        // Draw the canvas content
         GUI.BeginGroup(new Rect(Vector2.zero, canvasContentSize));
         
         if (backgroundImage != null)

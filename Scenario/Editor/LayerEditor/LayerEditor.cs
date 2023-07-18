@@ -15,14 +15,14 @@ public class LayerEditor : EditorWindow
     [SerializeField] private float rightWidthRatio = 0.1f; 
     [SerializeField] private float leftWidthRatio = 0.9f;
 
-    private List<Texture2D> uploadedImages = new List<Texture2D>();
-    private List<Vector2> imagePositions = new List<Vector2>();
-    private List<bool> isDraggingList = new List<bool>();
-    private List<Vector2> imageSizes = new List<Vector2>();
+    public List<Texture2D> uploadedImages = new List<Texture2D>();
+    public List<Vector2> imagePositions = new List<Vector2>();
+    public List<bool> isDraggingList = new List<bool>();
+    public List<Vector2> imageSizes = new List<Vector2>();
 
     private GUIStyle imageStyle;
 
-    private int selectedLayerIndex = -1;
+    public int selectedLayerIndex = -1;
     private int selectedImageIndex = -1;
     private const float HandleSize = 5f;
 
@@ -36,38 +36,12 @@ public class LayerEditor : EditorWindow
     private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
 
-    private Texture2D backgroundImage;
+    public Texture2D backgroundImage;
 
     private float zoomFactor = 1f;
 
     // Create an instance of ContextMenuActions
     private ContextMenuActions contextMenuActions;
-
-    // Create public properties to access private fields
-    public List<Texture2D> UploadedImages => uploadedImages;
-    public List<Vector2> ImagePositions => imagePositions;
-    public List<bool> IsDraggingList => isDraggingList;
-    public List<Vector2> ImageSizes => imageSizes;
-    public int SelectedLayerIndex 
-    {
-        get => selectedLayerIndex;
-        set
-        {
-            if (value >= -1 && value < UploadedImages.Count)
-            {
-                selectedLayerIndex = value;
-            }
-        }
-    }
-    public Texture2D BackgroundImage  
-    {
-        get => backgroundImage;
-        set
-        {
-            backgroundImage = value;
-        }
-    }
-
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
     {
@@ -80,7 +54,6 @@ public class LayerEditor : EditorWindow
         imageStyle.alignment = TextAnchor.MiddleCenter;
         imageSizes = new List<Vector2>();
         
-        // Instantiate the ContextMenuActions class
         contextMenuActions = new ContextMenuActions(this);
     }
 
@@ -99,19 +72,19 @@ public class LayerEditor : EditorWindow
 
         EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth));
         
-        for (int i = 0; i < UploadedImages.Count; i++)
+        for (int i = 0; i < uploadedImages.Count; i++)
         {
-            Texture2D uploadedImage = UploadedImages[i];
+            Texture2D uploadedImage = uploadedImages[i];
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(uploadedImage, GUILayout.MinWidth(50), GUILayout.MinHeight(50));
             
-            if (SelectedLayerIndex == i) 
+            if (selectedLayerIndex == i) 
             {
                 GUI.backgroundColor = Color.yellow;
             }
             if (GUILayout.Button($"Layer {i + 1}", GUILayout.MinWidth(100))) 
             {
-                SelectedLayerIndex = i;
+                selectedLayerIndex = i;
             }
             GUI.backgroundColor = Color.white;
             EditorGUILayout.EndHorizontal();
@@ -297,10 +270,6 @@ public class LayerEditor : EditorWindow
                         DeletePixelsVertical(index, newHeight, prevHeight);
                     }
                 }
-                else if (Event.current.button == 2)
-                {
-                    cropRect.position += Event.current.delta;   
-                }
 
                 cropRect.width = Mathf.Clamp(cropRect.width, 0f, imageRect.width);
                 cropRect.height = Mathf.Clamp(cropRect.height, 0f, imageRect.height);
@@ -349,24 +318,18 @@ public class LayerEditor : EditorWindow
             }
 
             if (isCropping)
-        {
-            float borderThickness = 1f;
-            Color borderColor = Color.red;
+            {
+                float borderThickness = 1f;
+                Color borderColor = Color.red;
 
-            EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
+                EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
 
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
-            
-            // Add handles at the corners
-            float handleSize = 10f;
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.x - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpLeft);
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.xMax - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpRight);
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.x - handleSize / 2, cropRect.yMax - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpRight);
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.xMax - handleSize / 2, cropRect.yMax - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpLeft);
-        }
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
+                
+            }
         }
 
         GUI.EndGroup();

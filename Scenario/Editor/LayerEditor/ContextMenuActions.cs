@@ -35,25 +35,25 @@ public class ContextMenuActions {
 
     private void MoveLayer(int fromIndex, int toIndex) {
       
-      if (fromIndex >= 0 && fromIndex < layerEditor.UploadedImages.Count && 
-          toIndex >= 0 && toIndex < layerEditor.UploadedImages.Count) {
+      if (fromIndex >= 0 && fromIndex < layerEditor.uploadedImages.Count && 
+          toIndex >= 0 && toIndex < layerEditor.uploadedImages.Count) {
           
-        Texture2D image = layerEditor.UploadedImages[fromIndex];
-        Vector2 position = layerEditor.ImagePositions[fromIndex];
-        bool isDragging = layerEditor.IsDraggingList[fromIndex];
-        Vector2 size = layerEditor.ImageSizes[fromIndex];
+        Texture2D image = layerEditor.uploadedImages[fromIndex];
+        Vector2 position = layerEditor.imagePositions[fromIndex];
+        bool isDragging = layerEditor.isDraggingList[fromIndex];
+        Vector2 size = layerEditor.imageSizes[fromIndex];
 
-        layerEditor.UploadedImages.RemoveAt(fromIndex);
-        layerEditor.ImagePositions.RemoveAt(fromIndex);
-        layerEditor.IsDraggingList.RemoveAt(fromIndex);
-        layerEditor.ImageSizes.RemoveAt(fromIndex);
+        layerEditor.uploadedImages.RemoveAt(fromIndex);
+        layerEditor.imagePositions.RemoveAt(fromIndex);
+        layerEditor.isDraggingList.RemoveAt(fromIndex);
+        layerEditor.imageSizes.RemoveAt(fromIndex);
 
-        layerEditor.UploadedImages.Insert(toIndex, image);
-        layerEditor.ImagePositions.Insert(toIndex, position);
-        layerEditor.IsDraggingList.Insert(toIndex, isDragging);  
-        layerEditor.ImageSizes.Insert(toIndex, size);
+        layerEditor.uploadedImages.Insert(toIndex, image);
+        layerEditor.imagePositions.Insert(toIndex, position);
+        layerEditor.isDraggingList.Insert(toIndex, isDragging);  
+        layerEditor.imageSizes.Insert(toIndex, size);
 
-        layerEditor.SelectedLayerIndex = toIndex;
+        layerEditor.selectedLayerIndex = toIndex;
       }
       
       layerEditor.Repaint();
@@ -61,10 +61,10 @@ public class ContextMenuActions {
 
     private void SetAsBackground(int index) {
       
-      if (index >= 0 && index < layerEditor.UploadedImages.Count) {
+      if (index >= 0 && index < layerEditor.uploadedImages.Count) {
       
-        Texture2D selectedImage = layerEditor.UploadedImages[index];
-        layerEditor.BackgroundImage = selectedImage;
+        Texture2D selectedImage = layerEditor.uploadedImages[index];
+        layerEditor.backgroundImage = selectedImage;
       
       }
     }
@@ -83,18 +83,18 @@ public class ContextMenuActions {
 
     private void CloneLayer(int index) {
     
-      if (index >= 0 && index < layerEditor.UploadedImages.Count) {
+      if (index >= 0 && index < layerEditor.uploadedImages.Count) {
       
-        Texture2D originalImage = layerEditor.UploadedImages[index];
+        Texture2D originalImage = layerEditor.uploadedImages[index];
       
         Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
         clonedImage.SetPixels(originalImage.GetPixels());
         clonedImage.Apply();
 
-        layerEditor.UploadedImages.Insert(index + 1, clonedImage);
-        layerEditor.ImagePositions.Insert(index + 1, layerEditor.ImagePositions[index]);
-        layerEditor.IsDraggingList.Insert(index + 1, false);
-        layerEditor.ImageSizes.Insert(index + 1, layerEditor.ImageSizes[index]);
+        layerEditor.uploadedImages.Insert(index + 1, clonedImage);
+        layerEditor.imagePositions.Insert(index + 1, layerEditor.imagePositions[index]);
+        layerEditor.isDraggingList.Insert(index + 1, false);
+        layerEditor.imageSizes.Insert(index + 1, layerEditor.imageSizes[index]);
       
       }
     
@@ -102,14 +102,14 @@ public class ContextMenuActions {
 
     private void DeleteLayer(int index) {
 
-      if (index >= 0 && index < layerEditor.UploadedImages.Count) {
+      if (index >= 0 && index < layerEditor.uploadedImages.Count) {
 
         try {
         
-          layerEditor.UploadedImages.RemoveAt(index);
-          layerEditor.ImagePositions.RemoveAt(index);
-          layerEditor.IsDraggingList.RemoveAt(index);
-          layerEditor.ImageSizes.RemoveAt(index);
+          layerEditor.uploadedImages.RemoveAt(index);
+          layerEditor.imagePositions.RemoveAt(index);
+          layerEditor.isDraggingList.RemoveAt(index);
+          layerEditor.imageSizes.RemoveAt(index);
         
         } catch (Exception ex) {
         
@@ -118,13 +118,13 @@ public class ContextMenuActions {
         
         }
 
-        if (layerEditor.SelectedLayerIndex == index) {
+        if (layerEditor.selectedLayerIndex == index) {
         
-          layerEditor.SelectedLayerIndex = -1;
+          layerEditor.selectedLayerIndex = -1;
         
-        } else if (layerEditor.SelectedLayerIndex > index) {
+        } else if (layerEditor.selectedLayerIndex > index) {
         
-          layerEditor.SelectedLayerIndex--;
+          layerEditor.selectedLayerIndex--;
         
         }
 
@@ -134,7 +134,7 @@ public class ContextMenuActions {
 
     private void FlipHorizontal(int index) {
 
-      Texture2D texture = layerEditor.UploadedImages[index];
+      Texture2D texture = layerEditor.uploadedImages[index];
 
       Texture2D flipped = new Texture2D(texture.width, texture.height);
 
@@ -149,13 +149,13 @@ public class ContextMenuActions {
       }
 
       flipped.Apply();
-      layerEditor.UploadedImages[index] = flipped;
+      layerEditor.uploadedImages[index] = flipped;
 
     }
 
     private void FlipVertical(int index) {
 
-      Texture2D texture = layerEditor.UploadedImages[index];
+      Texture2D texture = layerEditor.uploadedImages[index];
 
       Texture2D flipped = new Texture2D(texture.width, texture.height);
 
@@ -170,15 +170,15 @@ public class ContextMenuActions {
       }
 
       flipped.Apply();
-      layerEditor.UploadedImages[index] = flipped;
+      layerEditor.uploadedImages[index] = flipped;
 
     }
     
     internal void RemoveBackground(int index)
     {
-        if (index >= 0 && index < layerEditor.UploadedImages.Count)
+        if (index >= 0 && index < layerEditor.uploadedImages.Count)
         {
-            Texture2D texture2D = layerEditor.UploadedImages[index];
+            Texture2D texture2D = layerEditor.uploadedImages[index];
             var imgBytes = texture2D.EncodeToPNG();
             string base64String = Convert.ToBase64String(imgBytes);
             string dataUrl = $"data:image/png;base64,{base64String}";
@@ -239,7 +239,7 @@ public class ContextMenuActions {
             else
             {
                 Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                layerEditor.UploadedImages[index] = texture;
+                layerEditor.uploadedImages[index] = texture;
             }
         }
     }

@@ -293,10 +293,9 @@ public class LayerEditor : EditorWindow
                 selectedImageIndex = -1;
                 Event.current.Use();
             }
-            else if (Event.current.type == EventType.MouseUp && isCroppingActive)
+            else if (Event.current.type == EventType.MouseUp && isCropping)
             {
                 CropImage(i, cropRect);
-                isCroppingActive = false;
                 Event.current.Use();
             }
 

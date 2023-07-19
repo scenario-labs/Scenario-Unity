@@ -457,8 +457,9 @@ public class LayerEditor : EditorWindow
     private void CropImage(int index, Rect cropRect)
     {
         Texture2D originalImage = uploadedImages[index];
+
         int x = Mathf.RoundToInt(cropRect.x - imagePositions[index].x);
-        int y = Mathf.RoundToInt(cropRect.y - imagePositions[index].y);
+        int y = Mathf.RoundToInt((imagePositions[index].y + imageSizes[index].y) - (cropRect.y + cropRect.height));
         int width = Mathf.RoundToInt(cropRect.width);
         int height = Mathf.RoundToInt(cropRect.height);
 
@@ -473,7 +474,8 @@ public class LayerEditor : EditorWindow
         croppedImage.Apply();
 
         uploadedImages[index] = croppedImage;
-        imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + y);
+        imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + imageSizes[index].y - (y + height));
         imageSizes[index] = new Vector2(width, height);
     }
+
 }

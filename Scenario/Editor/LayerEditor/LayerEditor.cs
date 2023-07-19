@@ -329,15 +329,31 @@ public class LayerEditor : EditorWindow
             if (isCropping)
             {
                 float borderThickness = 1f;
-                Color borderColor = Color.red;
+                Color borderColor = Color.white;
 
                 EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
+
+                float lineHeight = cropRect.height / 3f;
+                float columnWidth = cropRect.width / 3f;
+
+                for (int lineIndex = 1; lineIndex <= 2; lineIndex++)
+                {
+                    float lineY = cropRect.y + lineIndex * lineHeight;
+                    Rect lineRect = new Rect(cropRect.x, lineY, cropRect.width, borderThickness);
+                    EditorGUI.DrawRect(lineRect, borderColor);
+                }
+
+                for (int columnIndex = 1; columnIndex <= 2; columnIndex++)
+                {
+                    float lineX = cropRect.x + columnIndex * columnWidth;
+                    Rect lineRect = new Rect(lineX, cropRect.y, borderThickness, cropRect.height);
+                    EditorGUI.DrawRect(lineRect, borderColor);
+                }
 
                 EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
                 EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
                 EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
                 EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
-                
             }
         }
 

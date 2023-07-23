@@ -86,7 +86,6 @@ public class ContextMenuActions {
       if (index >= 0 && index < layerEditor.uploadedImages.Count) {
       
         Texture2D originalImage = layerEditor.uploadedImages[index];
-      
         Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
         clonedImage.SetPixels(originalImage.GetPixels());
         clonedImage.Apply();
@@ -95,10 +94,21 @@ public class ContextMenuActions {
         layerEditor.imagePositions.Insert(index + 1, layerEditor.imagePositions[index]);
         layerEditor.isDraggingList.Insert(index + 1, false);
         layerEditor.imageSizes.Insert(index + 1, layerEditor.imageSizes[index]);
-      
+
+        Rect rect = new Rect(0, 0, clonedImage.width, clonedImage.height);
+        Vector2 pivot = new Vector2(0.5f, 0.5f);
+        Sprite sprite = Sprite.Create(clonedImage, rect, pivot);
+
+        GameObject spriteObj = new GameObject("SpriteObj");
+        SpriteRenderer renderer = spriteObj.AddComponent<SpriteRenderer>();
+        renderer.sprite = sprite;
+
+        spriteObj.transform.position = layerEditor.spriteObjects[index].transform.position;
+
+        layerEditor.spriteObjects.Insert(index + 1, spriteObj);
       }
-    
     }
+
 
     private void DeleteLayer(int index) {
 
@@ -110,6 +120,11 @@ public class ContextMenuActions {
           layerEditor.imagePositions.RemoveAt(index);
           layerEditor.isDraggingList.RemoveAt(index);
           layerEditor.imageSizes.RemoveAt(index);
+      
+          // Remove the corresponding GameObject in the scene
+          GameObject spriteObj = layerEditor.spriteObjects[index];
+          GameObject.DestroyImmediate(spriteObj);
+          layerEditor.spriteObjects.RemoveAt(index);
         
         } catch (Exception ex) {
         
@@ -127,10 +142,9 @@ public class ContextMenuActions {
           layerEditor.selectedLayerIndex--;
         
         }
-
       }
-
     }
+
 
     private void FlipHorizontal(int index) {
 
@@ -176,14 +190,14 @@ public class ContextMenuActions {
     
     internal void RemoveBackground(int index)
     {
-        if (index >= 0 && index < layerEditor.uploadedImages.Count)
-        {
-            Texture2D texture2D = layerEditor.uploadedImages[index];
-            var imgBytes = texture2D.EncodeToPNG();
-            string base64String = Convert.ToBase64String(imgBytes);
-            string dataUrl = $"data:image/png;base64,{base64String}";
-            EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl, index));
-        }
+      if (index >= 0 && index < layerEditor.uploadedImages.Count)
+      {
+        Texture2D texture2D = layerEditor.uploadedImages[index];
+        var imgBytes = texture2D.EncodeToPNG();
+        string base64String = Convert.ToBase64String(imgBytes);
+        string dataUrl = $"data:image/png;base64,{base64String}";
+        EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl, index));
+      }
     }
 
     private IEnumerator PutRemoveBackground(string dataUrl, int index)
@@ -205,42 +219,42 @@ public class ContextMenuActions {
 
         yield return client.ExecuteAsync(request, response =>
         {
-            if (response.ErrorException != null)
+          if (response.ErrorException != null)
+          {
+            Debug.Log($"Error: {response.ErrorException.Message}");
+          }
+          else
+          {
+            try
             {
-                Debug.Log($"Error: {response.ErrorException.Message}");
-            }
-            else
-            {
-                try
-                {
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
-                    string imageUrl = jsonResponse.asset.url;
+              dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
+              string imageUrl = jsonResponse.asset.url;
 
-                    EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageIntoMemory(imageUrl, index));
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
-                }
+              EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageIntoMemory(imageUrl, index));
             }
+            catch (Exception ex)
+            {
+              Debug.LogError("An error occurred while processing the response: " + ex.Message);
+            }
+          }
         });
     }
 
     private IEnumerator DownloadImageIntoMemory(string imageUrl, int index)
     {
-        using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageUrl))
-        {
-            yield return uwr.SendWebRequest();
+      using (UnityWebRequest uwr = UnityWebRequestTexture.GetTexture(imageUrl))
+      {
+        yield return uwr.SendWebRequest();
 
-            if (uwr.result != UnityWebRequest.Result.Success)
-            {
-                Debug.Log(uwr.error);
-            }
-            else
-            {
-                Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
-                layerEditor.uploadedImages[index] = texture;
-            }
+        if (uwr.result != UnityWebRequest.Result.Success)
+        {
+          Debug.Log(uwr.error);
         }
+        else
+        {
+          Texture2D texture = DownloadHandlerTexture.GetContent(uwr);
+          layerEditor.uploadedImages[index] = texture;
+        }
+      }
     }
 }

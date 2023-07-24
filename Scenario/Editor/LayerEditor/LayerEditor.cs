@@ -18,7 +18,7 @@ public class LayerEditor : EditorWindow
     public List<Vector2> imagePositions = new List<Vector2>();
     public List<bool> isDraggingList = new List<bool>();
     public List<Vector2> imageSizes = new List<Vector2>();
-    public List<GameObject> spriteObjects = new List<GameObject>();  // New List for GameObjects
+    public List<GameObject> spriteObjects = new List<GameObject>();
 
     private GUIStyle imageStyle;
 
@@ -59,7 +59,7 @@ public class LayerEditor : EditorWindow
         imagePositions = new List<Vector2>();
         isDraggingList = new List<bool>();
         imageSizes = new List<Vector2>();
-        spriteObjects = new List<GameObject>();  // Initialize the new GameObject list
+        spriteObjects = new List<GameObject>();
 
         rightPanel = new LayerEditorRightPanel(this);
         contextMenuActions = new ContextMenuActions(this);
@@ -71,7 +71,7 @@ public class LayerEditor : EditorWindow
         imagePositions.Clear();
         isDraggingList.Clear();
         imageSizes.Clear();
-        spriteObjects.Clear();  // Clear the GameObject list when the window is destroyed
+        spriteObjects.Clear();
     }
 
     private void OnGUI()
@@ -94,7 +94,7 @@ public class LayerEditor : EditorWindow
         EditorGUILayout.EndHorizontal();
 
         GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 30; // adjust this to your preferred size
+        buttonStyle.fontSize = 30;
 
         float buttonSize = 50;
         float buttonX = isRightPanelOpen ? position.width - buttonSize - rightWidth : position.width - buttonSize;
@@ -145,20 +145,15 @@ public class LayerEditor : EditorWindow
                     isDraggingList.Add(false);
                     imageSizes.Add(new Vector2(uploadedImage.width, uploadedImage.height));
 
-                    // create Sprite from Texture2D
                     Rect rect = new Rect(0, 0, uploadedImage.width, uploadedImage.height);
                     Vector2 pivot = new Vector2(0.5f, 0.5f);
                     Sprite sprite = Sprite.Create(uploadedImage, rect, pivot);
 
-                    // create GameObject with SpriteRenderer
                     GameObject spriteObj = new GameObject("SpriteObj");
                     SpriteRenderer renderer = spriteObj.AddComponent<SpriteRenderer>();
                     renderer.sprite = sprite;
 
-                    // position at center of scene
                     spriteObj.transform.position = new Vector3(0, 0, 0);
-
-                    // Add the new GameObject to the spriteObjects list
                     spriteObjects.Add(spriteObj);
                 }
             }
@@ -198,6 +193,10 @@ public class LayerEditor : EditorWindow
                         imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
                         imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
                         imageSizes[i] = imageSize;
+
+                        // Scale the corresponding GameObject as well
+                        GameObject spriteObj = spriteObjects[i];
+                        spriteObj.transform.localScale *= scaleFactor;
                     }
                     Event.current.Use();
                 }
@@ -259,14 +258,11 @@ public class LayerEditor : EditorWindow
                 newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
                 imagePosition = newPosition;
 
-                // Compute the movement delta in canvas units
                 Vector2 delta = newPosition - oldPosition;
 
-                // Convert the delta to scene units
-                float scaleFactor = 0.01f;  // Adjust this value as needed
+                float scaleFactor = 0.01f;
                 Vector3 sceneDelta = new Vector3(delta.x, -delta.y, 0) * scaleFactor;
 
-                // Update the position of the corresponding GameObject
                 GameObject spriteObj = spriteObjects[i];
                 spriteObj.transform.position += sceneDelta;
 
@@ -514,5 +510,13 @@ public class LayerEditor : EditorWindow
         uploadedImages[index] = croppedImage;
         imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + imageSizes[index].y - (y + height));
         imageSizes[index] = new Vector2(width, height);
+
+        Rect spriteRect = new Rect(0, 0, croppedImage.width, croppedImage.height);
+        Vector2 pivot = new Vector2(0.5f, 0.5f);
+        Sprite newSprite = Sprite.Create(croppedImage, spriteRect, pivot);
+
+        GameObject spriteObj = spriteObjects[index];
+        SpriteRenderer renderer = spriteObj.GetComponent<SpriteRenderer>();
+        renderer.sprite = newSprite;
     }
 }

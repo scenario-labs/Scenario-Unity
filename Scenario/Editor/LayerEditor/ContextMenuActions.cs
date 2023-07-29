@@ -93,9 +93,7 @@ public class ContextMenuActions {
   }
 
   private void CloneLayer(int index) {
-  
     if (index >= 0 && index < layerEditor.uploadedImages.Count) {
-    
       Texture2D originalImage = layerEditor.uploadedImages[index];
       Texture2D clonedImage = new Texture2D(originalImage.width, originalImage.height);
       clonedImage.SetPixels(originalImage.GetPixels());
@@ -110,7 +108,8 @@ public class ContextMenuActions {
       Vector2 pivot = new Vector2(0.5f, 0.5f);
       Sprite sprite = Sprite.Create(clonedImage, rect, pivot);
 
-      GameObject spriteObj = new GameObject("SpriteObj");
+      string originalName = layerEditor.spriteObjects[index].name;
+      GameObject spriteObj = new GameObject(originalName + "-clone");
       SpriteRenderer renderer = spriteObj.AddComponent<SpriteRenderer>();
       renderer.sprite = sprite;
 
@@ -119,9 +118,15 @@ public class ContextMenuActions {
         0);
 
       layerEditor.spriteObjects.Insert(index + 1, spriteObj);
+
+      for (int i = 0; i < layerEditor.spriteObjects.Count; i++)
+      {
+          GameObject obj = layerEditor.spriteObjects[i];
+          SpriteRenderer spriteRenderer = obj.GetComponent<SpriteRenderer>();
+          spriteRenderer.sortingOrder = i;
+      }
     }
   }
-
 
   private void DeleteLayer(int index) {
 

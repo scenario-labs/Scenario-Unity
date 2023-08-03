@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Set initial version
-      run: echo "version=0.1.1" >> $GITHUB_ENV
+      run: echo "version=0.1.2" >> $GITHUB_ENV
 
     - name: Check minor version
       run: |

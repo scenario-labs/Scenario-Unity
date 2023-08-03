@@ -4,69 +4,41 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Networking;
-using RestSharp;
-using Newtonsoft.Json;
-using UnityEditor.EditorTools;
-using Unity.EditorCoroutines.Editor;
 
 public class LayerEditor : EditorWindow
 {
-    [SerializeField] private float rightWidthRatio = 0.1f; 
+    [SerializeField] private float rightWidthRatio = 0.1f;
     [SerializeField] private float leftWidthRatio = 0.9f;
 
-    private List<Texture2D> uploadedImages = new List<Texture2D>();
-    private List<Vector2> imagePositions = new List<Vector2>();
-    private List<bool> isDraggingList = new List<bool>();
-    private List<Vector2> imageSizes = new List<Vector2>();
+    public List<Texture2D> uploadedImages = new();
+    public List<Vector2> imagePositions = new();
+    public List<bool> isDraggingList = new();
+    public List<Vector2> imageSizes = new();
+    public List<GameObject> spriteObjects = new();
 
     private GUIStyle imageStyle;
 
-    private int selectedLayerIndex = -1;
+    public int selectedLayerIndex = -1;
     private int selectedImageIndex = -1;
     private const float HandleSize = 5f;
 
+    private bool isRightPanelOpen = true;
     private bool showPixelAlignment = true;
     private bool showHorizontalAlignment = true;
     private Vector2 canvasScrollPosition;
-    private bool isCropping = false; 
+    private bool isCropping = false;
     private Rect cropRect;
     private bool isCroppingActive = false;
 
     private double lastClickTime = 0;
     private const double DoubleClickTimeThreshold = 0.3;
 
-    private Texture2D backgroundImage;
+    public Texture2D backgroundImage;
 
     private float zoomFactor = 1f;
 
-    // Create an instance of ContextMenuActions
+    private LayerEditorRightPanel rightPanel;
     private ContextMenuActions contextMenuActions;
-
-    // Create public properties to access private fields
-    public List<Texture2D> UploadedImages => uploadedImages;
-    public List<Vector2> ImagePositions => imagePositions;
-    public List<bool> IsDraggingList => isDraggingList;
-    public List<Vector2> ImageSizes => imageSizes;
-    public int SelectedLayerIndex 
-    {
-        get => selectedLayerIndex;
-        set
-        {
-            if (value >= -1 && value < UploadedImages.Count)
-            {
-                selectedLayerIndex = value;
-            }
-        }
-    }
-    public Texture2D BackgroundImage  
-    {
-        get => backgroundImage;
-        set
-        {
-            backgroundImage = value;
-        }
-    }
 
     [MenuItem("Window/Layer Editor")]
     public static void ShowWindow()
@@ -78,70 +50,87 @@ public class LayerEditor : EditorWindow
     {
         imageStyle = new GUIStyle();
         imageStyle.alignment = TextAnchor.MiddleCenter;
+
+        uploadedImages = new List<Texture2D>();
+        imagePositions = new List<Vector2>();
+        isDraggingList = new List<bool>();
         imageSizes = new List<Vector2>();
-        
-        // Instantiate the ContextMenuActions class
+        spriteObjects = new List<GameObject>();
+
+        rightPanel = new LayerEditorRightPanel(this);
         contextMenuActions = new ContextMenuActions(this);
+    }
+
+    private void OnDestroy()
+    {
+        uploadedImages.Clear();
+        imagePositions.Clear();
+        isDraggingList.Clear();
+        imageSizes.Clear();
+        spriteObjects.Clear();
     }
 
     private void OnGUI()
     {
         float totalWidth = position.width;
-        float leftWidth = totalWidth * leftWidthRatio;
-        float rightWidth = totalWidth * rightWidthRatio;
-        float middleWidth = totalWidth - leftWidth - rightWidth;
+        float leftWidth = isRightPanelOpen ? totalWidth * leftWidthRatio : totalWidth;
+        float rightWidth = isRightPanelOpen ? totalWidth * rightWidthRatio : 0f;
 
         EditorGUILayout.BeginHorizontal();
-        
+
         EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
         DrawCanvas(leftWidth);
         EditorGUILayout.EndVertical();
 
-        EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth));
-        
-        for (int i = 0; i < UploadedImages.Count; i++)
+        if (isRightPanelOpen)
         {
-            Texture2D uploadedImage = UploadedImages[i];
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.Label(uploadedImage, GUILayout.MinWidth(50), GUILayout.MinHeight(50));
-            
-            if (SelectedLayerIndex == i) 
-            {
-                GUI.backgroundColor = Color.yellow;
-            }
-            if (GUILayout.Button($"Layer {i + 1}", GUILayout.MinWidth(100))) 
-            {
-                SelectedLayerIndex = i;
-            }
-            GUI.backgroundColor = Color.white;
-            EditorGUILayout.EndHorizontal();
+            rightPanel.DrawRightPanel(rightWidth);
         }
-        
-        EditorGUILayout.EndVertical();
 
         EditorGUILayout.EndHorizontal();
+
+        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+        buttonStyle.fontSize = 30;
+
+        float buttonSize = 50;
+        float buttonX = isRightPanelOpen ? position.width - buttonSize - rightWidth : position.width - buttonSize;
+        if (GUI.Button(new Rect(buttonX, 0, buttonSize, buttonSize), "≡", buttonStyle))
+        {
+            isRightPanelOpen = !isRightPanelOpen;
+            Repaint();
+        }
     }
+
 
     private void DrawCanvas(float canvasWidth)
     {
+        Color backgroundColor = new Color32(18, 18, 18, 255);
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+
         Rect canvasRect = GUILayoutUtility.GetRect(canvasWidth, position.height);
         GUI.Box(canvasRect, GUIContent.none);
 
-        // Calculate the size of the zoomed-in canvas
         Vector2 canvasContentSize = new Vector2(canvasWidth * zoomFactor, position.height * zoomFactor);
 
-        // Begin a scroll view with scrollbars based on the canvas size
         canvasScrollPosition = GUI.BeginScrollView(canvasRect, canvasScrollPosition, new Rect(Vector2.zero, canvasContentSize));
-        
-        // Draw the canvas content
+
+        canvasRect = DrawImageList(canvasWidth, canvasRect, canvasContentSize);
+
+        DrawImageView(canvasRect);
+
+        GUI.EndScrollView();
+    }
+
+    private Rect DrawImageList(float canvasWidth, Rect canvasRect, Vector2 canvasContentSize)
+    {
         GUI.BeginGroup(new Rect(Vector2.zero, canvasContentSize));
-        
+
         if (backgroundImage != null)
         {
             GUI.DrawTexture(new Rect(Vector2.zero, new Vector2(canvasWidth, position.height) * zoomFactor), backgroundImage, ScaleMode.ScaleToFit, true);
         }
 
-        if (Event.current.type == EventType.DragUpdated && canvasRect.Contains(Event.current.mousePosition)) 
+        if (Event.current.type == EventType.DragUpdated && canvasRect.Contains(Event.current.mousePosition))
         {
             DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
             Event.current.Use();
@@ -159,26 +148,45 @@ public class LayerEditor : EditorWindow
                     uploadedImages.Add(uploadedImage);
                     imagePositions.Add(canvasCenter - new Vector2(uploadedImage.width / 2f, uploadedImage.height / 2f));
                     isDraggingList.Add(false);
-                    imageSizes.Add(new Vector2(uploadedImage.width, uploadedImage.height)); 
+                    imageSizes.Add(new Vector2(uploadedImage.width, uploadedImage.height));
+
+                    Rect rect = new Rect(0, 0, uploadedImage.width, uploadedImage.height);
+                    Vector2 pivot = new Vector2(0.5f, 0.5f);
+                    Sprite sprite = Sprite.Create(uploadedImage, rect, pivot);
+
+                    GameObject spriteObj = new GameObject("SpriteObj");
+                    SpriteRenderer renderer = spriteObj.AddComponent<SpriteRenderer>();
+                    renderer.sprite = sprite;
+
+                    spriteObj.transform.position = new Vector3(0, 0, 0);
+                    spriteObjects.Add(spriteObj);
                 }
             }
             Event.current.Use();
         }
 
         GUI.EndGroup();
+        return canvasRect;
+    }
 
+    private void DrawImageView(Rect canvasRect)
+    {
         GUI.BeginGroup(canvasRect);
-        
+
         for (int i = 0; i < uploadedImages.Count; i++)
         {
             int index = i;
-            
+
             Texture2D uploadedImage = uploadedImages[i];
             Vector2 imagePosition = imagePositions[i];
-            Vector2 imageSize = imageSizes[i]; 
+            Vector2 imageSize = imageSizes[i];
             bool isDragging = isDraggingList[i];
 
-            Vector2 transformedPosition = imagePosition * zoomFactor;
+            float imageSizeXHalf = (imageSize.x / 2.0f);
+            float imageSizeYHalf = (imageSize.y / 2.0f);
+            var halfSize = new Vector2(imageSizeXHalf, imageSizeYHalf);
+
+            Vector2 transformedPosition = (imagePosition - halfSize) * zoomFactor;
             Vector2 transformedSize = imageSize * zoomFactor;
 
             Rect imageRect = new Rect(transformedPosition, transformedSize);
@@ -187,21 +195,30 @@ public class LayerEditor : EditorWindow
 
             Vector2 transformedMousePosition = Event.current.mousePosition / zoomFactor;
 
-            if (Event.current.control && Event.current.type == EventType.ScrollWheel && imageRect.Contains(Event.current.mousePosition))
+            if (Event.current.type == EventType.ScrollWheel)
             {
-                float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
-                imageSize *= scaleFactor;
-                imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
-                imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
-                imageSizes[i] = imageSize;
-                Event.current.Use();
-            }
+                if (Event.current.control)
+                {
+                    if (imageRect.Contains(Event.current.mousePosition))
+                    {
+                        float scaleFactor = ScaleImage(ref imageSize);
+                        imageSizes[i] = imageSize;
 
-            if (!Event.current.control && Event.current.type == EventType.ScrollWheel)
-            {
-                zoomFactor -= Event.current.delta.y * 0.01f;
-                zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 10f);
-                Event.current.Use();
+                        // Scale the corresponding GameObject as well
+                        GameObject spriteObj = spriteObjects[i];
+                        spriteObj.transform.localScale *= scaleFactor;
+                    }
+                    Event.current.Use();
+                }
+                else
+                {
+                    Vector2 mousePositionBeforeZoom = (Event.current.mousePosition + canvasScrollPosition) / zoomFactor;
+                    zoomFactor -= Event.current.delta.y * 0.01f;
+                    zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 1f);
+                    Vector2 mousePositionAfterZoom = (Event.current.mousePosition + canvasScrollPosition) / zoomFactor;
+                    canvasScrollPosition += (mousePositionAfterZoom - mousePositionBeforeZoom) * zoomFactor;
+                    Event.current.Use();
+                }
             }
 
             if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
@@ -216,7 +233,7 @@ public class LayerEditor : EditorWindow
                             CropImage(i, cropRect);
                             isCroppingActive = false;
                         }
-                        else 
+                        else
                         {
                             selectedImageIndex = i;
                             isDragging = false;
@@ -244,12 +261,21 @@ public class LayerEditor : EditorWindow
             }
             else if (Event.current.type == EventType.MouseDrag && isDragging && !isCropping)
             {
+                Vector2 oldPosition = imagePosition;
                 Vector2 transformedDelta = Event.current.delta / zoomFactor;
-                
                 Vector2 newPosition = imagePosition + transformedDelta;
-                newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
-                newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);
+                /* newPosition.x = Mathf.Clamp(newPosition.x, 0f, (canvasRect.width / zoomFactor) - imageSize.x);
+                 newPosition.y = Mathf.Clamp(newPosition.y, 0f, (canvasRect.height / zoomFactor) - imageSize.y);*/
                 imagePosition = newPosition;
+
+                Vector2 delta = newPosition - oldPosition;
+
+                float scaleFactor = 0.01f;
+                Vector3 sceneDelta = new Vector3(delta.x, -delta.y, 0) * scaleFactor;
+
+                GameObject spriteObj = spriteObjects[i];
+                spriteObj.transform.position += sceneDelta;
+
                 Event.current.Use();
             }
             else if (Event.current.type == EventType.MouseDrag && isCropping)
@@ -297,16 +323,12 @@ public class LayerEditor : EditorWindow
                         DeletePixelsVertical(index, newHeight, prevHeight);
                     }
                 }
-                else if (Event.current.button == 2)
-                {
-                    cropRect.position += Event.current.delta;   
-                }
 
                 cropRect.width = Mathf.Clamp(cropRect.width, 0f, imageRect.width);
                 cropRect.height = Mathf.Clamp(cropRect.height, 0f, imageRect.height);
                 cropRect.x = Mathf.Clamp(cropRect.x, imageRect.x, imageRect.xMax - cropRect.width);
                 cropRect.y = Mathf.Clamp(cropRect.y, imageRect.y, imageRect.yMax - cropRect.height);
-                
+
                 Event.current.Use();
             }
             else if (Event.current.type == EventType.MouseUp && isDragging)
@@ -315,10 +337,9 @@ public class LayerEditor : EditorWindow
                 selectedImageIndex = -1;
                 Event.current.Use();
             }
-            else if (Event.current.type == EventType.MouseUp && isCroppingActive)
+            else if (Event.current.type == EventType.MouseUp && isCropping)
             {
                 CropImage(i, cropRect);
-                isCroppingActive = false;
                 Event.current.Use();
             }
 
@@ -349,33 +370,51 @@ public class LayerEditor : EditorWindow
             }
 
             if (isCropping)
-        {
-            float borderThickness = 1f;
-            Color borderColor = Color.red;
+            {
+                float borderThickness = 1f;
+                Color borderColor = Color.white;
 
-            EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
+                EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
 
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
-            
-            // Add handles at the corners
-            float handleSize = 10f;
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.x - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpLeft);
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.xMax - handleSize / 2, cropRect.y - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpRight);
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.x - handleSize / 2, cropRect.yMax - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpRight);
-            EditorGUIUtility.AddCursorRect(new Rect(cropRect.xMax - handleSize / 2, cropRect.yMax - handleSize / 2, handleSize, handleSize), MouseCursor.ResizeUpLeft);
-        }
+                float lineHeight = cropRect.height / 3f;
+                float columnWidth = cropRect.width / 3f;
+
+                for (int lineIndex = 1; lineIndex <= 2; lineIndex++)
+                {
+                    float lineY = cropRect.y + lineIndex * lineHeight;
+                    Rect lineRect = new Rect(cropRect.x, lineY, cropRect.width, borderThickness);
+                    EditorGUI.DrawRect(lineRect, borderColor);
+                }
+
+                for (int columnIndex = 1; columnIndex <= 2; columnIndex++)
+                {
+                    float lineX = cropRect.x + columnIndex * columnWidth;
+                    Rect lineRect = new Rect(lineX, cropRect.y, borderThickness, cropRect.height);
+                    EditorGUI.DrawRect(lineRect, borderColor);
+                }
+
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
+                EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
+            }
         }
 
         GUI.EndGroup();
-        GUI.EndScrollView();
+    }
+
+    private static float ScaleImage(ref Vector2 imageSize)
+    {
+        float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
+        imageSize *= scaleFactor;
+        imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
+        imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
+        return scaleFactor;
     }
 
     private void CreateContextMenu(int index)
     {
-        contextMenuActions.CreateContextMenu(index); 
+        contextMenuActions.CreateContextMenu(index);
     }
 
     private Texture2D LoadImageFromPath(string path)
@@ -442,7 +481,7 @@ public class LayerEditor : EditorWindow
         int startY = Mathf.Min(prevHeight, newHeight);
         int endY = Mathf.Max(prevHeight, newHeight);
 
-        if (newHeight < prevHeight) 
+        if (newHeight < prevHeight)
         {
             for (int y = startY; y < endY; y++)
             {
@@ -470,8 +509,9 @@ public class LayerEditor : EditorWindow
     private void CropImage(int index, Rect cropRect)
     {
         Texture2D originalImage = uploadedImages[index];
+
         int x = Mathf.RoundToInt(cropRect.x - imagePositions[index].x);
-        int y = Mathf.RoundToInt(cropRect.y - imagePositions[index].y);
+        int y = Mathf.RoundToInt((imagePositions[index].y + imageSizes[index].y) - (cropRect.y + cropRect.height));
         int width = Mathf.RoundToInt(cropRect.width);
         int height = Mathf.RoundToInt(cropRect.height);
 
@@ -482,11 +522,19 @@ public class LayerEditor : EditorWindow
 
         Texture2D croppedImage = new Texture2D(width, height);
         Color[] pixels = originalImage.GetPixels(x, y, width, height);
-        croppedImage.SetPixels(pixels); 
+        croppedImage.SetPixels(pixels);
         croppedImage.Apply();
 
         uploadedImages[index] = croppedImage;
-        imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + y);
+        imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + imageSizes[index].y - (y + height));
         imageSizes[index] = new Vector2(width, height);
+
+        Rect spriteRect = new Rect(0, 0, croppedImage.width, croppedImage.height);
+        Vector2 pivot = new Vector2(0.5f, 0.5f);
+        Sprite newSprite = Sprite.Create(croppedImage, spriteRect, pivot);
+
+        GameObject spriteObj = spriteObjects[index];
+        SpriteRenderer renderer = spriteObj.GetComponent<SpriteRenderer>();
+        renderer.sprite = newSprite;
     }
 }

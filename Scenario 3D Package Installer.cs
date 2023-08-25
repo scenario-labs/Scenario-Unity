@@ -5,8 +5,6 @@ using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using System.IO;
 using System.Collections.Generic;
-using UnityEditor.EditorTools;
-using System.Collections;
 
 public class Scenario3DPackageInstaller : EditorWindow
 {
@@ -99,25 +97,8 @@ public class Scenario3DPackageInstaller : EditorWindow
 
     private void AddPackage(string gitUrl, int packageIndex)
     {
-        var request = UnityEditor.PackageManager.Client.Add(gitUrl);
-        EditorCoroutineUtility.StartCoroutineOwnerless(CheckAddRequest(request, packageIndex));
-    }
-
-    private IEnumerator CheckAddRequest(AddRequest request, int packageIndex)
-    {
-        while (!request.IsCompleted)
-        {
-            yield return null;
-        }
-
-        if (request.Status == StatusCode.Success)
-        {
-            Debug.Log("Package installed successfully: " + request.Result.packageId);
-        }
-        else if (request.Status >= StatusCode.Failure)
-        {
-            Debug.LogError("Failed to install package: " + request.Error.message);
-        }
+        UnityEditor.PackageManager.Client.Add(gitUrl);
+        Debug.Log("Package installation requested: " + gitUrl);
     }
 
     [System.Serializable]

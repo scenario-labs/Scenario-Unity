@@ -2,12 +2,9 @@ using UnityEditor;
 using UnityEngine;
 using System.Linq;
 using UnityEditor.PackageManager;
-using UnityEditor.PackageManager.Requests;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Collections.Generic;
-using UnityEditor.EditorTools;
-using System.Collections;
 
 public class ScenarioPackageInstallerTwo : EditorWindow
 {
@@ -71,7 +68,7 @@ public class ScenarioPackageInstallerTwo : EditorWindow
             if (GUILayout.Button("Install", GUILayout.Width(100)))
             {
                 Debug.Log("Install button clicked for package: " + packages[i].name);
-                AddPackage(packages[i].gitUrl, i);
+                AddPackage(packages[i].gitUrl);
                 settings.PackageInstallComplete[i] = 1;
                 SaveSettings(settings);
             }
@@ -81,27 +78,10 @@ public class ScenarioPackageInstallerTwo : EditorWindow
         }
     }
 
-    private void AddPackage(string gitUrl, int packageIndex)
+    private void AddPackage(string gitUrl)
     {
-        var request = UnityEditor.PackageManager.Client.Add(gitUrl);
-        EditorCoroutineUtility.StartCoroutineOwnerless(CheckAddRequest(request, packageIndex));
-    }
-
-    private IEnumerator CheckAddRequest(AddRequest request, int packageIndex)
-    {
-        while (!request.IsCompleted)
-        {
-            yield return null;
-        }
-
-        if (request.Status == StatusCode.Success)
-        {
-            Debug.Log("Package installed successfully: " + request.Result.packageId);
-        }
-        else if (request.Status >= StatusCode.Failure)
-        {
-            Debug.LogError("Failed to install package: " + request.Error.message);
-        }
+        UnityEditor.PackageManager.Client.Add(gitUrl);
+        Debug.Log("Package installation requested: " + gitUrl);
     }
 
     private static void AddScopedRegistry(string name, string url, string[] scopes)

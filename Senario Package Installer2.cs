@@ -6,6 +6,8 @@ using UnityEditor.PackageManager.Requests;
 using Newtonsoft.Json.Linq;
 using System.IO;
 using System.Collections.Generic;
+using UnityEditor.EditorTools;
+using System.Collections;
 
 public class ScenarioPackageInstallerTwo : EditorWindow
 {
@@ -18,7 +20,8 @@ public class ScenarioPackageInstallerTwo : EditorWindow
 
         if (settings.FirstLoad == 0)
         {
-            settings.PackageSetupComplete_4 = 0;
+            settings.PackageSetupComplete = new int[] { 0 };
+            settings.PackageInstallComplete = new int[] { 0 };
             settings.FirstLoad = 1;
             SaveSettings(settings);
         }
@@ -53,31 +56,23 @@ public class ScenarioPackageInstallerTwo : EditorWindow
             EditorGUILayout.LabelField(packages[i].gitUrl, GUILayout.Width(200));
             EditorGUILayout.LabelField(packages[i].url, GUILayout.Width(200));
 
-            int adjustedIndex = i + 2;
-            int setupComplete = (adjustedIndex == 2) ? settings.PackageSetupComplete_4 : 0;
-            int installComplete = (adjustedIndex == 2) ? settings.PackageInstallComplete_4 : 0;
-
-            EditorGUI.BeginDisabledGroup(setupComplete == 1);
+            EditorGUI.BeginDisabledGroup(settings.PackageSetupComplete[i] == 1);
             if (GUILayout.Button("Setup", GUILayout.Width(100)))
             {
                 Debug.Log("Setup button clicked for package: " + packages[i].name);
-                if (adjustedIndex == 2)
-                    settings.PackageSetupComplete_4 = 1;
-
+                settings.PackageSetupComplete[i] = 1;
                 SaveSettings(settings);
 
                 AddScopedRegistry(packages[i].name, packages[i].url, packages[i].scopes);
             }
             EditorGUI.EndDisabledGroup();
 
-            EditorGUI.BeginDisabledGroup(installComplete == 1);
+            EditorGUI.BeginDisabledGroup(settings.PackageInstallComplete[i] == 1);
             if (GUILayout.Button("Install", GUILayout.Width(100)))
             {
                 Debug.Log("Install button clicked for package: " + packages[i].name);
-                AddPackage(packages[i].gitUrl, adjustedIndex);
-                if (adjustedIndex == 2)
-                    settings.PackageInstallComplete_4 = 1;
-
+                AddPackage(packages[i].gitUrl, i);
+                settings.PackageInstallComplete[i] = 1;
                 SaveSettings(settings);
             }
             EditorGUI.EndDisabledGroup();
@@ -88,8 +83,25 @@ public class ScenarioPackageInstallerTwo : EditorWindow
 
     private void AddPackage(string gitUrl, int packageIndex)
     {
-        UnityEditor.PackageManager.Client.Add(gitUrl);
-        Debug.Log("Package installation requested: " + gitUrl);
+        var request = UnityEditor.PackageManager.Client.Add(gitUrl);
+        EditorCoroutineUtility.StartCoroutineOwnerless(CheckAddRequest(request, packageIndex));
+    }
+
+    private IEnumerator CheckAddRequest(AddRequest request, int packageIndex)
+    {
+        while (!request.IsCompleted)
+        {
+            yield return null;
+        }
+
+        if (request.Status == StatusCode.Success)
+        {
+            Debug.Log("Package installed successfully: " + request.Result.packageId);
+        }
+        else if (request.Status >= StatusCode.Failure)
+        {
+            Debug.LogError("Failed to install package: " + request.Error.message);
+        }
     }
 
     private static void AddScopedRegistry(string name, string url, string[] scopes)
@@ -129,8 +141,8 @@ public class ScenarioPackageInstallerTwo : EditorWindow
     public struct Settings
     {
         public int FirstLoad;
-        public int PackageSetupComplete_4;
-        public int PackageInstallComplete_4;
+        public int[] PackageSetupComplete;
+        public int[] PackageInstallComplete;
     }
 
     private static string settingsPath => Path.Combine(Application.dataPath, "settings_two.json");

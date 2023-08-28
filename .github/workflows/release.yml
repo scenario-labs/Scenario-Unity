@@ -1,23 +1,20 @@
 name: Release
 on:
   push:
-    branches:
-      - main
+    tags:
+      - "v*.*.*"
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Create 2D Asset
-      if: startsWith(github.ref, 'refs/tags/')
       run: |
         zip -r Scenario2D.zip Scenario README.md Scenario2DPackageInstaller.cs Scenario2D.wlt ScenarioPackageInstaller2.cs
     - name: Create 3D Asset
-      if: startsWith(github.ref, 'refs/tags/')
       run: |
         zip -r Scenario3D.zip Scenario README.md Scenario3DPackageInstaller.cs Scenario3D.wlt ScenarioPackageInstaller2.cs
     - name: Upload 2D Asset
-      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: |
@@ -25,7 +22,6 @@ jobs:
           LICENSE
           README.md
     - name: Upload 3D Asset
-      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: |

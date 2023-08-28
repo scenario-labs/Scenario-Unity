@@ -8,40 +8,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Set initial version
-      run: echo "version=0.1.2" >> $GITHUB_ENV
-    - name: Check minor version
-      run: |
-        if [[ $(echo "${{ env.version }}" | awk -F. '{print $2}') == 0 ]]; then
-          echo "minor_change=false" >> $GITHUB_ENV
-        else
-          echo "minor_change=true" >> $GITHUB_ENV
-        fi
     - name: Create 2D Asset
-      if: env.minor_change == 'true'
+      if: startsWith(github.ref, 'refs/tags/')
       run: |
-        zip -r Scenario2D-v${{ env.version }}.zip Scenario README.md Scenario2DPackageInstaller.cs Scenario2D.wlt ScenarioPackageInstaller2.cs
+        zip -r Scenario2D.zip Scenario README.md Scenario2DPackageInstaller.cs Scenario2D.wlt ScenarioPackageInstaller2.cs
     - name: Create 3D Asset
-      if: env.minor_change == 'true'
+      if: startsWith(github.ref, 'refs/tags/')
       run: |
-        zip -r Scenario3D-v${{ env.version }}.zip Scenario README.md Scenario3DPackageInstaller.cs Scenario3D.wlt ScenarioPackageInstaller2.cs
+        zip -r Scenario3D.zip Scenario README.md Scenario3DPackageInstaller.cs Scenario3D.wlt ScenarioPackageInstaller2.cs
     - name: Upload 2D Asset
-      if: env.minor_change == 'true'
+      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       with:
         files: |
-          Scenario2D-v${{ env.version }}.zip
+          Scenario2D.zip
           LICENSE
           README.md
     - name: Upload 3D Asset
-      if: env.minor_change == 'true'
+      if: startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       with:
         files: |
-          Scenario3D-v${{ env.version }}.zip
+          Scenario3D.zip
           LICENSE
           README.md

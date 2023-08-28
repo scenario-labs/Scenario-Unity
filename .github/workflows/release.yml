@@ -16,6 +16,8 @@ jobs:
         zip -r Scenario3D.zip Scenario README.md Scenario3DPackageInstaller.cs Scenario3D.wlt ScenarioPackageInstaller2.cs
     - name: Upload 2D Asset
       uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: |
           Scenario2D.zip
@@ -23,6 +25,8 @@ jobs:
           README.md
     - name: Upload 3D Asset
       uses: softprops/action-gh-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: |
           Scenario3D.zip

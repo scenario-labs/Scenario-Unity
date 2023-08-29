@@ -10,10 +10,10 @@ jobs:
     - uses: actions/checkout@v3
     - name: Create 2D Asset
       run: |
-        zip -r Scenario2D.zip Scenario README.md "Scenario 2D Package Installer.cs" Scenario2D.wlt "Scenario Package Installer 2.cs"
+        zip -r Scenario2D.zip Scenario README.md "Scenario2DPackageInstaller.cs" Scenario2D.wlt "ScenarioPackageInstaller2.cs"
     - name: Create 3D Asset
       run: |
-        zip -r Scenario3D.zip Scenario README.md "Scenario 3D Package Installer.cs" Scenario3D.wlt "Scenario Package Installer 2.cs"
+        zip -r Scenario3D.zip Scenario README.md "Scenario3DPackageInstaller.cs" Scenario3D.wlt "ScenarioPackageInstaller2.cs"
     - name: Upload 2D Asset
       uses: softprops/action-gh-release@v1
       env:

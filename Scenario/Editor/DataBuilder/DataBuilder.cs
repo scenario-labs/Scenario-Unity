@@ -65,8 +65,7 @@ public class DataBuilder : EditorWindow
 
     private void OnGUI()
     {
-        Color backgroundColor = new Color32(26, 26, 26, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        DrawBackground();
 
         if (combinedScreenshot != null)
         {
@@ -89,22 +88,7 @@ public class DataBuilder : EditorWindow
 
         screenshotType = (ScreenshotType)EditorGUILayout.EnumPopup("Screenshot Type", screenshotType);
 
-        EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Place Object"))
-        {
-            PlaceObjectAndCameras();
-        }
-
-        if (GUILayout.Button("Remove Cameras"))
-        {
-            RemoveCameras();
-        }
-
-        if (GUILayout.Button("Take Screenshot"))
-        {
-            CaptureScreenshots();
-        }
-        EditorGUILayout.EndHorizontal();
+        DrawControlButtons();
 
         if (Mathf.Approximately(previousCameraDistance, cameraDistance) == false && instantiatedObject != null)
         {
@@ -124,7 +108,6 @@ public class DataBuilder : EditorWindow
             if (combinedScreenshot == null)
             {
                 Debug.Log("MUST HAVE A 3D IMAGE VIEW");
-                return;
             }
             else
             {
@@ -133,38 +116,65 @@ public class DataBuilder : EditorWindow
         }
     }
 
-    private void PlaceObjectAndCameras()
+    private void DrawControlButtons()
     {
-        if (selectedObject != null)
+        EditorGUILayout.BeginHorizontal();
         {
-            Camera sceneCamera = SceneView.lastActiveSceneView.camera;
-            Vector3 screenCenter = new Vector3(0.5f, 0.5f, 0.01f);
-            Vector3 worldCenter = sceneCamera.ViewportToWorldPoint(screenCenter);
-
-            instantiatedObject = Instantiate(selectedObject, worldCenter, Quaternion.identity);
-            cameras = new GameObject[9];
-
-            for (int i = 0; i < 9; i++)
+            if (GUILayout.Button("Place Object"))
             {
-                cameras[i] = CreateCamera("Camera " + (i + 1));
-                Camera cameraComponent = cameras[i].GetComponent<Camera>();
-
-                cameraComponent.clearFlags = CameraClearFlags.SolidColor;
-                
-                if (screenshotType == ScreenshotType.Normal)
-                {
-                    cameraComponent.backgroundColor = Color.white;
-                }
-                else if (screenshotType == ScreenshotType.Depth)
-                {
-                    cameraComponent.backgroundColor = Color.black;
-                }
-
-                cameraComponent.fieldOfView = 54f;
+                PlaceObjectAndCameras();
             }
 
-            UpdateCameraPositions();
+            if (GUILayout.Button("Remove Cameras"))
+            {
+                RemoveCameras();
+            }
+
+            if (GUILayout.Button("Take Screenshot"))
+            {
+                CaptureScreenshots();
+            }
         }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawBackground()
+    {
+        Color backgroundColor = new Color32(26, 26, 26, 255);
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+    }
+
+    private void PlaceObjectAndCameras()
+    {
+        if (selectedObject == null) return;
+        
+        Camera sceneCamera = SceneView.lastActiveSceneView.camera;
+        Vector3 screenCenter = new Vector3(0.5f, 0.5f, 0.01f);
+        Vector3 worldCenter = sceneCamera.ViewportToWorldPoint(screenCenter);
+
+        instantiatedObject = Instantiate(selectedObject, worldCenter, Quaternion.identity);
+        cameras = new GameObject[9];
+
+        for (int i = 0; i < 9; i++)
+        {
+            cameras[i] = CreateCamera("Camera " + (i + 1));
+            Camera cameraComponent = cameras[i].GetComponent<Camera>();
+
+            cameraComponent.clearFlags = CameraClearFlags.SolidColor;
+
+            if (screenshotType == ScreenshotType.Normal)
+            {
+                cameraComponent.backgroundColor = Color.white;
+            }
+            else if (screenshotType == ScreenshotType.Depth)
+            {
+                cameraComponent.backgroundColor = Color.black;
+            }
+
+            cameraComponent.fieldOfView = 54f;
+        }
+
+        UpdateCameraPositions();
     }
 
     private void UpdateCameraPositions()
@@ -213,9 +223,9 @@ public class DataBuilder : EditorWindow
         cameras = null;
     }
 
-    private GameObject CreateCamera(string name)
+    private GameObject CreateCamera(string cameraName)
     {
-        GameObject cameraObject = new GameObject(name);
+        GameObject cameraObject = new GameObject(cameraName);
         Camera camera = cameraObject.AddComponent<Camera>();
         return cameraObject;
     }
@@ -239,75 +249,76 @@ public class DataBuilder : EditorWindow
 
     private void CaptureScreenshots()
     {
-        if (cameras != null && cameras.Length > 0)
+        if (cameras == null || cameras.Length <= 0) return;
+        
+        int gridRows = 3;
+        int gridCols = 3;
+        int totalCameras = gridRows * gridCols;
+
+        int screenshotSize = ScreenshotSize;
+        int combinedWidth = screenshotSize * gridCols;
+        int combinedHeight = screenshotSize * gridRows;
+
+        combinedScreenshot = new Texture2D(combinedWidth, combinedHeight, TextureFormat.RGB24, false);
+
+        string saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
+        if (!Directory.Exists(saveFolder))
         {
-            int gridRows = 3;
-            int gridCols = 3;
-            int totalCameras = gridRows * gridCols;
-
-            int screenshotSize = ScreenshotSize;
-            int combinedWidth = screenshotSize * gridCols;
-            int combinedHeight = screenshotSize * gridRows;
-
-            combinedScreenshot = new Texture2D(combinedWidth, combinedHeight, TextureFormat.RGB24, false);
-
-            string saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
-            if (!Directory.Exists(saveFolder))
-            {
-                Directory.CreateDirectory(saveFolder);
-            }
-
-            for (int i = 0; i < totalCameras; i++)
-            {
-                if (i >= cameras.Length)
-                {
-                    continue;
-                }
-
-                Camera camera = cameras[i].GetComponent<Camera>();
-                RenderTexture renderTexture = new RenderTexture(screenshotSize, screenshotSize, 24);
-                camera.targetTexture = renderTexture;
-
-                if (screenshotType == ScreenshotType.Depth)
-                {
-                    camera.depthTextureMode = DepthTextureMode.Depth;
-                    camera.RenderWithShader(Shader.Find("Custom/DepthMap"), "");
-                }
-                else
-                {
-                    camera.Render();
-                }
-
-                RenderTexture.active = renderTexture;
-                Texture2D screenshot = new Texture2D(screenshotSize, screenshotSize, TextureFormat.RGB24, false);
-                screenshot.ReadPixels(new Rect(0, 0, screenshotSize, screenshotSize), 0, 0);
-                screenshot.Apply();
-
-                byte[] screenshotBytes = screenshot.EncodeToPNG();
-                string screenshotPath = Path.Combine(saveFolder, camera.name + "_" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png");
-                File.WriteAllBytes(screenshotPath, screenshotBytes);
-                Debug.Log("Saved Screenshot: " + screenshotPath);
-
-                int row = i / gridCols;
-                int col = i % gridCols;
-                int x = col * screenshotSize;
-                int y = (gridRows - row - 1) * screenshotSize;
-
-                combinedScreenshot.SetPixels(x, y, screenshotSize, screenshotSize, screenshot.GetPixels());
-
-                RenderTexture.active = null;
-                camera.targetTexture = null;
-                GameObject.DestroyImmediate(renderTexture);
-                GameObject.DestroyImmediate(screenshot);
-            }
-
-            combinedScreenshot.Apply();
-
-            byte[] combinedBytes = combinedScreenshot.EncodeToPNG();
-            string combinedPath = Path.Combine(saveFolder, "CombinedScreenshot_" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png");
-            File.WriteAllBytes(combinedPath, combinedBytes);
-            Debug.Log("Saved Combined Screenshot: " + combinedPath);
+            Directory.CreateDirectory(saveFolder);
         }
+
+        for (int i = 0; i < totalCameras; i++)
+        {
+            if (i >= cameras.Length)
+            {
+                continue;
+            }
+
+            Camera camera = cameras[i].GetComponent<Camera>();
+            RenderTexture renderTexture = new RenderTexture(screenshotSize, screenshotSize, 24);
+            camera.targetTexture = renderTexture;
+
+            if (screenshotType == ScreenshotType.Depth)
+            {
+                camera.depthTextureMode = DepthTextureMode.Depth;
+                camera.RenderWithShader(Shader.Find("Custom/DepthMap"), "");
+            }
+            else
+            {
+                camera.Render();
+            }
+
+            RenderTexture.active = renderTexture;
+            Texture2D screenshot = new Texture2D(screenshotSize, screenshotSize, TextureFormat.RGB24, false);
+            screenshot.ReadPixels(new Rect(0, 0, screenshotSize, screenshotSize), 0, 0);
+            screenshot.Apply();
+
+            byte[] screenshotBytes = screenshot.EncodeToPNG();
+            string screenshotPath = Path.Combine(saveFolder,
+                camera.name + "_" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png");
+            File.WriteAllBytes(screenshotPath, screenshotBytes);
+            Debug.Log("Saved Screenshot: " + screenshotPath);
+
+            int row = i / gridCols;
+            int col = i % gridCols;
+            int x = col * screenshotSize;
+            int y = (gridRows - row - 1) * screenshotSize;
+
+            combinedScreenshot.SetPixels(x, y, screenshotSize, screenshotSize, screenshot.GetPixels());
+
+            RenderTexture.active = null;
+            camera.targetTexture = null;
+            GameObject.DestroyImmediate(renderTexture);
+            GameObject.DestroyImmediate(screenshot);
+        }
+
+        combinedScreenshot.Apply();
+
+        byte[] combinedBytes = combinedScreenshot.EncodeToPNG();
+        string combinedPath = Path.Combine(saveFolder,
+            "CombinedScreenshot_" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png");
+        File.WriteAllBytes(combinedPath, combinedBytes);
+        Debug.Log("Saved Combined Screenshot: " + combinedPath);
     }
 
     private Texture2D CreateColorTexture(Color color)

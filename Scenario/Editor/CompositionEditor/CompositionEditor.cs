@@ -4,10 +4,10 @@ using System;
 
 public class CompositionEditor : EditorWindow
 {
-    private static readonly int[] ALLOWED_WIDTH_VALUES = { 512, 576, 640, 688, 704, 768, 912, 1024 };
-    private static readonly int[] ALLOWED_HEIGHT_VALUES = { 512, 576, 640, 688, 704, 768, 912, 1024 };
-    private static readonly float MINIMUM_WIDTH = 800f;
-    private static readonly float MINIMUM_HEIGHT = 750f;
+    private static readonly int[] AllowedWidthValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+    private static readonly int[] AllowedHeightValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+    private static readonly float MinimumWidth = 800f;
+    private static readonly float MinimumHeight = 750f;
 
     private int widthSliderValue = 512;
     private int heightSliderValue = 512;
@@ -20,7 +20,7 @@ public class CompositionEditor : EditorWindow
     public static void ShowWindow()
     {
         var window = GetWindow<CompositionEditor>("Composition Editor");
-        window.minSize = new Vector2(MINIMUM_WIDTH, MINIMUM_HEIGHT);
+        window.minSize = new Vector2(MinimumWidth, MinimumHeight);
     }
 
     private void OnGUI()
@@ -40,29 +40,30 @@ public class CompositionEditor : EditorWindow
 
     private void DrawScreenshotIfAvailable()
     {
-        if (screenshot != null)
-        {
-            Rect textureRect = GUILayoutUtility.GetRect(screenshot.width, screenshot.height, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
-            GUI.DrawTexture(textureRect, screenshot, ScaleMode.ScaleToFit);
-        }
+        if (screenshot == null) return;
+        
+        Rect textureRect = GUILayoutUtility.GetRect(screenshot.width, screenshot.height, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
+        GUI.DrawTexture(textureRect, screenshot, ScaleMode.ScaleToFit);
     }
 
     private void DrawControlButtons()
     {
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Place Camera"))
         {
-            PlaceCamera();
-        }
+            if (GUILayout.Button("Place Camera"))
+            {
+                PlaceCamera();
+            }
 
-        if (GUILayout.Button("Remove Camera"))
-        {
-            RemoveCamera();
-        }
+            if (GUILayout.Button("Remove Camera"))
+            {
+                RemoveCamera();
+            }
 
-        if (GUILayout.Button("Screenshot"))
-        {
-            CaptureScreenshot();
+            if (GUILayout.Button("Screenshot"))
+            {
+                CaptureScreenshot();
+            }
         }
         EditorGUILayout.EndHorizontal();
     }
@@ -71,40 +72,55 @@ public class CompositionEditor : EditorWindow
     {
         GUILayout.Space(20f);
         distanceOffset = EditorGUILayout.Slider("Distance Offset: ", distanceOffset, 0.1f, 100.0f);
-        widthSliderValue = DrawDimensionControl("Width: ", widthSliderValue, ALLOWED_WIDTH_VALUES);
-        heightSliderValue = DrawDimensionControl("Height: ", heightSliderValue, ALLOWED_HEIGHT_VALUES);
+        widthSliderValue = DrawDimensionControl("Width: ", widthSliderValue, AllowedWidthValues);
+        heightSliderValue = DrawDimensionControl("Height: ", heightSliderValue, AllowedHeightValues);
         GUILayout.Space(20f);
     }
 
     private int DrawDimensionControl(string label, int currentValue, int[] allowedValues)
     {
+        int index = 0;
+        
         EditorGUILayout.BeginVertical();
-        EditorGUILayout.LabelField(label, EditorStyles.label, GUILayout.Width(55), GUILayout.Height(20));
-        int index = NearestValueIndex(currentValue, allowedValues);
-        index = GUILayout.SelectionGrid(index, Array.ConvertAll(allowedValues, x => x.ToString()), allowedValues.Length);
+        {
+            EditorGUILayout.LabelField(label, EditorStyles.label, GUILayout.Width(55), GUILayout.Height(20));
+            index = NearestValueIndex(currentValue, allowedValues);
+            index = GUILayout.SelectionGrid(index, Array.ConvertAll(allowedValues, x => x.ToString()),
+                allowedValues.Length);
+        }
         EditorGUILayout.EndVertical();
+        
         return allowedValues[index];
     }
 
     private void DrawUseImageButton()
     {
         EditorGUILayout.BeginVertical();
-        GUIStyle generateButtonStyle = new GUIStyle(GUI.skin.button);
-        generateButtonStyle.normal.background = CreateColorTexture(new Color(0, 0.5333f, 0.8f, 1));
-        generateButtonStyle.normal.textColor = Color.white;
-        generateButtonStyle.active.background = CreateColorTexture(new Color(0, 0.3f, 0.6f, 1));
-        generateButtonStyle.active.textColor = Color.white;
-
-        if (GUILayout.Button("Use Image", generateButtonStyle, GUILayout.Height(40)))
         {
-            if (screenshot == null)
+            GUIStyle generateButtonStyle = new GUIStyle(GUI.skin.button)
             {
-                Debug.LogError("Screenshot must be taken before using the image");
-                return;
-            }
-            else
+                normal =
+                {
+                    background = CreateColorTexture(new Color(0, 0.5333f, 0.8f, 1)),
+                    textColor = Color.white
+                },
+                active =
+                {
+                    background = CreateColorTexture(new Color(0, 0.3f, 0.6f, 1)),
+                    textColor = Color.white
+                }
+            };
+
+            if (GUILayout.Button("Use Image", generateButtonStyle, GUILayout.Height(40)))
             {
-                PromptWindowUI.imageUpload = screenshot;
+                if (screenshot == null)
+                {
+                    Debug.LogError("Screenshot must be taken before using the image");
+                }
+                else
+                {
+                    PromptWindowUI.imageUpload = screenshot;
+                }
             }
         }
         EditorGUILayout.EndVertical();
@@ -117,21 +133,19 @@ public class CompositionEditor : EditorWindow
         Camera camera = compositionCamera.AddComponent<Camera>();
         SceneView sceneView = SceneView.lastActiveSceneView;
 
-        if (sceneView != null)
-        {
-            Vector3 cameraPosition = sceneView.pivot + sceneView.rotation * Vector3.forward * distanceOffset;
-            compositionCamera.transform.position = cameraPosition;
-            compositionCamera.transform.rotation = sceneView.rotation;
-        }
+        if (sceneView == null) return;
+        
+        Vector3 cameraPosition = sceneView.pivot + sceneView.rotation * Vector3.forward * distanceOffset;
+        compositionCamera.transform.position = cameraPosition;
+        compositionCamera.transform.rotation = sceneView.rotation;
     }
 
     private void RemoveCamera()
     {
-        if (compositionCamera != null)
-        {
-            DestroyImmediate(compositionCamera);
-            compositionCamera = null;
-        }
+        if (compositionCamera == null) return;
+        
+        DestroyImmediate(compositionCamera);
+        compositionCamera = null;
     }
 
     private int NearestValueIndex(int currentValue, int[] allowedValues)

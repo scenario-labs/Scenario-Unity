@@ -1,24 +1,24 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using System.IO;
 using static ImageDataStorage;
 
 public class ImagesUI
 {
-    public List<Texture2D> textures = new List<Texture2D>();
-    public int itemsPerRow = 5;
-    public float padding = 10f;
+    public List<Texture2D> textures = new();
+
+    private int itemsPerRow = 5;
+    private float padding = 10f;
 
     private Vector2 scrollPosition = Vector2.zero;
     private Texture2D selectedTexture = null;
 
-    internal Images images;
-    public int selectedTextureIndex = 0;
+    private Images images;
+    private int selectedTextureIndex = 0;
 
-    public int firstImageIndex = 0;
-    public int pageImageCount = 15;
-    public List<ImageData> pageList;
+    private int firstImageIndex = 0;
+    private int pageImageCount = 15;
+    private List<ImageData> pageList;
 
     public void Init(Images img)
     {
@@ -52,15 +52,15 @@ public class ImagesUI
     public void UpdatePage()
     {
         pageList = ImageDataStorage.imageDataList.GetRange(firstImageIndex, pageImageCount);
-        UpdateTextures();
+        FetchPageTextures();
     }
 
-    public async void UpdateTextures()
+    public async void FetchPageTextures()
     {
         textures.Clear();
         foreach (var item in pageList)
         {
-            Texture2D texture = await Images.LoadTexture(item.Url);
+            Texture2D texture = await CommonUtils.FetchTextureFromURLAsync(item.Url);
             textures.Add(texture);
         }
     }
@@ -84,29 +84,12 @@ public class ImagesUI
 
         float scrollViewHeight = (boxHeight + padding) * numRows;
 
-        scrollPosition = GUI.BeginScrollView(new Rect(0, 20, scrollViewWidth, position.height - 70), scrollPosition, new Rect(0, 0, scrollViewWidth - 20, scrollViewHeight));
+        scrollPosition = GUI.BeginScrollView(new Rect(0, 20, scrollViewWidth, position.height - 70), scrollPosition,
+            new Rect(0, 0, scrollViewWidth - 20, scrollViewHeight));
 
         for (int i = 0; i < textures.Count; i++)
         {
-            int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
-            int colIndex = i % itemsPerRow;
-
-            Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding), boxWidth, boxHeight);
-            Texture2D texture = textures[i];
-
-            if (texture != null)
-            {
-                if (GUI.Button(boxRect, ""))
-                {
-                    selectedTexture = texture;
-                    selectedTextureIndex = i;
-                }
-                GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
-            }
-            else
-            {
-                GUI.Box(boxRect, "Loading...");
-            }
+            DrawTextureButton(boxWidth, boxHeight, i);
         }
 
         GUI.EndScrollView();
@@ -119,6 +102,7 @@ public class ImagesUI
             SetPreviousPage();
             UpdatePage();
         }
+
         if (firstImageIndex < imageDataList.Count - pageImageCount && GUILayout.Button("Next Page"))
         {
             SetNextPage();
@@ -130,98 +114,141 @@ public class ImagesUI
 
         GUILayout.FlexibleSpace();
 
-        if (selectedTexture != null)
+        DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
+    }
+
+    private void DrawSelectedTextureSection(Rect position, float previewWidth, float scrollViewWidth)
+    {
+        if (selectedTexture == null)
         {
-            GUILayout.BeginArea(new Rect(scrollViewWidth, 20, previewWidth, position.height - 20));
-            GUILayout.Label("Selected Image", EditorStyles.boldLabel);
+            return;
+        }
+
+        GUILayout.BeginArea(new Rect(scrollViewWidth, 20, previewWidth, position.height - 20));
+        {
+            DrawScrollableArea(previewWidth);
+        }
+        GUILayout.EndArea();
+    }
+
+    private void DrawScrollableArea(float previewWidth)
+    {
+        DrawSelectedImage(previewWidth);
+        GUILayout.Space(10);
+        GUILayout.BeginVertical();
+        {
+            DrawFirstButtons();
             GUILayout.Space(10);
-            float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
-            float paddedPreviewWidth = previewWidth - 2 * padding;
-            float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
+            DrawSecondButtons();
+            GUILayout.Space(10);
+        }
+        GUILayout.EndVertical();
+        GUILayout.Space(10);
+    }
+
+    private void DrawSecondButtons()
+    {
+        string[] buttonNames = { "Remove Background", "Pixelate Image", "Upscale Image" /*, "Generate More Images"*/ };
+        System.Action[] buttonCallbacks =
+        {
+            () => images.RemoveBackgroundForImageAtIndex(selectedTextureIndex + firstImageIndex),
+            () => PixelEditor.ShowWindow(selectedTexture, ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex]),
+            () => UpscaleEditor.ShowWindow(selectedTexture, ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex]) /*,
+                () => {
+                    // TODO: Implement generate more images functionality
+                }*/
+        };
+
+        for (int i = 0; i < buttonNames.Length; i++)
+        {
             GUILayout.BeginHorizontal();
-            GUILayout.Space(padding);
-            GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth), GUILayout.Height(paddedPreviewHeight));
-            GUILayout.Space(padding);
+            {
+                GUILayout.Space(padding);
+
+                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
+                {
+                    buttonCallbacks[i]();
+                }
+
+                GUILayout.Space(padding);
+            }
             GUILayout.EndHorizontal();
-
             GUILayout.Space(10);
+        }
+    }
 
-            GUILayout.BeginVertical();
-
-            GUILayout.BeginHorizontal();
+    private void DrawFirstButtons()
+    {
+        GUILayout.BeginHorizontal();
+        {
             GUILayout.Space(padding);
 
-            string[] buttonNames1 = { "Refine Image", "Download", "Delete" };
-            System.Action[] buttonCallbacks1 = {
-                () => {
-                    PromptWindowUI.imageUpload = selectedTexture;
-                },
-                () => {
-                    string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-                    byte[] pngBytes = selectedTexture.EncodeToPNG();
-                    images.DownloadImage(fileName, pngBytes);
-                },
-                () => {
+            string[] buttonNames = { "Refine Image", "Download", "Delete" };
+            System.Action[] buttonCallbacks =
+            {
+                () => PromptWindowUI.imageUpload = selectedTexture,
+                () => CommonUtils.SaveTextureAsPNG(selectedTexture),
+                () =>
+                {
                     images.DeleteImageAtIndex(selectedTextureIndex + firstImageIndex);
                     selectedTexture = null;
                 }
             };
 
-            for (int i = 0; i < buttonNames1.Length; i++)
+            for (int i = 0; i < buttonNames.Length; i++)
             {
-                if (GUILayout.Button(buttonNames1[i], GUILayout.Height(40)))
+                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
                 {
-                    buttonCallbacks1[i]();
+                    buttonCallbacks[i]();
                 }
 
                 GUILayout.Space(padding);
             }
-
-            GUILayout.EndHorizontal();
-            GUILayout.Space(10);
-
-            string[] buttonNames2 = { "Remove Background", "Pixelate Image", "Upscale Image"/*, "Generate More Images"*/ };
-            System.Action[] buttonCallbacks2 = {
-                () => {
-                    images.RemoveBackground(selectedTextureIndex + firstImageIndex);
-                },
-                () => {
-                    PixelEditorUI.currentImage = selectedTexture;
-                    PixelEditorUI.imageData = ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex];
-                    PixelEditor.ShowWindow();
-                },
-                () => {
-                    UpscaleEditorUI.currentImage = selectedTexture;
-                    UpscaleEditorUI.imageData = ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex];
-                    UpscaleEditor.ShowWindow();
-                }/*,
-                () => {
-                    // TODO: Implement generate more images functionality
-                }*/
-            };
-
-            for (int i = 0; i < buttonNames2.Length; i++)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(padding);
-
-                if (GUILayout.Button(buttonNames2[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks2[i]();
-                }
-
-                GUILayout.Space(padding);
-                GUILayout.EndHorizontal();
-                GUILayout.Space(10);
-            }
-
-            GUILayout.Space(10);
-
-            GUILayout.EndVertical();
-
-            GUILayout.Space(10);
-
-            GUILayout.EndArea();
         }
-    }   
+        GUILayout.EndHorizontal();
+    }
+
+    private void DrawSelectedImage(float previewWidth)
+    {
+        GUILayout.Label("Selected Image", EditorStyles.boldLabel);
+
+        GUILayout.Space(10);
+
+        float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
+        float paddedPreviewWidth = previewWidth - 2 * padding;
+        float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
+
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.Space(padding);
+            GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth),
+                GUILayout.Height(paddedPreviewHeight));
+            GUILayout.Space(padding);
+        }
+        GUILayout.EndHorizontal();
+    }
+
+    private void DrawTextureButton(float boxWidth, float boxHeight, int i)
+    {
+        int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
+        int colIndex = i % itemsPerRow;
+
+        Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding), boxWidth, boxHeight);
+        Texture2D texture = textures[i];
+
+        if (texture == null)
+        {
+            GUI.Box(boxRect, "Loading...");
+        }
+        else
+        {
+            if (GUI.Button(boxRect, ""))
+            {
+                selectedTexture = texture;
+                selectedTextureIndex = i;
+            }
+
+            GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
+        }
+    }
 }

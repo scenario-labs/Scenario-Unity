@@ -97,320 +97,27 @@ public class ImageEditorUI
     {
         Color backgroundColor = new Color32(18, 18, 18, 255);
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
-        
-        float leftSectionWidth = position.width * 0.1f;
-        float middleSectionWidth = position.width * 0.8f;
-        float rightSectionWidth = position.width * 0.1f;
+
         EditorGUILayout.BeginHorizontal();
-        
-        // Left Section
-        EditorGUILayout.BeginVertical(GUILayout.Width(leftSectionWidth));
 
-        GUILayout.Space(18);
-        GUILayout.Label("Tools", EditorStyles.boldLabel);
-
-        for (int i = 0; i < toolButtons.Length; i++)
-        {
-            ToolButton button = toolButtons[i];
-            if (i % 4 == 0)
-            {
-                EditorGUILayout.BeginHorizontal();
-            }
-
-            GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-            buttonStyle.fontSize = 25;
-            if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), buttonStyle, GUILayout.Width(45), GUILayout.Height(45)))
-            {
-                currentDrawingMode = button.Mode;
-                button.OnClick?.Invoke();
-            }
-
-            if (i % 4 == 3 || i == toolButtons.Length - 1)
-            {
-                EditorGUILayout.EndHorizontal();
-            }
-        }
-
-        GUILayout.Space(10);
-
-        GUILayout.Label("Color", EditorStyles.boldLabel);
-
-        Color customColor = EditorGUILayout.ColorField(Color.white);
-
-        int colorButtonSize = 40;
-        int numColumns = Mathf.FloorToInt((leftSectionWidth - 0) / colorButtonSize);
-
-        for (int i = 0; i < 35; i++)
-        {
-            if (i % numColumns == 0) EditorGUILayout.BeginHorizontal();
-
-            GUIStyle colorButtonStyle = new GUIStyle(GUI.skin.button);
-            Color color = Color.HSVToRGB((float)i / 35, 1, 1);
-            colorButtonStyle.normal.background = MakeTex(2, 2, color);
-
-            if (GUILayout.Button("", colorButtonStyle, GUILayout.Width(colorButtonSize), GUILayout.Height(colorButtonSize)))
-            {
-                selectedColor = color;
-            }
-
-            if (i % numColumns == numColumns - 1 || i == 34) EditorGUILayout.EndHorizontal();
-        }
-
-        GUILayout.Space(10);
-
-        int[] brushSizes = new int[] { 6, 12, 16, 24, 30, 40, 48, 64 };
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("Brush Size", EditorStyles.boldLabel, GUILayout.Width(80));
-        GUILayout.Label(selectedBrushSize.ToString(), GUILayout.Width(40));
-        GUILayout.EndHorizontal();
-
-        GUILayout.BeginHorizontal();
-        selectedBrushSize = (int)GUILayout.HorizontalSlider(selectedBrushSize, brushSizes[0], brushSizes[brushSizes.Length - 1], GUILayout.Width(200));
-        GUILayout.EndHorizontal();
-
-        GUILayout.Space(20);
-        
-        float[] opacities = new float[] { 0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
-        int selectedOpacityIndex = 5;
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("Opacity", EditorStyles.boldLabel);
-        GUILayout.EndHorizontal();
-
-        GUILayout.BeginHorizontal();
-        for (int i = 0; i < opacities.Length; i++)
-        {
-            float opacity = opacities[i];
-            GUIStyle opacityButtonStyle = new GUIStyle(GUI.skin.button);
-            opacityButtonStyle.normal.background = MakeOpacityTex(10, 10, opacity);
-
-            if (GUILayout.Button("", opacityButtonStyle, GUILayout.Width(14), GUILayout.Height(14)))
-            {
-                selectedOpacityIndex = i;
-                selectedOpacity = opacities[selectedOpacityIndex];
-            }
-        }
-
-        GUILayout.EndHorizontal();
-        EditorGUILayout.EndVertical();
+        position = DrawLeftSection(position);
 
         // Flexible space between left and middle section
         GUILayout.FlexibleSpace();
 
-        // Middle Section
-        EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
+        DrawMiddleSection(position);
 
-        GUILayout.Space(18);
-
-        if (uploadedImage != null)
-        {
-            if (currentDrawingMode == DrawingMode.Draw || currentDrawingMode == DrawingMode.Erase)
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space();
-                EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
-                float maxSize = 1024f;
-                float aspectRatio = (float)uploadedImage.width / (float)uploadedImage.height;
-                float width = Mathf.Min(uploadedImage.width, maxSize);
-                float height = width / aspectRatio;
-                Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
-                GUI.DrawTexture(rect, uploadedImage, ScaleMode.ScaleToFit);
-                
-                if (canvasImage == null || canvasImage.width != uploadedImage.width || canvasImage.height != uploadedImage.height)
-                {
-                    int canvasWidth = Mathf.Min(uploadedImage.width, 1024);
-                    int canvasHeight = Mathf.Min(uploadedImage.height, 1024);
-                    canvasImage = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
-                    canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height).ToArray());
-                    canvasImage.Apply();
-                }
-                GUI.DrawTexture(rect, canvasImage, ScaleMode.ScaleToFit);
-
-                Rect lastRect = GUILayoutUtility.GetLastRect();
-                if (lastRect.Contains(Event.current.mousePosition))
-                {
-                    if (brushCursor == null || brushCursor.width != selectedBrushSize)
-                    {
-                        brushCursor = MakeCircularTex(selectedBrushSize, selectedColor);
-                    }
-                    EditorGUIUtility.AddCursorRect(lastRect, MouseCursor.CustomCursor);
-                    Cursor.SetCursor(brushCursor, new Vector2(brushCursor.width / 2, brushCursor.height / 2), CursorMode.Auto);
-
-                    if (Event.current.type == EventType.MouseDrag || Event.current.type == EventType.MouseDown)
-                    {
-                        Vector2 localMousePosition = Event.current.mousePosition - new Vector2(rect.x, rect.y);
-                        Vector2 textureCoords = new Vector2(localMousePosition.x / rect.width, localMousePosition.y / rect.height);
-
-                        int x = (int)(textureCoords.x * uploadedImage.width);
-                        int y = (int)((1 - textureCoords.y) * uploadedImage.height);
-
-                        if (currentDrawingMode == DrawingMode.Draw)
-                        {
-                            DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, selectedColor, selectedOpacity);
-                        }
-                        else if (currentDrawingMode == DrawingMode.Erase)
-                        {
-                            DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0), selectedOpacity);
-                        }
-
-                        Event.current.Use();
-                    }
-
-                    else if (Event.current.type == EventType.MouseUp)
-                    {
-                        newStroke = true;
-                    }
-                }
-
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.EndHorizontal();
-            }
-            else if (currentDrawingMode == DrawingMode.Expand)
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space();
-                EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
-                float centerX = position.width * 0.5f;
-                float centerY = position.height / 2f;
-                float imageWidth = uploadedImage.width;
-                float imageHeight = uploadedImage.height;
-                float buttonSize = 50f;
-
-                GUI.DrawTexture(new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight), uploadedImage);
-
-                if (GUI.Button(new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize, buttonSize), "+"))
-                {
-                    int newWidth = FindNextSize((int)imageWidth);
-                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
-                }
-
-                // Right button
-                if (GUI.Button(new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize), "+"))
-                {
-                    int newWidth = FindNextSize((int)imageWidth);
-                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
-                }
-
-                // Top button
-                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize, buttonSize), "+"))
-                {
-                    int newHeight = FindNextSize((int)imageHeight);
-                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
-                }
-
-                // Bottom button
-                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize), "+"))
-                {
-                    int newHeight = FindNextSize((int)imageHeight);
-                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
-                }
-
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.EndHorizontal();
-            }
-            else if (currentDrawingMode == DrawingMode.Crop)
-            {
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.Space();
-                EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
-
-                float centerX = position.width * 0.5f;
-                float centerY = position.height / 2f;
-                float imageWidth = uploadedImage.width;
-                float imageHeight = uploadedImage.height;
-                float buttonSize = 50f;
-
-                GUI.DrawTexture(new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight), uploadedImage);
-
-                if (GUI.Button(new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize, buttonSize), "-"))
-                {
-                    int newWidth = FindPreviousSize((int)imageWidth);
-                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
-                }
-
-                // Right button
-                if (GUI.Button(new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize), "-"))
-                {
-                    int newWidth = FindPreviousSize((int)imageWidth);
-                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
-                }
-
-                // Top button
-                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize, buttonSize), "-"))
-                {
-                    int newHeight = FindPreviousSize((int)imageHeight);
-                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
-                }
-
-                // Bottom button
-                if (GUI.Button(new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize), "-"))
-                {
-                    int newHeight = FindPreviousSize((int)imageHeight);
-                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
-                }
-
-                EditorGUILayout.EndVertical();
-                EditorGUILayout.EndHorizontal();
-            }
-        }
-        else
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            GUILayout.BeginVertical();
-
-            Rect dropArea = GUILayoutUtility.GetRect(512f, 256f, GUILayout.ExpandWidth(false));
-            GUI.Box(dropArea, "Drop image here or");
-
-            Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
-            {
-                if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-                {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-
-                    if (currentEvent.type == EventType.DragPerform)
-                    {
-                        DragAndDrop.AcceptDrag();
-                        string path = DragAndDrop.paths[0];
-                        if (System.IO.File.Exists(path) && (System.IO.Path.GetExtension(path).ToLower() == ".png" || System.IO.Path.GetExtension(path).ToLower() == ".jpg" || System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
-                        {
-                            Texture2D tex = new Texture2D(2, 2);
-                            byte[] imageData = File.ReadAllBytes(path);
-                            tex.LoadImage(imageData);
-                            SetImage(tex);
-                        }
-                    }
-
-                    currentEvent.Use();
-                }
-            }
-
-            Rect buttonRect = new Rect(dropArea.center.x - 75f, dropArea.center.y - 20f, 150f, 40f);
-            if (GUI.Button(buttonRect, "Upload"))
-            {
-                uploadedImagePath = EditorUtility.OpenFilePanel("Upload image", "", "png,jpeg,jpg");
-                if (!string.IsNullOrEmpty(uploadedImagePath))
-                {
-                    Texture2D tex = new Texture2D(1, 1);
-                    tex.LoadImage(File.ReadAllBytes(uploadedImagePath));
-                    SetImage(tex);
-                }
-            }
-
-            GUILayout.EndVertical();
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
-        }
-
-        EditorGUILayout.EndVertical();
         GUILayout.FlexibleSpace();
 
+        DrawRightSection(position);
+
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawRightSection(Rect position)
+    {
         // Right Section
+        float rightSectionWidth = position.width * 0.1f;
         EditorGUILayout.BeginVertical(GUILayout.Width(rightSectionWidth));
         GUILayout.Space(18);
         GUILayout.Label("Actions", EditorStyles.boldLabel);
@@ -425,7 +132,388 @@ public class ImageEditorUI
         }
 
         EditorGUILayout.EndVertical();
+    }
+
+    private void DrawMiddleSection(Rect position)
+    {
+        // Middle Section
+        float middleSectionWidth = position.width * 0.8f;
+        EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
+        {
+            GUILayout.Space(18);
+
+            if (uploadedImage != null)
+            {
+                switch (currentDrawingMode)
+                {
+                    case DrawingMode.Draw:
+                    case DrawingMode.Erase:
+                        DrawCanvasWithImage();
+                        break;
+                    case DrawingMode.Expand:
+                        DrawExpandSection(position);
+                        break;
+                    case DrawingMode.Crop:
+                        DrawCropSection(position);
+                        break;
+                }
+            }
+            else
+            {
+                DrawUploadSection();
+            }
+        }
+        EditorGUILayout.EndVertical();
+    }
+
+    private void DrawUploadSection()
+    {
+        GUILayout.BeginHorizontal();
+        {
+            GUILayout.FlexibleSpace();
+            GUILayout.BeginVertical();
+            {
+                HandleImageUpload();
+            }
+            GUILayout.EndVertical();
+            GUILayout.FlexibleSpace();
+        }
+        GUILayout.EndHorizontal();
+    }
+
+    private void HandleImageUpload()
+    {
+        Rect dropArea = GUILayoutUtility.GetRect(512f, 256f, GUILayout.ExpandWidth(false));
+        GUI.Box(dropArea, "Drop image here or");
+
+        Event currentEvent = Event.current;
+        if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
+        {
+            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+
+                if (currentEvent.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    string path = DragAndDrop.paths[0];
+                    if (System.IO.File.Exists(path) && (System.IO.Path.GetExtension(path).ToLower() == ".png" ||
+                                                        System.IO.Path.GetExtension(path).ToLower() == ".jpg" ||
+                                                        System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
+                    {
+                        Texture2D tex = new Texture2D(2, 2);
+                        byte[] imageData = File.ReadAllBytes(path);
+                        tex.LoadImage(imageData);
+                        SetImage(tex);
+                    }
+                }
+
+                currentEvent.Use();
+            }
+        }
+
+        Rect buttonRect = new Rect(dropArea.center.x - 75f, dropArea.center.y - 20f, 150f, 40f);
+        if (GUI.Button(buttonRect, "Upload"))
+        {
+            uploadedImagePath = EditorUtility.OpenFilePanel("Upload image", "", "png,jpeg,jpg");
+            if (!string.IsNullOrEmpty(uploadedImagePath))
+            {
+                Texture2D tex = new Texture2D(1, 1);
+                tex.LoadImage(File.ReadAllBytes(uploadedImagePath));
+                SetImage(tex);
+            }
+        }
+    }
+
+    private void DrawCropSection(Rect position)
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+            {
+                float centerX = position.width * 0.5f;
+                float centerY = position.height / 2f;
+                float imageWidth = uploadedImage.width;
+                float imageHeight = uploadedImage.height;
+                float buttonSize = 50f;
+
+                var rect = new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight);
+                GUI.DrawTexture(rect, uploadedImage);
+
+                rect = new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize,
+                    buttonSize);
+                if (GUI.Button(rect, "-"))
+                {
+                    int newWidth = FindPreviousSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
+                }
+
+                // Right button
+                rect = new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize);
+                if (GUI.Button(rect, "-"))
+                {
+                    int newWidth = FindPreviousSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
+                }
+
+                // Top button
+                rect = new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize,
+                    buttonSize);
+                if (GUI.Button(rect, "-"))
+                {
+                    int newHeight = FindPreviousSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
+                }
+
+                // Bottom button
+                rect = new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize);
+                if (GUI.Button(rect, "-"))
+                {
+                    int newHeight = FindPreviousSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
+                }
+            }
+            EditorGUILayout.EndVertical();
+        }
         EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawExpandSection(Rect position)
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+            {
+                float centerX = position.width * 0.5f;
+                float centerY = position.height / 2f;
+                float imageWidth = uploadedImage.width;
+                float imageHeight = uploadedImage.height;
+                float buttonSize = 50f;
+
+                var rect = new Rect(centerX - imageWidth / 2, centerY - imageHeight / 2, imageWidth, imageHeight);
+                GUI.DrawTexture(rect, uploadedImage);
+
+                rect = new Rect(centerX - imageWidth / 2 - buttonSize - 5, centerY - buttonSize / 2, buttonSize,
+                    buttonSize);
+                if (GUI.Button(rect, "+"))
+                {
+                    int newWidth = FindNextSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight, addLeft: true);
+                }
+
+                // Right button
+                rect = new Rect(centerX + imageWidth / 2 + 5, centerY - buttonSize / 2, buttonSize, buttonSize);
+                if (GUI.Button(rect, "+"))
+                {
+                    int newWidth = FindNextSize((int)imageWidth);
+                    uploadedImage = ResizeImage(uploadedImage, newWidth, (int)imageHeight);
+                }
+
+                // Top button
+                rect = new Rect(centerX - buttonSize / 2, centerY - imageHeight / 2 - buttonSize - 5, buttonSize,
+                    buttonSize);
+                if (GUI.Button(rect, "+"))
+                {
+                    int newHeight = FindNextSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight);
+                }
+
+                // Bottom button
+                rect = new Rect(centerX - buttonSize / 2, centerY + imageHeight / 2 + 5, buttonSize, buttonSize);
+                if (GUI.Button(rect, "+"))
+                {
+                    int newHeight = FindNextSize((int)imageHeight);
+                    uploadedImage = ResizeImage(uploadedImage, (int)imageWidth, newHeight, addBottom: true);
+                }
+            }
+            EditorGUILayout.EndVertical();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private void DrawCanvasWithImage()
+    {
+        EditorGUILayout.BeginHorizontal();
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
+            {
+                float maxSize = 1024f;
+                float aspectRatio = (float)uploadedImage.width / (float)uploadedImage.height;
+                float width = Mathf.Min(uploadedImage.width, maxSize);
+                float height = width / aspectRatio;
+                
+                Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false),
+                    GUILayout.ExpandHeight(false));
+
+                GUI.DrawTexture(rect, uploadedImage, ScaleMode.ScaleToFit);
+
+                if (canvasImage == null || canvasImage.width != uploadedImage.width ||
+                    canvasImage.height != uploadedImage.height)
+                {
+                    int canvasWidth = Mathf.Min(uploadedImage.width, 1024);
+                    int canvasHeight = Mathf.Min(uploadedImage.height, 1024);
+                    canvasImage = new Texture2D(canvasWidth, canvasHeight, TextureFormat.RGBA32, false, true);
+                    canvasImage.SetPixels(Enumerable.Repeat(Color.clear, canvasImage.width * canvasImage.height)
+                        .ToArray());
+                    canvasImage.Apply();
+                }
+
+                GUI.DrawTexture(rect, canvasImage, ScaleMode.ScaleToFit);
+
+                Rect lastRect = GUILayoutUtility.GetLastRect();
+                if (lastRect.Contains(Event.current.mousePosition))
+                {
+                    if (brushCursor == null || brushCursor.width != selectedBrushSize)
+                    {
+                        brushCursor = MakeCircularTex(selectedBrushSize, selectedColor);
+                    }
+
+                    EditorGUIUtility.AddCursorRect(lastRect, MouseCursor.CustomCursor);
+                    Cursor.SetCursor(brushCursor, new Vector2(brushCursor.width / 2, brushCursor.height / 2),
+                        CursorMode.Auto);
+
+                    if (Event.current.type == EventType.MouseDrag || Event.current.type == EventType.MouseDown)
+                    {
+                        Vector2 localMousePosition = Event.current.mousePosition - new Vector2(rect.x, rect.y);
+                        Vector2 textureCoords = new Vector2(localMousePosition.x / rect.width,
+                            localMousePosition.y / rect.height);
+
+                        int x = (int)(textureCoords.x * uploadedImage.width);
+                        int y = (int)((1 - textureCoords.y) * uploadedImage.height);
+
+                        if (currentDrawingMode == DrawingMode.Draw)
+                        {
+                            DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, selectedColor,
+                                selectedOpacity);
+                        }
+                        else if (currentDrawingMode == DrawingMode.Erase)
+                        {
+                            DrawOnTexture(canvasImage, new Vector2(x, y), selectedBrushSize, new Color(0, 0, 0, 0),
+                                selectedOpacity);
+                        }
+
+                        Event.current.Use();
+                    }
+
+                    else if (Event.current.type == EventType.MouseUp)
+                    {
+                        newStroke = true;
+                    }
+                }
+            }
+            EditorGUILayout.EndVertical();
+        }
+        EditorGUILayout.EndHorizontal();
+    }
+
+    private Rect DrawLeftSection(Rect position)
+    {
+        // Left Section
+        float leftSectionWidth = position.width * 0.1f;
+        EditorGUILayout.BeginVertical(GUILayout.Width(leftSectionWidth));
+        {
+            GUILayout.Space(18);
+            GUILayout.Label("Tools", EditorStyles.boldLabel);
+
+            for (int i = 0; i < toolButtons.Length; i++)
+            {
+                ToolButton button = toolButtons[i];
+                if (i % 4 == 0)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                }
+
+                GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+                buttonStyle.fontSize = 25;
+                if (GUILayout.Button(new GUIContent(button.Text, button.Tooltip), buttonStyle, GUILayout.Width(45),
+                        GUILayout.Height(45)))
+                {
+                    currentDrawingMode = button.Mode;
+                    button.OnClick?.Invoke();
+                }
+
+                if (i % 4 == 3 || i == toolButtons.Length - 1)
+                {
+                    EditorGUILayout.EndHorizontal();
+                }
+            }
+
+            GUILayout.Space(10);
+
+            GUILayout.Label("Color", EditorStyles.boldLabel);
+            
+            int colorButtonSize = 40;
+            int numColumns = Mathf.FloorToInt((leftSectionWidth - 0) / colorButtonSize);
+
+            for (int i = 0; i < 35; i++)
+            {
+                if (i % numColumns == 0) EditorGUILayout.BeginHorizontal();
+
+                GUIStyle colorButtonStyle = new GUIStyle(GUI.skin.button);
+                Color color = Color.HSVToRGB((float)i / 35, 1, 1);
+                colorButtonStyle.normal.background = MakeTex(2, 2, color);
+
+                if (GUILayout.Button("", colorButtonStyle, GUILayout.Width(colorButtonSize),
+                        GUILayout.Height(colorButtonSize)))
+                {
+                    selectedColor = color;
+                }
+
+                if (i % numColumns == numColumns - 1 || i == 34) EditorGUILayout.EndHorizontal();
+            }
+
+            GUILayout.Space(10);
+
+            int[] brushSizes = new[] { 6, 12, 16, 24, 30, 40, 48, 64 };
+
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Brush Size", EditorStyles.boldLabel, GUILayout.Width(80));
+                GUILayout.Label(selectedBrushSize.ToString(), GUILayout.Width(40));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            {
+                selectedBrushSize = (int)GUILayout.HorizontalSlider(selectedBrushSize, brushSizes[0],
+                    brushSizes[brushSizes.Length - 1], GUILayout.Width(200));
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.Space(20);
+
+            float[] opacities = new float[] { 0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
+            int selectedOpacityIndex = 5;
+
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Opacity", EditorStyles.boldLabel);
+            }
+            GUILayout.EndHorizontal();
+
+            GUILayout.BeginHorizontal();
+            {
+                for (int i = 0; i < opacities.Length; i++)
+                {
+                    float opacity = opacities[i];
+                    GUIStyle opacityButtonStyle = new GUIStyle(GUI.skin.button);
+                    opacityButtonStyle.normal.background = MakeOpacityTex(10, 10, opacity);
+
+                    if (GUILayout.Button("", opacityButtonStyle, GUILayout.Width(14), GUILayout.Height(14)))
+                    {
+                        selectedOpacityIndex = i;
+                        selectedOpacity = opacities[selectedOpacityIndex];
+                    }
+                }
+            }
+            GUILayout.EndHorizontal();
+        }
+        EditorGUILayout.EndVertical();
+        
+        return position;
     }
 
     private Texture2D MakeTex(int width, int height, Color col)
@@ -637,38 +725,36 @@ public class ImageEditorUI
 
     private void UndoCanvas()
     {
-        if (canvasHistoryIndex > 0)
-        {
-            // Save the current state to the redo stack
-            Texture2D redoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
-            redoImage.SetPixels(canvasImage.GetPixels());
-            redoImage.Apply();
-            redoHistory.Add(redoImage);
+        if (canvasHistoryIndex <= 0) return;
+        
+        // Save the current state to the redo stack
+        Texture2D redoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
+        redoImage.SetPixels(canvasImage.GetPixels());
+        redoImage.Apply();
+        redoHistory.Add(redoImage);
 
-            // Revert to the previous state
-            canvasHistoryIndex--;
-            canvasImage.SetPixels(canvasHistory[canvasHistoryIndex].GetPixels());
-            canvasImage.Apply();
-        }
+        // Revert to the previous state
+        canvasHistoryIndex--;
+        canvasImage.SetPixels(canvasHistory[canvasHistoryIndex].GetPixels());
+        canvasImage.Apply();
     }
 
     private void RedoCanvas()
     {
-        if (redoHistory.Count > 0)
-        {
-            // Save the current state to the undo stack
-            Texture2D undoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
-            undoImage.SetPixels(canvasImage.GetPixels());
-            undoImage.Apply();
-            canvasHistory.Add(undoImage);
-            canvasHistoryIndex++;
+        if (redoHistory.Count <= 0) return;
+        
+        // Save the current state to the undo stack
+        Texture2D undoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
+        undoImage.SetPixels(canvasImage.GetPixels());
+        undoImage.Apply();
+        canvasHistory.Add(undoImage);
+        canvasHistoryIndex++;
 
-            // Update to the next state
-            Texture2D redoImage = redoHistory[redoHistory.Count - 1];
-            redoHistory.RemoveAt(redoHistory.Count - 1);
-            canvasImage.SetPixels(redoImage.GetPixels());
-            canvasImage.Apply();
-        }
+        // Update to the next state
+        Texture2D redoImage = redoHistory[redoHistory.Count - 1];
+        redoHistory.RemoveAt(redoHistory.Count - 1);
+        canvasImage.SetPixels(redoImage.GetPixels());
+        canvasImage.Apply();
     }
 
     // Add the corresponding methods for the action buttons
@@ -687,41 +773,6 @@ public class ImageEditorUI
         uploadedImage.SetPixels(pixels);
         uploadedImage.Apply();
     }
-
-    /*private void LoadMaskFromFile()
-    {
-        string filePath = EditorUtility.OpenFilePanel("Load mask image", "", "png,jpg,jpeg");
-        if (!string.IsNullOrEmpty(filePath))
-        {
-            byte[] fileData = File.ReadAllBytes(filePath);
-            Texture2D loadedMask = new Texture2D(2, 2);
-            loadedMask.LoadImage(fileData);
-
-            if (loadedMask.width == canvasImage.width && loadedMask.height == canvasImage.height)
-            {
-                canvasImage.SetPixels(loadedMask.GetPixels());
-                canvasImage.Apply();
-
-                maskBuffer.SetPixels(loadedMask.GetPixels());
-                maskBuffer.Apply();
-
-                AddToCanvasHistory();
-            }
-            else
-            {
-                Debug.LogWarning("Loaded mask dimensions do not match canvas dimensions.");
-            }
-        }
-    }
-
-    private void SaveMaskToFile()
-    {
-        var savePath = EditorUtility.SaveFilePanel("Save image","", "", "png");
-        if (savePath.Length > 0)
-        {
-            File.WriteAllBytes(savePath, maskBuffer.EncodeToPNG());
-        }
-    }*/
 
     /*private void FillAll()
     {

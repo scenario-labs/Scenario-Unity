@@ -1,15 +1,10 @@
 using UnityEditor;
 using UnityEngine;
-using System;
-using System.Collections;
-using Cysharp.Threading.Tasks;
-using RestSharp;
 
 public class PixelEditor : EditorWindow
 {
-    private PixelEditorUI pixelEditorUI = new PixelEditorUI();
-
-    private static float minimumWidth = 1650f;
+    private static readonly float MinimumWidth = 1650f;
+    private PixelEditorUI pixelEditorUI = new();
 
     [MenuItem("Window/Scenario/Pixel Editor")]
     public static void ShowWindow()
@@ -21,7 +16,14 @@ public class PixelEditor : EditorWindow
             window.pixelEditorUI.removeBackground = false;
         }
 
-        window.minSize = new Vector2(minimumWidth, window.minSize.y);
+        window.minSize = new Vector2(MinimumWidth, window.minSize.y);
+    }
+
+    public static void ShowWindow(Texture2D selectedTexture, ImageDataStorage.ImageData imageData)
+    {
+        PixelEditorUI.currentImage = selectedTexture;
+        PixelEditorUI.imageData = imageData;
+        ShowWindow();
     }
 
     private void OnGUI()

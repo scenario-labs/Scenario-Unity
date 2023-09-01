@@ -1,32 +1,28 @@
 using UnityEditor;
 using UnityEngine;
-using System;
-using System.Collections;
-using Cysharp.Threading.Tasks;
-using RestSharp;
 
 public class UpscaleEditor : EditorWindow
 {
-    private UpscaleEditorUI upscaleEditorUI = new UpscaleEditorUI();
-
-    private static float minimumWidth = 1650f;
+    private static readonly float MinimumWidth = 1650f;
+    private static readonly UpscaleEditorUI UpscaleEditorUI = new();
 
     [MenuItem("Window/Scenario/Upscale Editor")]
     public static void ShowWindow()
     {
         var window = EditorWindow.GetWindow(typeof(UpscaleEditor), false, "Upscale Editor") as UpscaleEditor;
-        if (window.upscaleEditorUI != null)
-        {
-            /*window.upscaleEditorUI.removeNoise = false;
-            window.upscaleEditorUI.removeBackground = false;*/
-        }
+        window.minSize = new Vector2(MinimumWidth, window.minSize.y);
+    }
 
-        window.minSize = new Vector2(minimumWidth, window.minSize.y);
+    public static void ShowWindow(Texture2D selectedTexture, ImageDataStorage.ImageData imageData)
+    {
+        UpscaleEditorUI.currentImage = selectedTexture;
+        UpscaleEditorUI.imageData = imageData;
+        ShowWindow();
     }
 
     private void OnGUI()
     {
-        upscaleEditorUI.OnGUI(this.position);
+        UpscaleEditorUI.OnGUI(this.position);
     }
 
     private void OnDestroy()

@@ -37,7 +37,128 @@ public class PromptImagesUI
 
         scrollPosition = GUI.BeginScrollView(new Rect(0, 20, scrollViewWidth, position.height - 20), scrollPosition, new Rect(0, 0, scrollViewWidth - 20, scrollViewHeight));
 
+        DrawTextureBoxes(boxWidth, boxHeight);
 
+        GUI.EndScrollView();
+
+        GUILayout.FlexibleSpace();
+
+        if (selectedTexture != null)
+        {
+            DrawSelectedImagePreview(position, maxPreviewWidth, scrollViewWidth);
+        }
+    }
+
+    private void DrawSelectedImagePreview(Rect position, float maxPreviewWidth, float scrollViewWidth)
+    {
+        float paddedPreviewWidth = maxPreviewWidth - 2 * padding;
+        float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
+        float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
+        GUILayout.BeginArea(new Rect(scrollViewWidth, 20, maxPreviewWidth, position.height - 20));
+        GUILayout.Label("Selected Image", EditorStyles.boldLabel);
+        GUILayout.Space(10);
+        GUILayout.BeginHorizontal();
+        GUILayout.Space(padding);
+        GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth), GUILayout.Height(paddedPreviewHeight));
+        GUILayout.Space(padding);
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(10);
+
+        GUILayout.BeginVertical();
+
+        GUILayout.BeginHorizontal();
+        GUILayout.Space(padding);
+
+        string[] buttonNames = { "Refine Image", "Download", "Delete" };
+        System.Action[] buttonCallbacks = {
+                () => {
+                    PromptWindowUI.imageUpload = selectedTexture;
+                },
+                () => { DownloadImage();
+                },
+                () => {
+                    promptImages.DeleteImageAtIndex(selectedTextureIndex);
+                }
+            };
+
+        for (int i = 0; i < buttonNames.Length; i++)
+        {
+            if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
+            {
+                buttonCallbacks[i]();
+            }
+            GUILayout.Space(padding);
+        }
+
+        GUILayout.EndHorizontal();
+
+        GUILayout.Space(10);
+
+        string[] buttonNames2 = { "Remove Background", "Pixelate Image", "Upscale Image"/*, "Generate More Images"*/ };
+        System.Action[] buttonCallbacks2 = {
+                () => {
+                    promptImages.RemoveBackground(selectedTextureIndex);
+                },
+                () => { ShowPixelEditor();
+                },
+                () => { ShowUpscaleEditor();
+                }/*,
+                () => {
+                    // Assuming that selectedTexture is of type Texture2D
+                    PromptWindowUI.imageUpload = selectedTexture;
+                },
+                () => {
+                    // TODO: Implement generate more images functionality
+                }*/
+            };
+
+        for (int i = 0; i < buttonNames2.Length; i++)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Space(padding);
+
+            if (GUILayout.Button(buttonNames2[i], GUILayout.Height(40)))
+            {
+                buttonCallbacks2[i]();
+            }
+
+            GUILayout.EndHorizontal();
+            GUILayout.Space(10);
+        }
+
+        GUILayout.Space(10);
+
+        GUILayout.EndVertical();
+
+        GUILayout.Space(10);
+
+        GUILayout.EndArea();
+    }
+
+    private void ShowUpscaleEditor()
+    {
+        UpscaleEditorUI.currentImage = selectedTexture;
+        UpscaleEditorUI.imageData = PromptImages.imageDataList[selectedTextureIndex];
+        UpscaleEditor.ShowWindow();
+    }
+
+    private void ShowPixelEditor()
+    {
+        PixelEditorUI.currentImage = selectedTexture;
+        PixelEditorUI.imageData = PromptImages.imageDataList[selectedTextureIndex];
+        PixelEditor.ShowWindow();
+    }
+
+    private void DownloadImage()
+    {
+        string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+        byte[] pngBytes = selectedTexture.EncodeToPNG();
+        promptImages.DownloadImage(fileName, pngBytes);
+    }
+
+    private void DrawTextureBoxes(float boxWidth, float boxHeight)
+    {
         for (int i = 0; i < textures.Count; i++)
         {
             int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
@@ -59,106 +180,6 @@ public class PromptImagesUI
             {
                 GUI.Box(boxRect, "Loading...");
             }
-        }
-
-        GUI.EndScrollView();
-
-        GUILayout.FlexibleSpace();
-
-        if (selectedTexture != null)
-        {
-            float paddedPreviewWidth = maxPreviewWidth - 2 * padding;
-            float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
-            float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
-            GUILayout.BeginArea(new Rect(scrollViewWidth, 20, maxPreviewWidth, position.height - 20));
-            GUILayout.Label("Selected Image", EditorStyles.boldLabel);
-            GUILayout.Space(10);
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(padding);
-            GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth), GUILayout.Height(paddedPreviewHeight));
-            GUILayout.Space(padding);
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(10);
-
-            GUILayout.BeginVertical();
-
-            GUILayout.BeginHorizontal();
-            GUILayout.Space(padding);
-
-            string[] buttonNames = { "Refine Image", "Download", "Delete" };
-            System.Action[] buttonCallbacks = {
-                () => {
-                    PromptWindowUI.imageUpload = selectedTexture;
-                },
-                () => {
-                    string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-                    byte[] pngBytes = selectedTexture.EncodeToPNG();
-                    promptImages.DownloadImage(fileName, pngBytes);
-                },
-                () => {
-                    promptImages.DeleteImageAtIndex(selectedTextureIndex);
-                }
-            };
-
-            for (int i = 0; i < buttonNames.Length; i++)
-            {
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks[i]();
-                }
-                GUILayout.Space(padding);
-            }
-
-            GUILayout.EndHorizontal();
-
-            GUILayout.Space(10);
-
-            string[] buttonNames2 = { "Remove Background", "Pixelate Image", "Upscale Image"/*, "Generate More Images"*/ };
-            System.Action[] buttonCallbacks2 = {
-                () => {
-                    promptImages.RemoveBackground(selectedTextureIndex);
-                },
-                () => {
-                    PixelEditorUI.currentImage = selectedTexture;
-                    PixelEditorUI.imageData = PromptImages.imageDataList[selectedTextureIndex];
-                    PixelEditor.ShowWindow();
-                },
-                () => {
-                    UpscaleEditorUI.currentImage = selectedTexture;
-                    UpscaleEditorUI.imageData = PromptImages.imageDataList[selectedTextureIndex];
-                    UpscaleEditor.ShowWindow();
-                }/*,
-                () => {
-                    // Assuming that selectedTexture is of type Texture2D
-                    PromptWindowUI.imageUpload = selectedTexture;
-                },
-                () => {
-                    // TODO: Implement generate more images functionality
-                }*/
-            };
-
-            for (int i = 0; i < buttonNames2.Length; i++)
-            {
-                GUILayout.BeginHorizontal();
-                GUILayout.Space(padding);
-
-                if (GUILayout.Button(buttonNames2[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks2[i]();
-                }
-
-                GUILayout.EndHorizontal();
-                GUILayout.Space(10);
-            }
-
-            GUILayout.Space(10);
-
-            GUILayout.EndVertical();
-
-            GUILayout.Space(10);
-
-            GUILayout.EndArea();
         }
     }
 }

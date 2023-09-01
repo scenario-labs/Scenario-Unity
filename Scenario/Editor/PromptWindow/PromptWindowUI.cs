@@ -753,12 +753,19 @@ public class PromptWindowUI
 
     private string SerializeTags(List<string> tags)
     {
-        string values = "";
-        foreach (var tag in tags)
+        StringBuilder values = new StringBuilder();
+
+        for (int i = 0; i < tags.Count; i++)
         {
-            values += tag + ", ";
+            values.Append(tags[i]);
+
+            if (i < tags.Count - 1)
+            {
+                values.Append(", ");
+            }
         }
-        return values;
+
+        return values.ToString();
     }
 
     private string TruncateTag(string tag)

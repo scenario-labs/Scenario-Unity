@@ -135,7 +135,7 @@ public class DataBuilder : EditorWindow
                 PlaceObjectAndCameras();
             }
 
-            if (GUILayout.Button("Remove Cameras"))
+            if (GUILayout.Button("Remove Cameras/Lights"))
             {
                 RemoveCamerasAndLights();
             }
@@ -195,15 +195,17 @@ public class DataBuilder : EditorWindow
 
         (float latitude, float longitude)[] sphericalCoords = new (float, float)[]
         {
-            (Mathf.PI / 4, 0),
-            (Mathf.PI / 4, 2 * Mathf.PI / 3),
-            (Mathf.PI / 4, 4 * Mathf.PI / 3),
+            (Mathf.PI / 3, 0),
+            (Mathf.PI / 3, 2 * Mathf.PI / 3),
+            (Mathf.PI / 3, 4 * Mathf.PI / 3),
+            
             (Mathf.PI / 2, Mathf.PI / 3),
             (Mathf.PI / 2, Mathf.PI),
             (Mathf.PI / 2, 5 * Mathf.PI / 3),
-            (3 * Mathf.PI / 4, 0),
-            (3 * Mathf.PI / 4, 2 * Mathf.PI / 3),
-            (3 * Mathf.PI / 4, 4 * Mathf.PI / 3)
+            
+            (2 * Mathf.PI / 3, 0),
+            (2 * Mathf.PI / 3, 2 * Mathf.PI / 3),
+            (2 * Mathf.PI / 3, 4 * Mathf.PI / 3)
         };
 
         for (int i = 0; i < 9; i++)

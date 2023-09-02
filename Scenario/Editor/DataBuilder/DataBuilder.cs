@@ -132,7 +132,12 @@ public class DataBuilder : EditorWindow
         {
             if (GUILayout.Button("Place Object"))
             {
-                PlaceObjectAndCameras();
+                PlaceObject();
+            }
+
+            if (GUILayout.Button("Place Cameras/Lights"))
+            {
+                PlaceCamerasAndLights();
             }
 
             if (GUILayout.Button("Remove Cameras/Lights"))
@@ -154,15 +159,21 @@ public class DataBuilder : EditorWindow
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
-    private void PlaceObjectAndCameras()
+    private void PlaceObject()
     {
         if (selectedObject == null) return;
-        
+
         Camera sceneCamera = SceneView.lastActiveSceneView.camera;
         Vector3 screenCenter = new Vector3(0.5f, 0.5f, 0.01f);
         Vector3 worldCenter = sceneCamera.ViewportToWorldPoint(screenCenter);
 
         instantiatedObject = Instantiate(selectedObject, worldCenter, Quaternion.identity);
+    }
+
+    private void PlaceCamerasAndLights()
+    {
+        if (instantiatedObject == null) return;
+
         cameras = new GameObject[9];
 
         for (int i = 0; i < 9; i++)
@@ -185,7 +196,6 @@ public class DataBuilder : EditorWindow
         }
 
         UpdateCameraPositions();
-
         CreateLights();
     }
 

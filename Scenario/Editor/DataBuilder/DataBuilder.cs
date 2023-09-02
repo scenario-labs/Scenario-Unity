@@ -14,6 +14,7 @@ public class DataBuilder : EditorWindow
     private GameObject selectedObject;
     private GameObject instantiatedObject;
     private GameObject[] cameras;
+    private GameObject[] lights = new GameObject[8];
     private Texture2D combinedScreenshot;
     private ScreenshotType screenshotType = ScreenshotType.Normal;
     private ScreenshotType previousScreenshotType;
@@ -21,6 +22,7 @@ public class DataBuilder : EditorWindow
     private static float minimumHeight = 750f;
     private const int ScreenshotSize = 1024;
     private float cameraDistance = 2f;
+    private float lightDistance = 2f;
 
     [MenuItem("Window/Scenario/3d Data Builder")]
     public static void ShowWindow()
@@ -54,7 +56,7 @@ public class DataBuilder : EditorWindow
 
     private void OnDestroy()
     {
-        RemoveCameras();
+        RemoveCamerasAndLights();
 
         if (instantiatedObject != null)
         {
@@ -86,6 +88,9 @@ public class DataBuilder : EditorWindow
         float previousCameraDistance = cameraDistance;
         cameraDistance = EditorGUILayout.Slider("Camera Distance", cameraDistance, 0.1f, 100.0f);
 
+        float previousLightDistance = lightDistance;
+        lightDistance = EditorGUILayout.Slider("Light Distance", lightDistance, 0.1f, 100.0f);
+
         screenshotType = (ScreenshotType)EditorGUILayout.EnumPopup("Screenshot Type", screenshotType);
 
         DrawControlButtons();
@@ -93,6 +98,11 @@ public class DataBuilder : EditorWindow
         if (Mathf.Approximately(previousCameraDistance, cameraDistance) == false && instantiatedObject != null)
         {
             UpdateCameraPositions();
+        }
+
+        if (Mathf.Approximately(previousLightDistance, lightDistance) == false && instantiatedObject != null)
+        {
+            UpdateLightPositions();
         }
 
         GUILayout.Space(20f);
@@ -127,7 +137,7 @@ public class DataBuilder : EditorWindow
 
             if (GUILayout.Button("Remove Cameras"))
             {
-                RemoveCameras();
+                RemoveCamerasAndLights();
             }
 
             if (GUILayout.Button("Take Screenshot"))
@@ -175,6 +185,8 @@ public class DataBuilder : EditorWindow
         }
 
         UpdateCameraPositions();
+
+        CreateLights();
     }
 
     private void UpdateCameraPositions()
@@ -210,7 +222,7 @@ public class DataBuilder : EditorWindow
         }
     }
 
-    private void RemoveCameras()
+    private void RemoveCamerasAndLights()
     {
         if (cameras != null)
         {
@@ -221,6 +233,16 @@ public class DataBuilder : EditorWindow
         }
 
         cameras = null;
+
+        if (lights != null)
+        {
+            foreach (GameObject light in lights)
+            {
+                DestroyImmediate(light);
+            }
+        }
+
+        lights = null;
     }
 
     private GameObject CreateCamera(string cameraName)
@@ -327,5 +349,34 @@ public class DataBuilder : EditorWindow
         texture.SetPixel(0, 0, color);
         texture.Apply();
         return texture;
+    }
+
+    private void CreateLights()
+    {
+        lights = new GameObject[8];
+        for (int i = 0; i < 8; i++)
+        {
+            lights[i] = new GameObject("Light " + (i + 1));
+            Light lightComponent = lights[i].AddComponent<Light>();
+            lightComponent.type = LightType.Directional;
+        }
+        UpdateLightPositions();
+    }
+
+    private void UpdateLightPositions()
+    {
+        Vector3 objectCenter = GetObjectCenter(instantiatedObject);
+
+        Vector3[] directions = new Vector3[]
+        {
+            new Vector3(1, 1, 1),
+            new Vector3(-1, 1, 1),
+            new Vector3(1, -1, 1),
+            new Vector3(-1, -1, 1),
+            new Vector3(1, 1, -1),
+            new Vector3(-1, 1, -1),
+            new Vector3(1, -1, -1),
+            new Vector3(-1, -1, -1)
+        };
     }
 }

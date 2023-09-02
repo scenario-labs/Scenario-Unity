@@ -378,5 +378,12 @@ public class DataBuilder : EditorWindow
             new Vector3(1, -1, -1),
             new Vector3(-1, -1, -1)
         };
+
+        for (int i = 0; i < lights.Length; i++)
+        {
+            Vector3 direction = directions[i].normalized;
+            lights[i].transform.position = objectCenter + direction * lightDistance;
+            lights[i].transform.LookAt(objectCenter);
+        }
     }
 }

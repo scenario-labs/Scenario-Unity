@@ -56,13 +56,7 @@ public class DataBuilder : EditorWindow
 
     private void OnDestroy()
     {
-        RemoveCamerasAndLights();
-
-        if (instantiatedObject != null)
-        {
-            DestroyImmediate(instantiatedObject);
-            instantiatedObject = null;
-        }
+        Remove();
     }
 
     private void OnGUI()
@@ -140,9 +134,9 @@ public class DataBuilder : EditorWindow
                 PlaceCamerasAndLights();
             }
 
-            if (GUILayout.Button("Remove Cameras/Lights"))
+            if (GUILayout.Button("Remove Object/Cameras/Lights"))
             {
-                RemoveCamerasAndLights();
+                Remove();
             }
 
             if (GUILayout.Button("Take Screenshot"))
@@ -234,7 +228,7 @@ public class DataBuilder : EditorWindow
         }
     }
 
-    private void RemoveCamerasAndLights()
+    private void Remove()
     {
         if (cameras != null)
         {
@@ -255,6 +249,12 @@ public class DataBuilder : EditorWindow
         }
 
         lights = null;
+
+        if (instantiatedObject != null)
+        {
+            DestroyImmediate(instantiatedObject);
+            instantiatedObject = null;
+        }
     }
 
     private GameObject CreateCamera(string cameraName)

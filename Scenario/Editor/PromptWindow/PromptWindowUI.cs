@@ -99,40 +99,18 @@ public partial class PromptWindowUI
         }
 
         scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
-        GUILayout.Label("Generate Images", EditorStyles.boldLabel);
-
-        if (GUILayout.Button(selectedModelName, GUILayout.Height(30)))
-        {
-            Models.ShowWindow();
-        }
-
+        
+        CustomStyle.ButtonSecondary(selectedModelName, 30 , Models.ShowWindow);
+        CustomStyle.Separator();
         RenderPromptSection();
-
-        GUILayout.Space(10f);
-
+        CustomStyle.Space();
         RenderNegativePromptSection();
+        CustomStyle.Separator();
 
         bool shouldAutoGenerateSeed = imagesliderValue > 1;
-        if (shouldAutoGenerateSeed)
-        {
-            seedinputText = "-1";
-        }
+        if (shouldAutoGenerateSeed) { seedinputText = "-1"; }
 
-        GUIStyle generateButtonStyle = new(GUI.skin.button)
-        {
-            normal =
-            {
-                background = CreateColorTexture(new Color(0, 0.5333f, 0.8f, 1)),
-                textColor = Color.white
-            },
-            active =
-            {
-                background = CreateColorTexture(new Color(0, 0.3f, 0.6f, 1)),
-                textColor = Color.white
-            }
-        };
-
-        if (GUILayout.Button("Generate Image", generateButtonStyle, GUILayout.Height(40)))
+        CustomStyle.ButtonPrimary("Generate Image", 40, () =>
         {
             promptinputText = SerializeTags(tags);
             negativepromptinputText = SerializeTags(negativeTags);
@@ -146,27 +124,22 @@ public partial class PromptWindowUI
             else
             {
                 string seed = seedinputText;
-                if (seed == "-1")
-                {
-                    seed = null;
-                }
+                if (seed == "-1") { seed = null; }
                 promptWindow.GenerateImage(seed);
             }
-        }
+        });
 
-        GUILayout.Space(10f);
+        CustomStyle.Space();
 
         RenderImageSettingsSection(shouldAutoGenerateSeed);
 
         GUI.enabled = true;
 
-        GUILayout.Space(20f);
-
-        GUILayout.Label("Type");
-
+        CustomStyle.Space();
+        
         int selectedTab = isTextToImage ? 0 : (isImageToImage ? 1 : 2);
         string[] tabLabels = { "Text to Image", "Image to Image", "Inpainting" };
-        selectedTab = GUILayout.Toolbar(selectedTab, tabLabels);
+        selectedTab = GUILayout.Toolbar(selectedTab, tabLabels, CustomStyle.GetTertiaryButtonStyle());
 
         switch (selectedTab)
         {
@@ -197,7 +170,7 @@ public partial class PromptWindowUI
 
         if (isImageToImage || isInpainting)
         {
-            GUILayout.Space(10f);
+            CustomStyle.Space();
 
             Rect dropArea = RenderImageUploadArea();
 
@@ -243,7 +216,7 @@ public partial class PromptWindowUI
 
             if (isImageToImage)
             {
-                GUILayout.Space(10f);
+                CustomStyle.Space();
 
                 controlNetFoldout = EditorGUILayout.Foldout(controlNetFoldout, "ControlNet Options");
 
@@ -256,8 +229,7 @@ public partial class PromptWindowUI
 
     private static void DrawBackground(Rect position)
     {
-        Color backgroundColor = new Color32(26, 26, 26, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
     }
 
     private static void HandleDrag()
@@ -329,7 +301,7 @@ public partial class PromptWindowUI
 
     private static Rect RenderImageUploadArea()
     {
-        GUILayout.Label("Upload Image");
+        CustomStyle.Label("Upload Image");
 
         Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
         if (imageUpload == null)
@@ -389,14 +361,6 @@ public partial class PromptWindowUI
         }
 
         return nearestIndex;
-    }
-
-    private Texture2D CreateColorTexture(Color color)
-    {
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, color);
-        texture.Apply();
-        return texture;
     }
 
     private int GetNewIndex(Vector2 currentPos)

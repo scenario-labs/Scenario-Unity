@@ -68,9 +68,13 @@ public class ModelsUI
         {
             pageList = Models.models.GetRange(firstImageIndex, pageImageCount);
             if (Models.models.Count - (firstImageIndex + pageImageCount) >= 15)
+            {
                 EnableNextButton();
+            }
             else
+            {
                 DisableNextButton();
+            }
         }
         Models.loadedModels.Clear();
         foreach (var item in pageList)
@@ -103,14 +107,20 @@ public class ModelsUI
         GUILayout.BeginArea(new Rect(0, position.height - 50, position.width, 50));
         GUILayout.BeginHorizontal();
 
-        if (showPreviousButton && GUILayout.Button("Previous Page"))
+        if (showPreviousButton)
         {
-            RunModelsDataOperation(-1);
+            EditorStyle.Button("Previous Page", () =>
+            {
+                RunModelsDataOperation(-1);
+            });
         }
 
-        if (showNextButton && GUILayout.Button("Next Page"))
+        if (showNextButton)
         {
-            RunModelsDataOperation(1);
+            EditorStyle.Button("Next Page", () =>
+            {
+                RunModelsDataOperation(1);
+            });
         }
 
         GUILayout.EndHorizontal();
@@ -119,7 +129,7 @@ public class ModelsUI
 
     private static void DrawBackground(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
@@ -134,8 +144,11 @@ public class ModelsUI
 
         scrollPosition = GUI.BeginScrollView(new Rect(0, 70, position.width, position.height - 20), scrollPosition, new Rect(0, 0, position.width - 20, scrollViewHeight));
 
-        GUIStyle style = new GUIStyle(GUI.skin.label);
-        style.alignment = TextAnchor.MiddleCenter;
+        GUIStyle style = new GUIStyle(GUI.skin.label)
+        {
+            alignment = TextAnchor.MiddleCenter
+        };
+        
         for (int i = 0; i < textures.Count; i++)
         {
             DrawTextureBox(boxWidth, boxHeight, rowPadding, style, i);
@@ -186,11 +199,11 @@ public class ModelsUI
 
             if (selectedTab == 0)
             {
-                Models.ShowWindow("private");
+                Models.SetTab("private");
             }
             else if (selectedTab == 1)
             {
-                Models.ShowWindow("public");
+                Models.SetTab("public");
             }
         }
     }

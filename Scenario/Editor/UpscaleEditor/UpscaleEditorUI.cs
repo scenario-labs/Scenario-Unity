@@ -43,7 +43,7 @@ public class UpscaleEditorUI
 
     private static void DrawBackground(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
@@ -52,7 +52,7 @@ public class UpscaleEditorUI
         // Right section
         GUILayout.BeginVertical(GUILayout.Width(position.width * 0.15f));
 
-        GUILayout.Label("Upscale Image", EditorStyles.boldLabel);
+        EditorStyle.Label("Upscale Image", bold: true);
         if (currentImage == null)
         {
             DrawImageUploadArea();
@@ -63,17 +63,14 @@ public class UpscaleEditorUI
             Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
             GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
 
-            if (GUILayout.Button("Clear Image"))
-            {
-                currentImage = null;
-            }
+            EditorStyle.Button("Clear Image", ()=>currentImage = null);
         }
 
-        GUILayout.Label("Upscale Image Options", EditorStyles.boldLabel);
+        EditorStyle.Label("Upscale Image Options", bold: true);
 
         GUILayout.BeginHorizontal();
         {
-            GUILayout.Label("Scaling Factor:");
+            EditorStyle.Label("Scaling Factor:");
             
             if (GUILayout.Toggle(scalingFactor == 2, "2", EditorStyles.miniButtonLeft))
             {
@@ -90,23 +87,20 @@ public class UpscaleEditorUI
         forceFaceRestoration = EditorGUILayout.Toggle("Force Face Restoration", forceFaceRestoration);
         usePhotorealisticModel = EditorGUILayout.Toggle("Use Photorealistic Model", usePhotorealisticModel);
 
-        if (GUILayout.Button("Upscale Image"))
+        EditorStyle.Button("Upscale Image", () =>
         {
-            if (currentImage != null)
-            {
-                imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
-                assetId = imageData.Id;
-                
-                FetchUpscaledImage(imageDataUrl);
-            }
-        }
-
+            if (currentImage == null) return;
+            imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
+            assetId = imageData.Id;
+            FetchUpscaledImage(imageDataUrl);
+        });
+        
         if (selectedTexture != null)
         {
-            if (GUILayout.Button("Download"))
+            EditorStyle.Button("Download", () =>
             {
                 CommonUtils.SaveTextureAsPNG(selectedTexture);
-            }
+            });
         }
 
         GUILayout.EndVertical();
@@ -245,7 +239,7 @@ public class UpscaleEditorUI
                 photorealist = usePhotorealisticModel,
                 scalingFactor = scalingFactor,
                 returnImage = returnImage,
-                name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png"
+                name = CommonUtils.GetRandomImageFileName()
             };
             json = JsonConvert.SerializeObject(payload);
         }

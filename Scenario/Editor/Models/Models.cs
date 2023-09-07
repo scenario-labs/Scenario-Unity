@@ -19,18 +19,16 @@ public class Models : EditorWindow
     [MenuItem("Window/Scenario/Models")]
     public static void ShowWindow()
     {
-        ShowWindow("private");
+        SetTab("private");
         
         Models window = GetWindow<Models>("Models");
         window.minSize = new Vector2(MinimumWidth, window.minSize.y);
     }
 
-    public static void ShowWindow(string privacySetting)
+    public static void SetTab(string privacySetting)
     {
         privacy = privacySetting;
         GetModelsData(0);
-        GetPaginationToken(null);
-        EditorWindow.GetWindow(typeof(Models));
     }
 
     private void OnDestroy()
@@ -39,68 +37,64 @@ public class Models : EditorWindow
         modelsUI.ClearData();
     }
 
-    internal static void GetModelsData(int updateType = 0)
+    internal static void GetModelsData(int updateType = 0,Action onSuccess = null)
     {
         models.Clear();
-
-        bool continueFetching = true;
-        while (continueFetching)
+        
+        FetchModelPage(updateType, () =>
         {
-            string endpoint = $"models?pageSize=15&status=trained&privacy={privacy}";
-
-            if (!string.IsNullOrEmpty(paginationToken) && updateType != 0)
+            switch (updateType)
             {
-                endpoint += $"&paginationToken={paginationToken}";
+                case 0:
+                    modelsUI.SetFirstPage();
+                    break;
+                case 1:
+                    modelsUI.SetNextPage();
+                    break;
+                case -1:
+                    modelsUI.SetPreviousPage();
+                    break;
             }
 
-            ApiClient.RestGet(endpoint, response =>
-            {
-                var modelsResponse = JsonConvert.DeserializeObject<ModelsResponse>(response.Content);
-                models.AddRange(modelsResponse.models);
-
-                if (modelsResponse.nextPaginationToken is null ||
-                    paginationToken == modelsResponse.nextPaginationToken)
-                {
-                    paginationToken = "";
-                    continueFetching = false;
-                }
-                else
-                {
-                    paginationToken = modelsResponse.nextPaginationToken;
-                    Debug.Log("fetching data...");
-                }
-            }, error =>
-            {
-                Debug.Log("stop fetching data.");
-                continueFetching = false;
-            });
-        }
-
-        switch (updateType)
-        {
-            case 0:
-                modelsUI.SetFirstPage();
-                break;
-            case 1:
-                modelsUI.SetNextPage();
-                break;
-            case -1:
-                modelsUI.SetPreviousPage();
-                break;
-        }
-
-        modelsUI.UpdatePage();
-        EditorWindow.GetWindow(typeof(Models)).Repaint();
+            modelsUI.UpdatePage();
+            
+            EditorWindow.GetWindow(typeof(Models)).Repaint();
+            
+            onSuccess?.Invoke();
+        });
     }
 
-    private static void GetPaginationToken(Action<string> token)
+    private static void FetchModelPage(int updateType, Action onSuccess)
     {
-        ApiClient.RestGet("token", response =>
+        string endpoint = $"models?pageSize=15&status=trained&privacy={privacy}";
+
+        if (!string.IsNullOrEmpty(paginationToken) && updateType != 0)
         {
-            var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(response.Content);
-            paginationToken = tokenResponse.nextPaginationToken;
-            EditorPrefs.SetString(PaginationTokenKey, paginationToken);
-            token?.Invoke(paginationToken);
+            endpoint += $"&paginationToken={paginationToken}";
+        }
+
+        ApiClient.RestGet(endpoint, response =>
+        {
+            var modelsResponse = JsonConvert.DeserializeObject<ModelsResponse>(response.Content);
+            models.AddRange(modelsResponse.models);
+
+            if (modelsResponse.nextPaginationToken is null ||
+                paginationToken == modelsResponse.nextPaginationToken)
+            {
+                paginationToken = "";
+            }
+            else
+            {
+                paginationToken = modelsResponse.nextPaginationToken;
+                Debug.Log("fetching next page data...");
+                EditorPrefs.SetString(PaginationTokenKey, paginationToken);
+                FetchModelPage(updateType, null);
+            }
+            
+            onSuccess?.Invoke();
+        }, error =>
+        {
+            Debug.Log("stop fetching data.");
         });
     }
 

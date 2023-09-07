@@ -8,28 +8,33 @@ public partial class PromptWindowUI
 {
     private void RenderPromptSection()
     {
+        CustomStyle.Label("Prompt (Keywords to Include)", alignment: TextAnchor.MiddleCenter);
+
         GUILayout.BeginHorizontal();
         {
-            GUILayout.Label("Prompt");
-            GUILayout.FlexibleSpace();
+            CustomStyle.Space(2);
+            
+            HandlePositiveInputField();
+
+            CustomStyle.Space(2);
             GUIContent plusPrompt = new GUIContent(EditorGUIUtility.IconContent("d_Toolbar Plus").image);
-            if (GUILayout.Button(plusPrompt, GUILayout.Width(20), GUILayout.Height(15)))
+            if (GUILayout.Button(plusPrompt, GUILayout.Width(25), GUILayout.Height(25)))
             {
                 PromptBuilderWindow.isFromNegativePrompt = false;
                 PromptBuilderWindow.ShowWindow(PromptRecv, tags);
             }
         }
         GUILayout.EndHorizontal();
-
-        GUILayout.Space(10f);
-
-        EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(100));
+        
+        EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(50));
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             {
-                GUIStyle customTagStyle = new GUIStyle(EditorStyles.label);
-                customTagStyle.fixedHeight = 25;
-                customTagStyle.margin = new RectOffset(0, 5, 0, 5);
+                GUIStyle customTagStyle = new GUIStyle(EditorStyles.label)
+                {
+                    fixedHeight = 25,
+                    margin = new RectOffset(0, 5, 0, 5)
+                };
 
                 float availableWidth = EditorGUIUtility.currentViewWidth - 20;
                 int tagsPerRow = Mathf.FloorToInt(availableWidth / 100);
@@ -116,30 +121,30 @@ public partial class PromptWindowUI
                 }
             }
             EditorGUILayout.EndVertical();
-
-            EditorGUILayout.BeginVertical();
-            {
-                GUI.SetNextControlName("inputTextField");
-                inputText = EditorGUILayout.TextField(inputText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
-
-                if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "inputTextField")
-                {
-                    if (!string.IsNullOrWhiteSpace(inputText))
-                    {
-                        string descriptorName = inputText.Trim();
-                        tags.Add(descriptorName);
-                        inputText = "";
-                        Event.current.Use();
-                    }
-                    else
-                    {
-                        EditorGUI.FocusTextInControl("inputTextField");
-                        Event.current.Use();
-                    }
-                }
-            }
-            EditorGUILayout.EndVertical();
         }
         EditorGUILayout.EndVertical();
+    }
+
+    private void HandlePositiveInputField()
+    {
+        GUI.SetNextControlName("inputTextField");
+        inputText = EditorGUILayout.TextField(inputText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+
+        if (Event.current.isKey && Event.current.keyCode == KeyCode.Return &&
+            GUI.GetNameOfFocusedControl() == "inputTextField")
+        {
+            if (!string.IsNullOrWhiteSpace(inputText))
+            {
+                string descriptorName = inputText.Trim();
+                tags.Add(descriptorName);
+                inputText = "";
+                Event.current.Use();
+            }
+            else
+            {
+                EditorGUI.FocusTextInControl("inputTextField");
+                Event.current.Use();
+            }
+        }
     }
 }

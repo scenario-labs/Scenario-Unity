@@ -45,7 +45,7 @@ public class PixelEditorUI
 
     private static void DrawBackground(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
@@ -54,7 +54,7 @@ public class PixelEditorUI
         // Right section
         GUILayout.BeginVertical(GUILayout.Width(position.width * 0.15f));
 
-        GUILayout.Label("Pixelate Image", EditorStyles.boldLabel);
+        EditorStyle.Label("Pixelate Image", bold: true);
         if (currentImage == null)
         {
             Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
@@ -73,14 +73,11 @@ public class PixelEditorUI
             Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
             GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
 
-            if (GUILayout.Button("Clear Image"))
-            {
-                currentImage = null;
-            }
+            EditorStyle.Button("Clear Image", ()=> currentImage = null);
         }
 
 
-        GUILayout.Label("Pixel Grid Size:");
+        EditorStyle.Label("Pixel Grid Size:");
         int pixelGridSizeIndex = Array.IndexOf(allowedPixelGridSizes, (int)pixelGridSize);
         if (pixelGridSizeIndex == -1) { pixelGridSizeIndex = 0; }
         
@@ -89,23 +86,18 @@ public class PixelEditorUI
         removeNoise = EditorGUILayout.Toggle("Remove Noise", removeNoise);
         removeBackground = EditorGUILayout.Toggle("Remove Background", removeBackground);
 
-        if (GUILayout.Button("Pixelate Image"))
+        EditorStyle.Button("Pixelate Image", () =>
         {
-            if (currentImage != null)
-            {
-                imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
-
-                assetId = imageData.Id;
-                FetchPixelatedImage(imageDataUrl);
-            }
-        }
-
+            if (currentImage == null) return;
+            
+            imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
+            assetId = imageData.Id;
+            FetchPixelatedImage(imageDataUrl);
+        });
+        
         if (selectedTexture != null)
         {
-            if (GUILayout.Button("Download"))
-            {
-                CommonUtils.SaveTextureAsPNG(selectedTexture);
-            }
+            EditorStyle.Button("Download", () => CommonUtils.SaveTextureAsPNG(selectedTexture));
         }
 
         GUILayout.EndVertical();
@@ -123,11 +115,14 @@ public class PixelEditorUI
                 {
                     DragAndDrop.AcceptDrag();
                     string path = DragAndDrop.paths[0];
-                    if (System.IO.File.Exists(path) && (System.IO.Path.GetExtension(path).ToLower() == ".png" || System.IO.Path.GetExtension(path).ToLower() == ".jpg" || System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
+                    if (System.IO.File.Exists(path) &&
+                        (System.IO.Path.GetExtension(path).ToLower() == ".png" ||
+                         System.IO.Path.GetExtension(path).ToLower() == ".jpg" ||
+                         System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
                     {
                         currentImage = new Texture2D(2, 2);
-                        byte[] imageData = File.ReadAllBytes(path);
-                        currentImage.LoadImage(imageData);
+                        byte[] imgBytes = File.ReadAllBytes(path);
+                        currentImage.LoadImage(imgBytes);
                     }
                 }
                 currentEvent.Use();
@@ -182,7 +177,7 @@ public class PixelEditorUI
         return position;
     }
     
-    private async void FetchPixelatedImage(string imgUrl)
+    private void FetchPixelatedImage(string imgUrl)
     {
         string json = "";
         

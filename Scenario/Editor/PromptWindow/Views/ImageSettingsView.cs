@@ -8,32 +8,32 @@ public partial class PromptWindowUI
 {
      private void RenderImageSettingsSection(bool shouldAutoGenerateSeed)
     {
-        showSettings = EditorGUILayout.Foldout(showSettings, "Image Settings");
-        
+        showSettings = EditorGUILayout.BeginFoldoutHeaderGroup(showSettings, "Image Settings");
+
         if (!showSettings) return;
-        
+
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.LabelField("Width: ", EditorStyles.label, GUILayout.Width(55), GUILayout.Height(20));
+            CustomStyle.Label("Width: ", width: 45, height: 20);
             int widthIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
             widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(allowedWidthValues, x => x.ToString()),
-                allowedWidthValues.Length);
+                allowedWidthValues.Length, CustomStyle.GetNormalButtonStyle());
             widthSliderValue = allowedWidthValues[widthIndex];
         }
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.LabelField("Height: ", EditorStyles.label, GUILayout.Width(55), GUILayout.Height(20));
+            CustomStyle.Label("Height: ", width: 45, height: 20);
             int heightIndex = NearestValueIndex(heightSliderValue, allowedHeightValues);
             heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(allowedHeightValues, x => x.ToString()),
-                allowedHeightValues.Length);
+                allowedHeightValues.Length, CustomStyle.GetNormalButtonStyle());
             heightSliderValue = allowedHeightValues[heightIndex];
         }
         EditorGUILayout.EndHorizontal();
 
-        GUILayout.Space(20f);
-
+        CustomStyle.Space();
+        
         float labelWidthPercentage = 0.2f;
         float sliderWidthPercentage = 0.78f;
 
@@ -92,5 +92,7 @@ public partial class PromptWindowUI
             }
         }
         EditorGUILayout.EndHorizontal();
+
+        EditorGUILayout.EndFoldoutHeaderGroup();
     }
 }

@@ -56,31 +56,26 @@ public class PromptImagesUI
         float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
         GUILayout.BeginArea(new Rect(scrollViewWidth, 20, maxPreviewWidth, position.height - 20));
         GUILayout.Label("Selected Image", EditorStyles.boldLabel);
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
         GUILayout.BeginHorizontal();
-        GUILayout.Space(padding);
+        CustomStyle.Space(padding);
         GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth), GUILayout.Height(paddedPreviewHeight));
-        GUILayout.Space(padding);
+        CustomStyle.Space(padding);
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
 
         GUILayout.BeginVertical();
 
         GUILayout.BeginHorizontal();
-        GUILayout.Space(padding);
+        CustomStyle.Space(padding);
 
         string[] buttonNames = { "Refine Image", "Download", "Delete" };
         System.Action[] buttonCallbacks = {
-                () => {
-                    PromptWindowUI.imageUpload = selectedTexture;
-                },
-                () => { DownloadImage();
-                },
-                () => {
-                    promptImages.DeleteImageAtIndex(selectedTextureIndex);
-                }
-            };
+                () => PromptWindowUI.imageUpload = selectedTexture,
+                () => DownloadImage(),
+                () => promptImages.DeleteImageAtIndex(selectedTextureIndex)
+        };
 
         for (int i = 0; i < buttonNames.Length; i++)
         {
@@ -88,22 +83,18 @@ public class PromptImagesUI
             {
                 buttonCallbacks[i]();
             }
-            GUILayout.Space(padding);
+            CustomStyle.Space(padding);
         }
 
         GUILayout.EndHorizontal();
 
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
 
         string[] buttonNames2 = { "Remove Background", "Pixelate Image", "Upscale Image"/*, "Generate More Images"*/ };
         System.Action[] buttonCallbacks2 = {
-                () => {
-                    promptImages.RemoveBackground(selectedTextureIndex);
-                },
-                () => { ShowPixelEditor();
-                },
-                () => { ShowUpscaleEditor();
-                }/*,
+                () => promptImages.RemoveBackground(selectedTextureIndex),
+                () => ShowPixelEditor(),
+                () => ShowUpscaleEditor() /*,
                 () => {
                     // Assuming that selectedTexture is of type Texture2D
                     PromptWindowUI.imageUpload = selectedTexture;
@@ -116,7 +107,7 @@ public class PromptImagesUI
         for (int i = 0; i < buttonNames2.Length; i++)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Space(padding);
+            CustomStyle.Space(padding);
 
             if (GUILayout.Button(buttonNames2[i], GUILayout.Height(40)))
             {
@@ -124,14 +115,14 @@ public class PromptImagesUI
             }
 
             GUILayout.EndHorizontal();
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
         }
 
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
 
         GUILayout.EndVertical();
 
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
 
         GUILayout.EndArea();
     }

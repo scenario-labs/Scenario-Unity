@@ -1,11 +1,5 @@
-using Cysharp.Threading.Tasks;
 using System;
 using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
 using RestSharp;
 using UnityEngine;
 
@@ -106,28 +100,6 @@ public static class ApiClient
         {
             Debug.Log($"Error: {response.Content}");
             errorAction?.Invoke(response.ErrorMessage);
-        }
-    }
-
-    public static async UniTask<string> GetAsync(string endpoint)
-    {
-        using var client = new HttpClient();
-        
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", PluginSettings.EncodedAuth);
-        client.DefaultRequestHeaders.Accept.Clear();
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-
-        var response = await client.GetAsync(APIUrl + endpoint);
-
-        if (response.IsSuccessStatusCode)
-        {
-            string content = await response.Content.ReadAsStringAsync();
-            return content;
-        }
-        else
-        {
-            Debug.LogError(response.StatusCode + " , " + response.ReasonPhrase);
-            return null;
         }
     }
 }

@@ -35,17 +35,17 @@ public class PromptBuilderWindow : EditorWindow
         tagRects.Clear();
         DrawPromptWithTags();
 
-        EditorGUILayout.Space(20f);
+        CustomStyle.Space(20f);
 
         GUILayout.Label("Enhance your prompts with additional tokens from these categories:");
         DisplayCategoryButtons();
 
-        EditorGUILayout.Space(20f);
+        CustomStyle.Space(20f);
 
         GUILayout.Label("Choose a descriptor to add to your prompt");
         DisplayDescriptorButtons(currentDescriptors.Skip(pageIndex * itemsPerPage).Take(itemsPerPage).ToArray());
 
-        EditorGUILayout.Space(20f);
+        CustomStyle.Space(20f);
 
         DisplayNavigationButtons();
         DrawUpdateButton();
@@ -53,33 +53,26 @@ public class PromptBuilderWindow : EditorWindow
 
     private void DrawBackground()
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
     private void DrawUpdateButton()
     {
-        GUIStyle updateButtonStyle = new GUIStyle(GUI.skin.button);
-        updateButtonStyle.normal.background = CreateColorTexture(new Color(0, 0.5333f, 0.8f, 1));
-        updateButtonStyle.normal.textColor = Color.white;
-        updateButtonStyle.active.background = CreateColorTexture(new Color(0, 0.3f, 0.6f, 1));
-        updateButtonStyle.active.textColor = Color.white;
-
         Rect bottomAreaRect = new Rect(0, Screen.height - 60, Screen.width, 60);
 
         GUILayout.BeginArea(bottomAreaRect);
-
-        if (onReturn != null)
         {
-            if (GUILayout.Button("Update Tags", updateButtonStyle, GUILayout.Height(40)))
+            if (onReturn != null)
             {
-                Close();
-
-                onReturn?.Invoke(SerializeTags());
-                onReturn = null;
+                EditorStyle.ButtonPrimary("Update Tags", 40, () =>
+                {
+                    Close();
+                    onReturn?.Invoke(SerializeTags());
+                    onReturn = null;
+                });
             }
         }
-
         GUILayout.EndArea();
     }
 
@@ -90,9 +83,11 @@ public class PromptBuilderWindow : EditorWindow
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             {
-                GUIStyle customTagStyle = new GUIStyle(EditorStyles.label);
-                customTagStyle.fixedHeight = 25;
-                customTagStyle.margin = new RectOffset(0, 5, 0, 5);
+                GUIStyle customTagStyle = new GUIStyle(EditorStyles.label)
+                {
+                    fixedHeight = 25,
+                    margin = new RectOffset(0, 5, 0, 5)
+                };
 
                 float availableWidth = EditorGUIUtility.currentViewWidth - 20;
                 int tagsPerRow = Mathf.FloorToInt(availableWidth / 100);
@@ -215,8 +210,13 @@ public class PromptBuilderWindow : EditorWindow
         float buttonWidth = 100;
         int buttonsPerRow = Mathf.FloorToInt(position.width / buttonWidth);
         int currentButton = 0;
-        GUIStyle activeButtonStyle = new GUIStyle(GUI.skin.button);
-        activeButtonStyle.normal.textColor = Color.blue;
+        GUIStyle activeButtonStyle = new GUIStyle(GUI.skin.button)
+        {
+            normal =
+            {
+                textColor = Color.blue
+            }
+        };
 
         for (int i = 0; i < categories.Length; i++)
         {
@@ -327,14 +327,6 @@ public class PromptBuilderWindow : EditorWindow
         ShowWindow();
         Instance.tags = tagList;
         onReturn += onPromptBuilderReturn;
-    }
-
-    private Texture2D CreateColorTexture(Color color)
-    {
-        Texture2D texture = new Texture2D(1, 1);
-        texture.SetPixel(0, 0, color);
-        texture.Apply();
-        return texture;
     }
 }
 

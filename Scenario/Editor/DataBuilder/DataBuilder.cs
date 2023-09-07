@@ -35,28 +35,33 @@ public class DataBuilder : EditorWindow
 
     private void Update()
     {
-        if (previousScreenshotType != screenshotType && cameras != null)
+        if (previousScreenshotType == screenshotType || cameras == null) return;
+        
+        foreach (GameObject cameraObject in cameras)
         {
-            foreach (GameObject cameraObject in cameras)
+            Camera cameraComponent = cameraObject.GetComponent<Camera>();
+            if (screenshotType == ScreenshotType.Normal)
             {
-                Camera cameraComponent = cameraObject.GetComponent<Camera>();
-                if (screenshotType == ScreenshotType.Normal)
-                {
-                    cameraComponent.backgroundColor = Color.white;
-                }
-                else if (screenshotType == ScreenshotType.Depth)
-                {
-                    cameraComponent.backgroundColor = Color.black;
-                }
+                cameraComponent.backgroundColor = Color.white;
             }
-
-            previousScreenshotType = screenshotType;
+            else if (screenshotType == ScreenshotType.Depth)
+            {
+                cameraComponent.backgroundColor = Color.black;
+            }
         }
+
+        previousScreenshotType = screenshotType;
     }
 
     private void OnDestroy()
     {
-        Remove();
+        RemoveCamerasAndLights();
+
+        if (instantiatedObject != null)
+        {
+            DestroyImmediate(instantiatedObject);
+            instantiatedObject = null;
+        }
     }
 
     private void OnGUI()
@@ -99,7 +104,7 @@ public class DataBuilder : EditorWindow
             UpdateLightPositions();
         }
 
-        GUILayout.Space(20f);
+        CustomStyle.Space(20f);
 
         GUIStyle generateButtonStyle = new GUIStyle(GUI.skin.button);
         generateButtonStyle.normal.background = CreateColorTexture(new Color(0, 0.5333f, 0.8f, 1));
@@ -124,32 +129,17 @@ public class DataBuilder : EditorWindow
     {
         EditorGUILayout.BeginHorizontal();
         {
-            if (GUILayout.Button("Place Object"))
-            {
-                PlaceObject();
-            }
-
-            if (GUILayout.Button("Place Cameras/Lights"))
-            {
-                PlaceCamerasAndLights();
-            }
-
-            if (GUILayout.Button("Remove Object/Cameras/Lights"))
-            {
-                Remove();
-            }
-
-            if (GUILayout.Button("Take Screenshot"))
-            {
-                CaptureScreenshots();
-            }
+            EditorStyle.Button("Place Object", PlaceObject);
+            EditorStyle.Button("Place Cameras/Lights", PlaceCamerasAndLights);
+            EditorStyle.Button("Remove Cameras/Lights", RemoveCamerasAndLights);
+            EditorStyle.Button("Take Screenshot", CaptureScreenshots);
         }
         EditorGUILayout.EndHorizontal();
     }
 
     private void DrawBackground()
     {
-        Color backgroundColor = new Color32(26, 26, 26, 255);
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
@@ -228,7 +218,7 @@ public class DataBuilder : EditorWindow
         }
     }
 
-    private void Remove()
+    private void RemoveCamerasAndLights()
     {
         if (cameras != null)
         {
@@ -249,6 +239,7 @@ public class DataBuilder : EditorWindow
         }
 
         lights = null;
+
 
         if (instantiatedObject != null)
         {

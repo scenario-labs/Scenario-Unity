@@ -5,14 +5,19 @@ using UnityEngine;
 
 public partial class PromptWindowUI
 {
-      private void RenderNegativePromptSection()
+    private void RenderNegativePromptSection()
     {
+        CustomStyle.Label("Negative Prompt (Keywords to Exclude)", alignment: TextAnchor.MiddleCenter);
+
         GUILayout.BeginHorizontal();
         {
-            GUILayout.Label("Negative Prompt");
-            GUILayout.FlexibleSpace();
+            CustomStyle.Space(2);
+
+            HandleNegativeInputField();
+
+            CustomStyle.Space(2);
             GUIContent plusNegativePrompt = new GUIContent(EditorGUIUtility.IconContent("d_Toolbar Plus").image);
-            if (GUILayout.Button(plusNegativePrompt, GUILayout.Width(20), GUILayout.Height(15)))
+            if (GUILayout.Button(plusNegativePrompt, GUILayout.Width(25), GUILayout.Height(25)))
             {
                 PromptBuilderWindow.isFromNegativePrompt = true;
                 PromptBuilderWindow.ShowWindow(NegativePromptRecv, negativeTags);
@@ -20,7 +25,7 @@ public partial class PromptWindowUI
         }
         GUILayout.EndHorizontal();
 
-        EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(100));
+        EditorGUILayout.BeginVertical(GUI.skin.box, GUILayout.Height(50));
         {
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
             {
@@ -47,13 +52,23 @@ public partial class PromptWindowUI
                         Rect tagRect = GUILayoutUtility.GetRect(tagContent, customTagStyle);
 
                         bool isActiveTag = currentTagIndex == negativeDragFromIndex;
-                        GUIStyle tagStyle = isActiveTag ? new GUIStyle(customTagStyle) { normal = { background = MakeTex(2, 2, isActiveTag ? new Color(0.5f, 0.5f, 0.5f) : new Color(0.8f, 0.8f, 0.8f)) } } : customTagStyle;
+                        GUIStyle tagStyle = isActiveTag
+                            ? new GUIStyle(customTagStyle)
+                            {
+                                normal =
+                                {
+                                    background = MakeTex(2, 2,
+                                        isActiveTag ? new Color(0.5f, 0.5f, 0.5f) : new Color(0.8f, 0.8f, 0.8f))
+                                }
+                            }
+                            : customTagStyle;
 
                         Rect xRect = new Rect(tagRect.xMax - 20, tagRect.y, 20, tagRect.height);
 
                         if (Event.current.type == EventType.MouseDown)
                         {
-                            if (Event.current.button == 0 && Event.current.clickCount == 2 && tagRect.Contains(Event.current.mousePosition))
+                            if (Event.current.button == 0 && Event.current.clickCount == 2 &&
+                                tagRect.Contains(Event.current.mousePosition))
                             {
                                 int plusCount = tag.Split('+').Length - 1;
                                 if (plusCount < 3)
@@ -70,7 +85,8 @@ public partial class PromptWindowUI
                             }
                         }
 
-                        if (Event.current.type == EventType.MouseDown && Event.current.button == 0 && tagRect.Contains(Event.current.mousePosition))
+                        if (Event.current.type == EventType.MouseDown && Event.current.button == 0 &&
+                            tagRect.Contains(Event.current.mousePosition))
                         {
                             if (!xRect.Contains(Event.current.mousePosition))
                             {
@@ -115,30 +131,31 @@ public partial class PromptWindowUI
                 }
             }
             EditorGUILayout.EndVertical();
-
-            EditorGUILayout.BeginVertical();
-            {
-                GUI.SetNextControlName("negativeInputTextField");
-                negativeInputText = EditorGUILayout.TextField(negativeInputText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
-
-                if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "negativeInputTextField")
-                {
-                    if (!string.IsNullOrWhiteSpace(negativeInputText))
-                    {
-                        string descriptorName = negativeInputText.Trim();
-                        negativeTags.Add(descriptorName);
-                        negativeInputText = "";
-                        Event.current.Use();
-                    }
-                    else
-                    {
-                        EditorGUI.FocusTextInControl("negativeInputTextField");
-                        Event.current.Use();
-                    }
-                }
-            }
-            EditorGUILayout.EndVertical();
         }
         EditorGUILayout.EndVertical();
+    }
+
+    private void HandleNegativeInputField()
+    {
+        GUI.SetNextControlName("negativeInputTextField");
+        negativeInputText =
+            EditorGUILayout.TextField(negativeInputText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+
+        if (Event.current.isKey && Event.current.keyCode == KeyCode.Return &&
+            GUI.GetNameOfFocusedControl() == "negativeInputTextField")
+        {
+            if (!string.IsNullOrWhiteSpace(negativeInputText))
+            {
+                string descriptorName = negativeInputText.Trim();
+                negativeTags.Add(descriptorName);
+                negativeInputText = "";
+                Event.current.Use();
+            }
+            else
+            {
+                EditorGUI.FocusTextInControl("negativeInputTextField");
+                Event.current.Use();
+            }
+        }
     }
 }

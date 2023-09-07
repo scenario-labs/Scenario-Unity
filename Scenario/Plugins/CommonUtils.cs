@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
@@ -11,6 +10,14 @@ using UnityEngine.Networking;
 
 public static class CommonUtils
 {
+    public static Texture2D CreateColorTexture(Color color)
+    {
+        Texture2D texture = new Texture2D(1, 1);
+        texture.SetPixel(0, 0, color);
+        texture.Apply();
+        return texture;
+    }
+    
     public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "")
     {
         if (fileName == null) { fileName = GetRandomImageFileName(); }
@@ -81,23 +88,5 @@ public static class CommonUtils
         Texture2D texture = new Texture2D(1,1);
         ImageConversion.LoadImage(texture, bytes);
         return texture;
-    }
-    
-    public static async Task<Texture2D> FetchTextureFromURLAsync(string url)
-    {
-        using UnityWebRequest www = UnityWebRequest.Get(url);
-        
-        DownloadHandlerTexture downloadHandlerTexture = new DownloadHandlerTexture(true);
-        www.downloadHandler = downloadHandlerTexture;
-        
-        await www.SendWebRequest();
-        
-        if (www.result != UnityWebRequest.Result.Success)
-        {
-            Debug.LogError(www.error);
-            return null;
-        }
-        
-        return downloadHandlerTexture.texture;
     }
 }

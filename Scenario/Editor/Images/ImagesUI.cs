@@ -60,8 +60,10 @@ public class ImagesUI
         textures.Clear();
         foreach (var item in pageList)
         {
-            Texture2D texture = await CommonUtils.FetchTextureFromURLAsync(item.Url);
-            textures.Add(texture);
+            CommonUtils.FetchTextureFromURL(item.Url, texture =>
+            {
+                textures.Add(texture);
+            });
         }
     }
 
@@ -72,8 +74,7 @@ public class ImagesUI
 
     public void OnGUI(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        DrawBackground(position);
 
         float previewWidth = 309f;
         float scrollViewWidth = selectedTexture != null ? position.width - previewWidth : position.width;
@@ -117,6 +118,12 @@ public class ImagesUI
         DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
     }
 
+    private static void DrawBackground(Rect position)
+    {
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+    }
+
     private void DrawSelectedTextureSection(Rect position, float previewWidth, float scrollViewWidth)
     {
         if (selectedTexture == null)
@@ -134,16 +141,16 @@ public class ImagesUI
     private void DrawScrollableArea(float previewWidth)
     {
         DrawSelectedImage(previewWidth);
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
         GUILayout.BeginVertical();
         {
             DrawFirstButtons();
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
             DrawSecondButtons();
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
         }
         GUILayout.EndVertical();
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
     }
 
     private void DrawSecondButtons()
@@ -163,17 +170,17 @@ public class ImagesUI
         {
             GUILayout.BeginHorizontal();
             {
-                GUILayout.Space(padding);
+                CustomStyle.Space(padding);
 
                 if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
                 {
                     buttonCallbacks[i]();
                 }
 
-                GUILayout.Space(padding);
+                CustomStyle.Space(padding);
             }
             GUILayout.EndHorizontal();
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
         }
     }
 
@@ -181,7 +188,7 @@ public class ImagesUI
     {
         GUILayout.BeginHorizontal();
         {
-            GUILayout.Space(padding);
+            CustomStyle.Space(padding);
 
             string[] buttonNames = { "Refine Image", "Download", "Delete" };
             System.Action[] buttonCallbacks =
@@ -202,7 +209,7 @@ public class ImagesUI
                     buttonCallbacks[i]();
                 }
 
-                GUILayout.Space(padding);
+                CustomStyle.Space(padding);
             }
         }
         GUILayout.EndHorizontal();
@@ -212,7 +219,7 @@ public class ImagesUI
     {
         GUILayout.Label("Selected Image", EditorStyles.boldLabel);
 
-        GUILayout.Space(10);
+        CustomStyle.Space(10);
 
         float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
         float paddedPreviewWidth = previewWidth - 2 * padding;
@@ -220,10 +227,10 @@ public class ImagesUI
 
         GUILayout.BeginHorizontal();
         {
-            GUILayout.Space(padding);
+            CustomStyle.Space(padding);
             GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth),
                 GUILayout.Height(paddedPreviewHeight));
-            GUILayout.Space(padding);
+            CustomStyle.Space(padding);
         }
         GUILayout.EndHorizontal();
     }

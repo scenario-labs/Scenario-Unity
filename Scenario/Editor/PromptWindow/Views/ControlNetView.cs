@@ -25,7 +25,7 @@ public partial class PromptWindowUI
 
         if (!isControlNet) return;
         
-        GUILayout.Space(20);
+        CustomStyle.Space(20);
 
         if (isAdvancedSettings)
         {

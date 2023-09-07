@@ -48,8 +48,10 @@ public class LayerEditor : EditorWindow
 
     private void OnEnable()
     {
-        imageStyle = new GUIStyle();
-        imageStyle.alignment = TextAnchor.MiddleCenter;
+        imageStyle = new GUIStyle
+        {
+            alignment = TextAnchor.MiddleCenter
+        };
 
         uploadedImages = new List<Texture2D>();
         imagePositions = new List<Vector2>();

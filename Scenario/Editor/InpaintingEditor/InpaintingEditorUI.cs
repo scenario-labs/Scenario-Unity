@@ -106,8 +106,7 @@ public class InpaintingEditorUI
 
     public void DrawUI(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        DrawBackground(position);
 
         float leftSectionWidth = position.width * 0.1f;
         float middleSectionWidth = position.width * 0.8f;
@@ -126,12 +125,18 @@ public class InpaintingEditorUI
         EditorGUILayout.EndHorizontal();
     }
 
+    private static void DrawBackground(Rect position)
+    {
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+    }
+
     private void DrawRightSection(float rightSectionWidth)
     {
         // Right Section
         EditorGUILayout.BeginVertical(GUILayout.Width(rightSectionWidth));
-        GUILayout.Space(18);
-        GUILayout.Label("Actions", EditorStyles.boldLabel);
+        CustomStyle.Space(18);
+        EditorStyle.Label("Actions", bold: true);
 
         for (int i = 0; i < actionButtons.Length; i++)
         {
@@ -151,7 +156,7 @@ public class InpaintingEditorUI
         // Middle Section
         EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
         {
-            GUILayout.Space(18);
+            CustomStyle.Space(18);
 
             if (uploadedImage != null)
             {
@@ -236,7 +241,7 @@ public class InpaintingEditorUI
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.Space();
+            CustomStyle.Space();
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             {
                 float centerX = position.width * 0.5f;
@@ -294,7 +299,7 @@ public class InpaintingEditorUI
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.Space();
+            CustomStyle.Space();
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             {
                 float centerX = position.width * 0.5f;
@@ -352,7 +357,7 @@ public class InpaintingEditorUI
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.Space();
+            CustomStyle.Space();
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             {
                 float maxSize = 1024f;
@@ -436,7 +441,7 @@ public class InpaintingEditorUI
         // Left Section
         EditorGUILayout.BeginVertical(GUILayout.Width(leftSectionWidth));
         {
-            GUILayout.Space(18);
+            CustomStyle.Space(18);
             GUILayout.Label("Tools", EditorStyles.boldLabel);
 
             for (int i = 0; i < toolButtons.Length; i++)
@@ -463,7 +468,7 @@ public class InpaintingEditorUI
                 }
             }
 
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
 
             int[] brushSizes = new int[] { 6, 12, 16, 24, 30, 40, 48, 64 };
 
@@ -481,7 +486,7 @@ public class InpaintingEditorUI
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(20);
+            CustomStyle.Space(20);
 
             float[] opacities = new[] { 0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
             int selectedOpacityIndex = 5;

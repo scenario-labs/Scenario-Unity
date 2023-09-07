@@ -95,8 +95,7 @@ public class ImageEditorUI
 
     public void DrawUI(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        DrawBackground(position);
 
         EditorGUILayout.BeginHorizontal();
 
@@ -114,12 +113,18 @@ public class ImageEditorUI
         EditorGUILayout.EndHorizontal();
     }
 
+    private static void DrawBackground(Rect position)
+    {
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+    }
+
     private void DrawRightSection(Rect position)
     {
         // Right Section
         float rightSectionWidth = position.width * 0.1f;
         EditorGUILayout.BeginVertical(GUILayout.Width(rightSectionWidth));
-        GUILayout.Space(18);
+        CustomStyle.Space(18);
         GUILayout.Label("Actions", EditorStyles.boldLabel);
 
         for (int i = 0; i < actionButtons.Length; i++)
@@ -140,7 +145,7 @@ public class ImageEditorUI
         float middleSectionWidth = position.width * 0.8f;
         EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
         {
-            GUILayout.Space(18);
+            CustomStyle.Space(18);
 
             if (uploadedImage != null)
             {
@@ -229,7 +234,7 @@ public class ImageEditorUI
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.Space();
+            CustomStyle.Space();
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             {
                 float centerX = position.width * 0.5f;
@@ -283,7 +288,7 @@ public class ImageEditorUI
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.Space();
+            CustomStyle.Space();
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             {
                 float centerX = position.width * 0.5f;
@@ -337,7 +342,7 @@ public class ImageEditorUI
     {
         EditorGUILayout.BeginHorizontal();
         {
-            EditorGUILayout.Space();
+            CustomStyle.Space();
             EditorGUILayout.BeginVertical(GUILayout.ExpandWidth(false), GUILayout.ExpandHeight(false));
             {
                 float maxSize = 1024f;
@@ -415,7 +420,7 @@ public class ImageEditorUI
         float leftSectionWidth = position.width * 0.1f;
         EditorGUILayout.BeginVertical(GUILayout.Width(leftSectionWidth));
         {
-            GUILayout.Space(18);
+            CustomStyle.Space(18);
             GUILayout.Label("Tools", EditorStyles.boldLabel);
 
             for (int i = 0; i < toolButtons.Length; i++)
@@ -441,7 +446,7 @@ public class ImageEditorUI
                 }
             }
 
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
 
             GUILayout.Label("Color", EditorStyles.boldLabel);
             
@@ -465,7 +470,7 @@ public class ImageEditorUI
                 if (i % numColumns == numColumns - 1 || i == 34) EditorGUILayout.EndHorizontal();
             }
 
-            GUILayout.Space(10);
+            CustomStyle.Space(10);
 
             int[] brushSizes = new[] { 6, 12, 16, 24, 30, 40, 48, 64 };
 
@@ -483,7 +488,7 @@ public class ImageEditorUI
             }
             GUILayout.EndHorizontal();
 
-            GUILayout.Space(20);
+            CustomStyle.Space(20);
 
             float[] opacities = new float[] { 0.0f, 0.2f, 0.4f, 0.6f, 0.8f, 1.0f };
             int selectedOpacityIndex = 5;

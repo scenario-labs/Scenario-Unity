@@ -34,7 +34,7 @@ public class CompositionEditor : EditorWindow
 
     private void DrawBackground()
     {
-        Color backgroundColor = new Color32(26, 26, 26, 255);
+        Color backgroundColor = CustomStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
@@ -50,31 +50,20 @@ public class CompositionEditor : EditorWindow
     {
         EditorGUILayout.BeginHorizontal();
         {
-            if (GUILayout.Button("Place Camera"))
-            {
-                PlaceCamera();
-            }
-
-            if (GUILayout.Button("Remove Camera"))
-            {
-                RemoveCamera();
-            }
-
-            if (GUILayout.Button("Screenshot"))
-            {
-                CaptureScreenshot();
-            }
+            CustomStyle.ButtonSecondary("Place Camera", 25, PlaceCamera);
+            CustomStyle.ButtonSecondary("Remove Camera", 25, RemoveCamera);
+            CustomStyle.ButtonSecondary("Take Screenshot", 25, CaptureScreenshot);
         }
         EditorGUILayout.EndHorizontal();
     }
 
     private void DrawControls()
     {
-        GUILayout.Space(20f);
+        CustomStyle.Space();
         distanceOffset = EditorGUILayout.Slider("Distance Offset: ", distanceOffset, 0.1f, 100.0f);
         widthSliderValue = DrawDimensionControl("Width: ", widthSliderValue, AllowedWidthValues);
         heightSliderValue = DrawDimensionControl("Height: ", heightSliderValue, AllowedHeightValues);
-        GUILayout.Space(20f);
+        CustomStyle.Space(20f);
     }
 
     private int DrawDimensionControl(string label, int currentValue, int[] allowedValues)
@@ -124,7 +113,7 @@ public class CompositionEditor : EditorWindow
             }
         }
         EditorGUILayout.EndVertical();
-        GUILayout.Space(10f);
+        CustomStyle.Space(10f);
     }
 
     private void PlaceCamera()

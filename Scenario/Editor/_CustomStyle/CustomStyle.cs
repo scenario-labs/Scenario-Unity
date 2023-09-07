@@ -34,8 +34,6 @@ public static class CustomStyle
     {
         return new Color32(18, 18, 18, 255);
     }
-    
-    //new Color(0.23f, 0.89f, 0.45f)
 
     public static bool Foldout(bool value, string text)
     {
@@ -120,7 +118,6 @@ public static class CustomStyle
             border = new RectOffset(),
             normal =
             {
-                background = CommonUtils.CreateColorTexture(new Color(0.09f, 0.75f, 0.92f)),
                 textColor = Color.white
             },
             active =

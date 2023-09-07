@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using System.Collections.Generic;
+using System.Text;
 
 public partial class PromptWindowUI
 {
@@ -40,7 +41,7 @@ public partial class PromptWindowUI
     internal int widthSliderValue = 512;
     internal int heightSliderValue = 512;
     internal float imagesliderValue = 4;
-    internal float samplesliderValue = 50;
+    internal float samplesliderValue = 30;
     internal float influncesliderValue = 0.25f;
     internal float guidancesliderValue = 7;
     internal string postedModelName = "Choose Model";
@@ -326,12 +327,16 @@ public partial class PromptWindowUI
     
     private string SerializeTags(List<string> tags)
     {
-        string values = "";
-        foreach (var tag in tags)
+        if (tags == null || tags.Count == 0)
+            return "";
+
+        StringBuilder serializedTags = new StringBuilder(tags[0]);
+        for (int i = 1; i < tags.Count; i++)
         {
-            values += tag + ", ";
+            serializedTags.Append(", ");
+            serializedTags.Append(tags[i]);
         }
-        return values;
+        return serializedTags.ToString();
     }
 
     private string TruncateTag(string tag)

@@ -32,7 +32,7 @@ public static class CustomStyle
     
     public static Color GetBackgroundColor()
     {
-        return new Color(0.24f, 0.24f, 0.24f);
+        return new Color32(18, 18, 18, 255);
     }
     
     //new Color(0.23f, 0.89f, 0.45f)
@@ -92,17 +92,17 @@ public static class CustomStyle
         {
             normal =
             {
-                background = CommonUtils.CreateColorTexture(new Color(0.44f, 0.35f, 0.89f)),
+                background = CommonUtils.CreateColorTexture(new Color(0, 0.5333f, 0.8f, 1)),
                 textColor = Color.white
             },
             active =
             {
-                background = CommonUtils.CreateColorTexture(new Color(0.33f, 0.34f, 1f)),
+                background = CommonUtils.CreateColorTexture(new Color(0, 0.5333f, 0.75f, 1)),
                 textColor = Color.white
             },
             hover = 
             {
-                background = CommonUtils.CreateColorTexture(new Color(0.47f, 0.5f, 1f)),
+                background = CommonUtils.CreateColorTexture(new Color(0, 0.5333f, 0.75f, 1)),
                 textColor = Color.white
             }
         };

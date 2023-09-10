@@ -8,15 +8,10 @@ public partial class PromptWindowUI
 {
     private void RenderPromptSection()
     {
-        CustomStyle.Label("Prompt (Keywords to Include)", alignment: TextAnchor.MiddleCenter);
-
         GUILayout.BeginHorizontal();
         {
-            CustomStyle.Space(2);
-            
+            CustomStyle.Label("Prompt", width: 64, alignment: TextAnchor.MiddleCenter);
             HandlePositiveInputField();
-
-            CustomStyle.Space(2);
             GUIContent plusPrompt = new GUIContent(EditorGUIUtility.IconContent("d_Toolbar Plus").image);
             if (GUILayout.Button(plusPrompt, GUILayout.Width(25), GUILayout.Height(25)))
             {
@@ -128,7 +123,7 @@ public partial class PromptWindowUI
     private void HandlePositiveInputField()
     {
         GUI.SetNextControlName("inputTextField");
-        inputText = EditorGUILayout.TextField(inputText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+        inputText = EditorGUILayout.TextField(inputText, GUILayout.ExpandWidth(true), GUILayout.Height(25), GUILayout.MinWidth(400));
 
         if (Event.current.isKey && Event.current.keyCode == KeyCode.Return &&
             GUI.GetNameOfFocusedControl() == "inputTextField")

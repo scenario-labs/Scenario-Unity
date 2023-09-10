@@ -1,126 +1,113 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
+using System.Linq;
 using static Models;
 
 public class ModelsUI
 {
+    public List<ModelData> pageModels = new();
+    private float padding = 10f;
     private int itemsPerRow = 5;
     private int firstImageIndex;
-    private int pageImageCount;
-    private float padding = 10f;
-    private List<ModelData> pageList = new();
-    private List<(Texture2D, string)> textures = new();
+    private int maxModelsPerPage;
     private int selectedTab = 0;
-    private bool showNextButton = true;
+    private bool showNextButton = false;
     private bool showPreviousButton = false;
+    private bool drawTabs = false;
     private Vector2 scrollPosition = Vector2.zero;
 
-    public void DisableNextButton()
+    private void SetFirstPage()
     {
-        showNextButton = false;
-    }
-
-    public void EnableNextButton()
-    {
-        showNextButton = true;
-    }
-
-    public void SetFirstPage()
-    {
+        selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
+        
         firstImageIndex = 0;
-        pageImageCount = 15;
+        maxModelsPerPage = 15;
 
         showPreviousButton = false;
+        showNextButton = false;
+
+        UpdatePage();
     }
 
-    public void SetNextPage()
+    private void SetNextPage()
     {
-        firstImageIndex += pageImageCount;
-        if (firstImageIndex > Models.models.Count - pageImageCount)
+        firstImageIndex += maxModelsPerPage;
+
+        var models = Models.GetModels();
+        
+        if (firstImageIndex > models.Count - maxModelsPerPage)
         {
-            firstImageIndex = Models.models.Count - pageImageCount;
+            firstImageIndex = models.Count - maxModelsPerPage;
+            showNextButton = false;
         }
         showPreviousButton = true;
+
+        UpdatePage();
     }
 
-    public void SetPreviousPage()
+    private void SetPreviousPage()
     {
-        firstImageIndex -= pageImageCount;
-        showPreviousButton = firstImageIndex > 0;
-    }
-
-    public void ResetPaginationToken()
-    {
-        Models.paginationToken = "";
-        EditorPrefs.SetString(Models.PaginationTokenKey, Models.paginationToken);
-    }
-
-    public void UpdatePage()
-    {
-        pageList.Clear();
-        if (models.Count < pageImageCount)
-        {
-            pageList.AddRange(models);
-            DisableNextButton();
-        }
-        else
-        {
-            pageList = Models.models.GetRange(firstImageIndex, pageImageCount);
-            if (Models.models.Count - (firstImageIndex + pageImageCount) >= 15)
-            {
-                EnableNextButton();
-            }
-            else
-            {
-                DisableNextButton();
-            }
-        }
-        Models.loadedModels.Clear();
-        foreach (var item in pageList)
-        {
-            Models.loadedModels.Add(item.id);
-        }
+        firstImageIndex -= maxModelsPerPage;
+        showPreviousButton = firstImageIndex > maxModelsPerPage;
         
-        UpdateTextures();
+        UpdatePage();
     }
 
-    public void ResetTabSelection()
+    private void UpdatePage()
     {
-        selectedTab = 0;
-    }
+        // clear page
+        pageModels.Clear();
+        
+        var models = Models.GetModels();
 
-    public void ClearData()
-    {
-        textures.Clear();
-    }
+        // Populate Page with models
+        for (int i = firstImageIndex; i < firstImageIndex + maxModelsPerPage; i++)
+        {
+            if (i > models.Count - 1)
+            {
+                continue;
+            }
+            
+            pageModels.Add(models[i]);
+        }
 
+        if (models.Count > maxModelsPerPage && firstImageIndex != models.Count - maxModelsPerPage)
+        {
+            showNextButton = true;
+        }
+
+        if (pageModels.Count > maxModelsPerPage)
+        {
+            showNextButton = true;
+        }
+
+        drawTabs = true;
+    }
+    
     public void OnGUI(Rect position)
     {
         DrawBackground(position);
 
-        string[] tabs = { "Private Models", "Public Models" };
-        HandleTabSelection(tabs);
+        if (drawTabs)
+        {
+            string[] tabs = { "Private Models", "Public Models" };
+            HandleTabSelection(tabs);    
+        }
 
-        position = DrawModelsGrid(position);
+        DrawModelsGrid(position);
 
         GUILayout.BeginArea(new Rect(0, position.height - 50, position.width, 50));
         GUILayout.BeginHorizontal();
 
         if (showPreviousButton)
         {
-            EditorStyle.Button("Previous Page", () =>
-            {
-                RunModelsDataOperation(-1);
-            });
+            EditorStyle.Button("Previous Page", () => { RedrawPage(-1); });
         }
 
         if (showNextButton)
         {
-            EditorStyle.Button("Next Page", () =>
-            {
-                RunModelsDataOperation(1);
-            });
+            EditorStyle.Button("Next Page", () => { RedrawPage(1); });
         }
 
         GUILayout.EndHorizontal();
@@ -133,58 +120,66 @@ public class ModelsUI
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
-    private Rect DrawModelsGrid(Rect position)
+    private void DrawModelsGrid(Rect position)
     {
         float boxWidth = (position.width - padding * (itemsPerRow - 1)) / itemsPerRow;
         float boxHeight = boxWidth;
 
-        int numRows = Mathf.CeilToInt((float)textures.Count / itemsPerRow);
+        var textures = Models.GetTextures();
+
+        int numRows = Mathf.CeilToInt((float)maxModelsPerPage / itemsPerRow);
         float rowPadding = 10f;
         float scrollViewHeight = (boxHeight + padding + rowPadding) * numRows - rowPadding;
 
         scrollPosition = GUI.BeginScrollView(new Rect(0, 70, position.width, position.height - 20), scrollPosition, new Rect(0, 0, position.width - 20, scrollViewHeight));
-
-        GUIStyle style = new GUIStyle(GUI.skin.label)
         {
-            alignment = TextAnchor.MiddleCenter
-        };
-        
-        for (int i = 0; i < textures.Count; i++)
-        {
-            DrawTextureBox(boxWidth, boxHeight, rowPadding, style, i);
+            DrawTextureBox(boxWidth, boxHeight, rowPadding, textures);
         }
-
         GUI.EndScrollView();
-        return position;
     }
 
-    private void DrawTextureBox(float boxWidth, float boxHeight, float rowPadding, GUIStyle style, int i)
+    private void DrawTextureBox(float boxWidth, float boxHeight, float rowPadding, List<TexturePair> textures)
     {
-        int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
-        int colIndex = i % itemsPerRow;
+        var models = Models.GetModels();
 
-        Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding + rowPadding), boxWidth, boxHeight);
-        Texture2D texture = textures[i].Item1;
-        string name = textures[i].Item2;
-
-        if (texture != null)
+        for (int i = 0; i < pageModels.Count; i++)
         {
-            if (GUI.Button(boxRect, texture))
+            int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
+            int colIndex = i % itemsPerRow;
+
+            var i1 = i;
+            var item = textures.FirstOrDefault(x => x.name == pageModels[i1].name);
+            if (item == null) { return; }
+
+            Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding + rowPadding), boxWidth, boxHeight);
+            Texture2D texture = item.texture;
+            string name = item.name;
+        
+            GUIStyle style = new GUIStyle(GUI.skin.label)
             {
-                if (i >= 0 && i < Models.loadedModels.Count)
-                {
-                    EditorPrefs.SetString("SelectedModelId", Models.loadedModels[i].ToString());
-                    EditorPrefs.SetString("SelectedModelName", name);
-                }
+                alignment = TextAnchor.MiddleCenter
+            };
 
-                EditorWindow window = EditorWindow.GetWindow(typeof(Models));
-                window.Close();
+            if (texture != null)
+            {
+                if (GUI.Button(boxRect, texture))
+                {
+                    if (i >= 0 && i < models.Count)
+                    {
+                        EditorPrefs.SetString("SelectedModelId", models[i].id);
+                        EditorPrefs.SetString("SelectedModelName", name);
+                    }
+
+                    EditorWindow window = EditorWindow.GetWindow(typeof(Models));
+                    window.Close();
+                }
+                
+                GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);
             }
-            GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);
-        }
-        else
-        {
-            GUI.Box(boxRect, "Loading...");
+            else
+            {
+                GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading..", style);
+            }
         }
     }
 
@@ -195,48 +190,32 @@ public class ModelsUI
 
         if (previousTab != selectedTab)
         {
-            ClearData();
-
             if (selectedTab == 0)
             {
-                Models.SetTab("private");
+                Models.SetTab(Models.privacyPrivate);
+                drawTabs = false;
             }
             else if (selectedTab == 1)
             {
-                Models.SetTab("public");
+                Models.SetTab(Models.privacyPublic);
+                drawTabs = false;
             }
         }
     }
 
-    private void RunModelsDataOperation(int direction)
+    public void RedrawPage(int _updateType)
     {
-        GetModelsData(direction);
-    }
-
-    private void UpdateTextures()
-    {
-        textures.Clear();
-        
-        foreach (var item in pageList)
+        switch (_updateType)
         {
-            string downloadUrl = null;
-            
-            if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
-            {
-                downloadUrl = item.thumbnail.url;
-            }
-            else if (item.trainingImages != null && item.trainingImages.Count > 0)
-            {
-                downloadUrl = item.trainingImages[0].downloadUrl;
-            }
-
-            if (!string.IsNullOrEmpty(downloadUrl))
-            {
-                CommonUtils.FetchTextureFromURL(downloadUrl, texture =>
-                {
-                    textures.Add((texture, item.name));
-                });
-            }
+            case 0:
+                SetFirstPage();
+                break;
+            case 1:
+                SetNextPage();
+                break;
+            case -1:
+                SetPreviousPage();
+                break;
         }
     }
 }

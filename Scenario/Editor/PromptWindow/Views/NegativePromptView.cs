@@ -7,15 +7,10 @@ public partial class PromptWindowUI
 {
     private void RenderNegativePromptSection()
     {
-        CustomStyle.Label("Negative Prompt (Keywords to Exclude)", alignment: TextAnchor.MiddleCenter);
-
         GUILayout.BeginHorizontal();
         {
-            CustomStyle.Space(2);
-
+            CustomStyle.Label("- Prompt", width: 64, alignment: TextAnchor.MiddleCenter);
             HandleNegativeInputField();
-
-            CustomStyle.Space(2);
             GUIContent plusNegativePrompt = new GUIContent(EditorGUIUtility.IconContent("d_Toolbar Plus").image);
             if (GUILayout.Button(plusNegativePrompt, GUILayout.Width(25), GUILayout.Height(25)))
             {
@@ -139,7 +134,7 @@ public partial class PromptWindowUI
     {
         GUI.SetNextControlName("negativeInputTextField");
         negativeInputText =
-            EditorGUILayout.TextField(negativeInputText, GUILayout.ExpandWidth(true), GUILayout.Height(25));
+            EditorGUILayout.TextField(negativeInputText, GUILayout.ExpandWidth(true), GUILayout.Height(25), GUILayout.MinWidth(400));
 
         if (Event.current.isKey && Event.current.keyCode == KeyCode.Return &&
             GUI.GetNameOfFocusedControl() == "negativeInputTextField")

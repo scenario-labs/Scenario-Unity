@@ -55,7 +55,7 @@ public class ImagesUI
         FetchPageTextures();
     }
 
-    public async void FetchPageTextures()
+    private void FetchPageTextures()
     {
         textures.Clear();
         foreach (var item in pageList)
@@ -96,21 +96,20 @@ public class ImagesUI
         GUI.EndScrollView();
 
         GUILayout.BeginArea(new Rect(0, position.height - 50, scrollViewWidth, 50));
-        GUILayout.BeginHorizontal();
-
-        if (firstImageIndex > 0 && GUILayout.Button("Previous Page"))
         {
-            SetPreviousPage();
-            UpdatePage();
+            GUILayout.BeginHorizontal();
+            if (firstImageIndex > 0 && GUILayout.Button("Previous Page"))
+            {
+                SetPreviousPage();
+                UpdatePage();
+            }
+            if (firstImageIndex < imageDataList.Count - pageImageCount && GUILayout.Button("Next Page"))
+            {
+                SetNextPage();
+                UpdatePage();
+            }
+            GUILayout.EndHorizontal();
         }
-
-        if (firstImageIndex < imageDataList.Count - pageImageCount && GUILayout.Button("Next Page"))
-        {
-            SetNextPage();
-            UpdatePage();
-        }
-
-        GUILayout.EndHorizontal();
         GUILayout.EndArea();
 
         GUILayout.FlexibleSpace();

@@ -66,6 +66,29 @@ public static class CommonUtils
             response?.Invoke(texture);
         }
     }
+    
+    public static async Task<Texture2D> FetchTextureFromURLAsync(string imageUrl)
+    {
+        using UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUrl);
+        
+        var task = www.SendWebRequest();
+
+        while (!task.isDone)
+        {
+            await Task.Delay(1000);
+        }
+        
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError(www.error);
+            return null;
+        }
+        else
+        {
+            Texture2D texture = DownloadHandlerTexture.GetContent(www);
+            return texture;
+        }
+    }
 
     public static string GetRandomImageFileName()
     {

@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using System.Threading.Tasks;
 using RestSharp;
 using UnityEngine;
 
@@ -100,6 +101,27 @@ public static class ApiClient
         {
             Debug.Log($"Error: {response.Content}");
             errorAction?.Invoke(response.ErrorMessage);
+        }
+    }
+    
+    public static async Task<string> RestGetAsync( string appendUrl)
+    {
+        var client = new RestClient(APIUrl + "/" + appendUrl);
+        var request = new RestRequest(Method.GET);
+        request.AddHeader("accept", "application/json");
+        request.AddHeader("Authorization", "Basic " + PluginSettings.EncodedAuth);
+
+        IRestResponse response = await client.ExecuteAsync(request);
+
+        if (response.StatusCode == HttpStatusCode.OK && response.ErrorException == null)
+        {
+            Debug.Log($"Response: {response.Content}");
+            return response.Content;
+        }
+        else
+        {
+            Debug.Log($"Error: {response.Content}");
+            return "";
         }
     }
 }

@@ -20,7 +20,7 @@ public static class CommonUtils
     
     public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "")
     {
-        if (fileName == null) { fileName = GetRandomImageFileName(); }
+        if (fileName == null || fileName == "") { fileName = GetRandomImageFileName(); }
         byte[] pngBytes = texture2D.EncodeToPNG();
         SaveImageBytesToFile(fileName, pngBytes);
     }

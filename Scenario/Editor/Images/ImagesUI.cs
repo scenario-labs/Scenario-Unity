@@ -160,55 +160,47 @@ public class ImagesUI
             () => images.RemoveBackgroundForImageAtIndex(selectedTextureIndex + firstImageIndex),
             () => PixelEditor.ShowWindow(selectedTexture, ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex]),
             () => UpscaleEditor.ShowWindow(selectedTexture, ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex]) /*,
-                () => {
-                    // TODO: Implement generate more images functionality
-                }*/
+            () => {
+                // TODO: Implement generate more images functionality
+            }*/
         };
 
         for (int i = 0; i < buttonNames.Length; i++)
         {
-            GUILayout.BeginHorizontal();
+            if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
             {
-                CustomStyle.Space(padding);
-
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks[i]();
-                }
-
-                CustomStyle.Space(padding);
+                buttonCallbacks[i]();
             }
-            GUILayout.EndHorizontal();
             CustomStyle.Space(10);
         }
     }
 
     private void DrawFirstButtons()
     {
-        GUILayout.BeginHorizontal();
+        string[] buttonNames = { "Refine Image", "Download", "Delete" };
+        System.Action[] buttonCallbacks =
         {
-            CustomStyle.Space(padding);
-
-            string[] buttonNames = { "Refine Image", "Download", "Delete" };
-            System.Action[] buttonCallbacks =
+            () => PromptWindowUI.imageUpload = selectedTexture,
+            () => CommonUtils.SaveTextureAsPNG(selectedTexture),
+            () =>
             {
-                () => PromptWindowUI.imageUpload = selectedTexture,
-                () => CommonUtils.SaveTextureAsPNG(selectedTexture),
-                () =>
-                {
-                    images.DeleteImageAtIndex(selectedTextureIndex + firstImageIndex);
-                    selectedTexture = null;
-                }
-            };
+                images.DeleteImageAtIndex(selectedTextureIndex + firstImageIndex);
+                selectedTexture = null;
+            }
+        };
 
-            for (int i = 0; i < buttonNames.Length; i++)
+        GUILayout.BeginHorizontal();
+        for (int i = 0; i < buttonNames.Length; i++)
+        {
+            if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
             {
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks[i]();
-                }
+                buttonCallbacks[i]();
+            }
 
-                CustomStyle.Space(padding);
+            // Add spacing between buttons but not after the last button
+            if (i < buttonNames.Length - 1)
+            {
+                CustomStyle.Space(5);
             }
         }
         GUILayout.EndHorizontal();

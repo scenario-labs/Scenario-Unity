@@ -111,35 +111,35 @@ public class PromptImagesUI
     
     private void DrawFirstButtons()
     {
-        GUILayout.BeginHorizontal();
+        string[] buttonNames = { "Refine Image", "Download", "Delete" };
+        System.Action[] buttonCallbacks =
         {
-            CustomStyle.Space(padding);
-
-            string[] buttonNames = { "Refine Image", "Download", "Delete" };
-            System.Action[] buttonCallbacks =
+            () => PromptWindowUI.imageUpload = selectedTexture,
+            () => CommonUtils.SaveTextureAsPNG(selectedTexture),
+            () =>
             {
-                () => PromptWindowUI.imageUpload = selectedTexture,
-                () => CommonUtils.SaveTextureAsPNG(selectedTexture),
-                () =>
-                {
-                    promptImages.DeleteImageAtIndex(selectedTextureIndex);
-                    selectedTexture = null;
-                }
-            };
+                promptImages.DeleteImageAtIndex(selectedTextureIndex);
+                selectedTexture = null;
+            }
+        };
 
-            for (int i = 0; i < buttonNames.Length; i++)
+        GUILayout.BeginHorizontal();
+        for (int i = 0; i < buttonNames.Length; i++)
+        {
+            if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
             {
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks[i]();
-                }
+                buttonCallbacks[i]();
+            }
 
-                CustomStyle.Space(padding);
+            // Add spacing between buttons but not after the last button
+            if (i < buttonNames.Length - 1)
+            {
+                CustomStyle.Space(10);
             }
         }
         GUILayout.EndHorizontal();
     }
-    
+
     private void DrawSecondButtons()
     {
         string[] buttonNames = { "Remove Background", "Pixelate Image", "Upscale Image" /*, "Generate More Images"*/ };
@@ -156,18 +156,15 @@ public class PromptImagesUI
         for (int i = 0; i < buttonNames.Length; i++)
         {
             GUILayout.BeginHorizontal();
+            if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
             {
-                CustomStyle.Space(padding);
-
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks[i]();
-                }
-
-                CustomStyle.Space(padding);
+                buttonCallbacks[i]();
             }
             GUILayout.EndHorizontal();
-            CustomStyle.Space(10);
+            if (i < buttonNames.Length - 1)
+            {
+                CustomStyle.Space(10);
+            }
         }
     }
 

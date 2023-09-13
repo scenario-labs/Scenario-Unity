@@ -8,27 +8,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
-    - name: Create 2D Asset
+    - name: Create Scenario Asset
       run: |
-        zip -r Scenario2D.zip Scenario README.md "Scenario 2D Package Installer.cs" Scenario2D.wlt "Scenario Package Installer 2.cs"
-    - name: Create 3D Asset
-      run: |
-        zip -r Scenario3D.zip Scenario README.md "Scenario 3D Package Installer.cs" Scenario3D.wlt "Scenario Package Installer 2.cs"
-    - name: Upload 2D Asset
+        zip -r Scenario.zip Scenario README.md
+    - name: Upload Scenario Asset
       uses: softprops/action-gh-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         files: |
-          Scenario2D.zip
-          LICENSE
-          README.md
-    - name: Upload 3D Asset
-      uses: softprops/action-gh-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        files: |
-          Scenario3D.zip
+          Scenario.zip
           LICENSE
           README.md

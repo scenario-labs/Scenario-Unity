@@ -2,46 +2,159 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.IO;
-using System.Net;
 using Newtonsoft.Json;
-using RestSharp;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine.Networking;
-using Unity.EditorCoroutines.Editor;
-using System.Collections;
 
 public class UpscaleEditorUI
 {
     public static Texture2D currentImage = null;
     public static ImageDataStorage.ImageData imageData = null;
-
-    public List<Texture2D> upscaledImages = new List<Texture2D>();
-    public static List<ImageDataStorage.ImageData> imageDataList = new List<ImageDataStorage.ImageData>();
-
-    public string imageDataUrl = "";
-    public string assetId = "";
-    public Texture2D selectedTexture = null;
-    public bool returnImage = true;
-    public int itemsPerRow = 1;
-    public float padding = 10f;
-    public Vector2 scrollPosition = Vector2.zero;
-
-    private int scalingFactor = 2;
-    private bool forceFaceRestoration = false;
-    private bool photorealist = false;
     
-    private int selectedTextureIndex = 0;
-    private float leftSectionWidth = 150;
+    private static List<ImageDataStorage.ImageData> imageDataList = new();
+
+    private List<Texture2D> upscaledImages = new();
+    private Texture2D selectedTexture = null;
+    private Vector2 scrollPosition = Vector2.zero;
+    
+    private string imageDataUrl = "";
+    private string assetId = "";
+
+    private bool returnImage = true;
+    private bool forceFaceRestoration = false;
+    private bool usePhotorealisticModel = false;
+    
+    private int scalingFactor = 2;
+    private int itemsPerRow = 1;
+
+    private readonly float padding = 10f;
+    private readonly float leftSectionWidth = 150;
 
     public void OnGUI(Rect position)
     {
+        DrawBackground(position);
+        GUILayout.BeginHorizontal();
+        {
+            position = DrawLeftSection(position);
+            GUILayout.FlexibleSpace();
+            DrawRightSection(position);
+        }
+        GUILayout.EndHorizontal();
+    }
 
-        Color backgroundColor = new Color32(18, 18, 18, 255);
+    private static void DrawBackground(Rect position)
+    {
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
         EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+    }
+
+    private void DrawRightSection(Rect position)
+    {
+        // Right section
+        GUILayout.BeginVertical(GUILayout.Width(position.width * 0.15f));
+
+        EditorStyle.Label("Upscale Image", bold: true);
+        if (currentImage == null)
+        {
+            DrawImageUploadArea();
+            HandleDrag();
+        }
+        else
+        {
+            Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
+            GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
+
+            EditorStyle.Button("Clear Image", ()=>currentImage = null);
+        }
+
+        EditorStyle.Label("Upscale Image Options", bold: true);
 
         GUILayout.BeginHorizontal();
+        {
+            EditorStyle.Label("Scaling Factor:");
+            
+            if (GUILayout.Toggle(scalingFactor == 2, "2", EditorStyles.miniButtonLeft))
+            {
+                scalingFactor = 2;
+            }
 
+            if (GUILayout.Toggle(scalingFactor == 4, "4", EditorStyles.miniButtonRight))
+            {
+                scalingFactor = 4;
+            }
+        }
+        GUILayout.EndHorizontal();
+
+        forceFaceRestoration = EditorGUILayout.Toggle("Force Face Restoration", forceFaceRestoration);
+        usePhotorealisticModel = EditorGUILayout.Toggle("Use Photorealistic Model", usePhotorealisticModel);
+
+        EditorStyle.Button("Upscale Image", () =>
+        {
+            if (currentImage == null) return;
+            imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
+            assetId = imageData.Id;
+            FetchUpscaledImage(imageDataUrl);
+        });
+        
+        if (selectedTexture != null)
+        {
+            EditorStyle.Button("Download", () =>
+            {
+                CommonUtils.SaveTextureAsPNG(selectedTexture);
+            });
+        }
+
+        GUILayout.EndVertical();
+    }
+
+    private static void HandleDrag()
+    {
+        Event currentEvent = Event.current;
+        if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
+        {
+            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                if (currentEvent.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    string path = DragAndDrop.paths[0];
+                    if (System.IO.File.Exists(path) && 
+                        (System.IO.Path.GetExtension(path).ToLower() == ".png" || 
+                          System.IO.Path.GetExtension(path).ToLower() == ".jpg" ||
+                           System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
+                    {
+                        currentImage = new Texture2D(2, 2);
+                        byte[] imgBytes = File.ReadAllBytes(path);
+                        currentImage.LoadImage(imgBytes);
+                    }
+                }
+                currentEvent.Use();
+            }
+        }
+    }
+
+    private static void DrawImageUploadArea()
+    {
+        Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
+        GUI.Box(dropArea, "Drag & Drop an image here");
+
+        Rect buttonRect = new Rect(dropArea.center.x - 50f, dropArea.center.y - 15f, 100f, 30f);
+        if (GUI.Button(buttonRect, "Choose Image"))
+        {
+            string imagePath = EditorUtility.OpenFilePanel("Choose Image", "", "png,jpg,jpeg");
+            if (!string.IsNullOrEmpty(imagePath))
+            {
+                currentImage = new Texture2D(2, 2);
+                byte[] imgbytes = File.ReadAllBytes(imagePath);
+                currentImage.LoadImage(imgbytes);
+
+                imageData = new ImageDataStorage.ImageData();
+            }
+        }
+    }
+
+    private Rect DrawLeftSection(Rect position)
+    {
         // Left section
         GUILayout.BeginVertical(GUILayout.Width(position.width * 0.85f));
         float requiredWidth = itemsPerRow * (256 + padding) + padding;
@@ -50,218 +163,92 @@ public class UpscaleEditorUI
 
         for (int i = 0; i < upscaledImages.Count; i++)
         {
-            int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
-            int colIndex = i % itemsPerRow;
-
-            Rect boxRect = new Rect(colIndex * (256 + padding), rowIndex * (256 + padding), 256, 256);
-            Texture2D texture = upscaledImages[i];
-
-            if (texture != null)
-            {
-                if (GUI.Button(boxRect, ""))
-                {
-                    selectedTexture = texture;
-                    selectedTextureIndex = i;
-                }
-                GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
-            }
-            else
-            {
-                GUI.Box(boxRect, "Loading...");
-            }
+            DrawTextureButton(i);
         }
         GUI.EndScrollView();
         GUILayout.EndVertical();
+        return position;
+    }
 
-        GUILayout.FlexibleSpace();
+    private void DrawTextureButton(int i)
+    {
+        int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
+        int colIndex = i % itemsPerRow;
 
-        // Right section
-        GUILayout.BeginVertical(GUILayout.Width(position.width * 0.15f));
-    
-        GUILayout.Label("Upscale Image", EditorStyles.boldLabel);
-        if (currentImage == null)
-        {   
-            Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag & Drop an image here");
+        Rect boxRect = new Rect(colIndex * (256 + padding), rowIndex * (256 + padding), 256, 256);
+        Texture2D texture = upscaledImages[i];
 
-            Rect buttonRect = new Rect(dropArea.center.x - 50f, dropArea.center.y - 15f, 100f, 30f);
-            if (GUI.Button(buttonRect, "Choose Image")) 
-            {
-                string imagePath = EditorUtility.OpenFilePanel("Choose Image", "", "png,jpg,jpeg");
-                if (!string.IsNullOrEmpty(imagePath)) 
-                {
-                    currentImage = new Texture2D(2, 2);
-                    byte[] imageData = File.ReadAllBytes(imagePath);
-                    currentImage.LoadImage(imageData);
-
-                    UpscaleEditorUI.imageData = new ImageDataStorage.ImageData();
-                }
-            }
-
-            Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
-            {
-                if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-                {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                    if (currentEvent.type == EventType.DragPerform)
-                    {
-                        DragAndDrop.AcceptDrag();
-                        string path = DragAndDrop.paths[0];
-                        if (System.IO.File.Exists(path) && (System.IO.Path.GetExtension(path).ToLower() == ".png" || System.IO.Path.GetExtension(path).ToLower() == ".jpg" || System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
-                        {
-                            currentImage = new Texture2D(2, 2);
-                            byte[] imageData = File.ReadAllBytes(path);
-                            currentImage.LoadImage(imageData);
-                        }
-                    }
-                    currentEvent.Use();
-                }
-            }
+        if (texture == null)
+        {
+            GUI.Box(boxRect, "Loading...");
         }
         else
         {
-            Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
-            GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
-
-            if (GUILayout.Button("Clear Image")) 
+            if (GUI.Button(boxRect, ""))
             {
-                currentImage = null;
+                selectedTexture = texture;
             }
+
+            GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
         }
-
-        GUILayout.Label("Upscale Image Options", EditorStyles.boldLabel);
-
-        GUILayout.BeginHorizontal();
-        GUILayout.Label("Scaling Factor:");
-        if (GUILayout.Toggle(scalingFactor == 2, "2", EditorStyles.miniButtonLeft))
-        {
-            scalingFactor = 2;
-        }
-        if (GUILayout.Toggle(scalingFactor == 4, "4", EditorStyles.miniButtonRight))
-        {
-            scalingFactor = 4;
-        }
-        GUILayout.EndHorizontal();
-
-        forceFaceRestoration = EditorGUILayout.Toggle("Force Face Restoration", forceFaceRestoration);
-        photorealist = EditorGUILayout.Toggle("Use Photorealistic Model", photorealist);
-       
-        
-        if (GUILayout.Button("Upscale Image"))
-        {
-            if (currentImage != null)
-            {
-                var imgBytes = currentImage.EncodeToPNG();
-                string base64String = Convert.ToBase64String(imgBytes);
-                imageDataUrl = base64String;//$"data:image/png;base64,{base64String}";
-                
-                assetId = imageData.Id;
-                FetchUpscaledImage(imageDataUrl);
-            }
-        }
-
-        if (selectedTexture != null)
-        {
-            if (GUILayout.Button("Download"))
-            {
-                string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-                DownloadImage(fileName, selectedTexture.EncodeToPNG());
-            }
-        }
-
-        GUILayout.EndVertical();
-
-        GUILayout.EndHorizontal();
     }
 
-    private void DownloadImage(string fileName, byte[] pngBytes)
+    private void FetchUpscaledImage(string imgUrl)
     {
-        var downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
-        string filePath = downloadPath + "/" + fileName;
-        File.WriteAllBytes(filePath, pngBytes);
-        EditorCoroutineUtility.StartCoroutineOwnerless(RefreshDatabase());
-        Debug.Log("Downloaded image to: " + filePath);
-    }
-
-    IEnumerator RefreshDatabase()
-    {
-        yield return null;
-        AssetDatabase.Refresh();
-    }
-
-    private async void FetchUpscaledImage(string imgUrl)
-    {
-        try
+        string json = GetJsonPayload(imgUrl);
+        Debug.Log(json);
+            
+        ApiClient.RestPut("images/upscale",json, response =>
         {
-            string json = "";
-
-            if (assetId == "")
+            var pixelatedResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+            Texture2D texture = CommonUtils.DataURLToTexture2D(pixelatedResponse.image);
+            ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
             {
-                var payload = new
-                {
-                    image = imgUrl,
-                    forceFaceRestoration = forceFaceRestoration,
-                    photorealist = photorealist,
-                    scalingFactor = scalingFactor,
-                    returnImage = returnImage,
-                    name = ""
-                };
-                json = JsonConvert.SerializeObject(payload);
-            }
-            else
-            {
-                var payload = new
-                {
-                    image = imgUrl,
-                    assetId = assetId,
-                    forceFaceRestoration = forceFaceRestoration,
-                    photorealist = photorealist,
-                    scalingFactor = scalingFactor,
-                    returnImage = returnImage,
-                    name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png"
-                };
-                json = JsonConvert.SerializeObject(payload);
-            }
-
-            Debug.Log(json);
-
-            var client = new RestClient(ApiClient.apiUrl + "/images/upscale");
-            var request = new RestRequest(Method.PUT);
-            request.AddHeader("accept", "application/json");
-            request.AddHeader("content-type", "application/json");
-            request.AddHeader("Authorization", "Basic " + PluginSettings.EncodedAuth);
-            request.AddParameter("application/json", json, ParameterType.RequestBody);
-            IRestResponse response = await client.ExecuteAsync(request);
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                Debug.Log(response);
-                var pixelatedResponse = JsonConvert.DeserializeObject<Root>(response.Content);
-                string base64 = pixelatedResponse.image.Replace("data:image/png;base64,","");
-                byte[] pngBytes = Convert.FromBase64String(base64);
-                Texture2D texture = new Texture2D(1,1);
-                ImageConversion.LoadImage(texture, pngBytes);
-                ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
-                {
-                    Id = pixelatedResponse.asset.id,
-                    Url = pixelatedResponse.image, 
-                    InferenceId = pixelatedResponse.asset.ownerId,
-                };
-                upscaledImages.Insert(0, texture);
-                imageDataList.Insert(0, newImageData);
-            }
-            else
-            {
-                Debug.LogError(response.ResponseStatus + " " + response.ErrorMessage);
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex.Message);
-        }
+                Id = pixelatedResponse.asset.id,
+                Url = pixelatedResponse.image, 
+                InferenceId = pixelatedResponse.asset.ownerId,
+            };
+            upscaledImages.Insert(0, texture);
+            imageDataList.Insert(0, newImageData);
+        });
     }
-    
+
+    private string GetJsonPayload(string imgUrl)
+    {
+        string json;
+        if (assetId == "")
+        {
+            var payload = new
+            {
+                image = imgUrl,
+                forceFaceRestoration = forceFaceRestoration,
+                photorealist = usePhotorealisticModel,
+                scalingFactor = scalingFactor,
+                returnImage = returnImage,
+                name = ""
+            };
+            json = JsonConvert.SerializeObject(payload);
+        }
+        else
+        {
+            var payload = new
+            {
+                image = imgUrl,
+                assetId = assetId,
+                forceFaceRestoration = forceFaceRestoration,
+                photorealist = usePhotorealisticModel,
+                scalingFactor = scalingFactor,
+                returnImage = returnImage,
+                name = CommonUtils.GetRandomImageFileName()
+            };
+            json = JsonConvert.SerializeObject(payload);
+        }
+
+        return json;
+    }
+
+    #region API_DTO
+
     public class Asset
     {
         public string id { get; set; }
@@ -293,5 +280,7 @@ public class UpscaleEditorUI
         public Asset asset { get; set; }
         public string image { get; set; }
     }
+
+    #endregion
 }
 

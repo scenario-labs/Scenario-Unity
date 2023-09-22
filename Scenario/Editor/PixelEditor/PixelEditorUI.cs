@@ -2,48 +2,149 @@ using UnityEngine;
 using UnityEditor;
 using System;
 using System.IO;
-using System.Net;
 using Newtonsoft.Json;
-using RestSharp;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using UnityEngine.Networking;
-using Unity.EditorCoroutines.Editor;
-using System.Collections;
 
 public class PixelEditorUI
 {
     public static Texture2D currentImage = null;
     public static ImageDataStorage.ImageData imageData = null;
 
-    public List<Texture2D> pixelatedImages = new List<Texture2D>();
-    public static List<ImageDataStorage.ImageData> imageDataList = new List<ImageDataStorage.ImageData>();
+    private static List<ImageDataStorage.ImageData> imageDataList = new();
 
-    public string imageDataUrl = "";
-    public string assetId = "";
-    public Texture2D selectedTexture = null;
-    public float pixelGridSize = 32f;
-    public string name = "";
     public bool removeNoise = false;
     public bool removeBackground = false;
-    public bool returnImage = true;
-    public int itemsPerRow = 1;
-    public float padding = 10f;
-    public Vector2 scrollPosition = Vector2.zero;
-
-    private int selectedTextureIndex = 0;
+    private bool returnImage = true;
+    private int itemsPerRow = 1;
+    private string imageDataUrl = "";
+    private string assetId = "";
+    private float pixelGridSize = 32f;
+    private float padding = 10f;
+    private Vector2 scrollPosition = Vector2.zero;
+    private Texture2D selectedTexture = null;
+    private List<Texture2D> pixelatedImages = new();
+    
     private float leftSectionWidth = 150;
-    private readonly int[] allowedPixelGridSizes = new int[] { 32, 64, 128, 256 };
     private int selectedGridSizeIndex = 0;
+    private readonly int[] allowedPixelGridSizes = { 32, 64, 128, 256 };
 
     public void OnGUI(Rect position)
     {
-
-        Color backgroundColor = new Color32(18, 18, 18, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        DrawBackground(position);
 
         GUILayout.BeginHorizontal();
 
+        position = DrawLeftSection(position);
+
+        GUILayout.FlexibleSpace();
+
+        DrawRightSection(position);
+
+        GUILayout.EndHorizontal();
+    }
+
+    private static void DrawBackground(Rect position)
+    {
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+    }
+
+    private void DrawRightSection(Rect position)
+    {
+        // Right section
+        GUILayout.BeginVertical(GUILayout.Width(position.width * 0.15f));
+
+        EditorStyle.Label("Pixelate Image", bold: true);
+        if (currentImage == null)
+        {
+            Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
+            GUI.Box(dropArea, "Drag & Drop an image here");
+
+            Rect buttonRect = new Rect(dropArea.center.x - 50f, dropArea.center.y - 15f, 100f, 30f);
+            if (GUI.Button(buttonRect, "Choose Image"))
+            {
+                HandleChooseImageClick();
+            }
+
+            HandleDrag();
+        }
+        else
+        {
+            Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
+            GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
+
+            EditorStyle.Button("Clear Image", ()=> currentImage = null);
+        }
+
+
+        EditorStyle.Label("Pixel Grid Size:");
+        int pixelGridSizeIndex = Array.IndexOf(allowedPixelGridSizes, (int)pixelGridSize);
+        if (pixelGridSizeIndex == -1) { pixelGridSizeIndex = 0; }
+        
+        selectedGridSizeIndex = GUILayout.SelectionGrid(selectedGridSizeIndex, Array.ConvertAll(allowedPixelGridSizes, x => x.ToString()), allowedPixelGridSizes.Length);
+        pixelGridSize = allowedPixelGridSizes[selectedGridSizeIndex];
+        removeNoise = EditorGUILayout.Toggle("Remove Noise", removeNoise);
+        removeBackground = EditorGUILayout.Toggle("Remove Background", removeBackground);
+
+        EditorStyle.Button("Pixelate Image", () =>
+        {
+            if (currentImage == null) return;
+            
+            imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
+            assetId = imageData.Id;
+            FetchPixelatedImage(imageDataUrl);
+        });
+        
+        if (selectedTexture != null)
+        {
+            EditorStyle.Button("Download", () => CommonUtils.SaveTextureAsPNG(selectedTexture));
+        }
+
+        GUILayout.EndVertical();
+    }
+
+    private static void HandleDrag()
+    {
+        Event currentEvent = Event.current;
+        if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
+        {
+            if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
+            {
+                DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+                if (currentEvent.type == EventType.DragPerform)
+                {
+                    DragAndDrop.AcceptDrag();
+                    string path = DragAndDrop.paths[0];
+                    if (System.IO.File.Exists(path) &&
+                        (System.IO.Path.GetExtension(path).ToLower() == ".png" ||
+                         System.IO.Path.GetExtension(path).ToLower() == ".jpg" ||
+                         System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
+                    {
+                        currentImage = new Texture2D(2, 2);
+                        byte[] imgBytes = File.ReadAllBytes(path);
+                        currentImage.LoadImage(imgBytes);
+                    }
+                }
+                currentEvent.Use();
+            }
+        }
+    }
+
+    private static void HandleChooseImageClick()
+    {
+        string imagePath = EditorUtility.OpenFilePanel("Choose Image", "", "png,jpg,jpeg");
+        if (!string.IsNullOrEmpty(imagePath))
+        {
+            currentImage = new Texture2D(2, 2);
+            byte[] imgBytes = File.ReadAllBytes(imagePath);
+            currentImage.LoadImage(imgBytes);
+
+            PixelEditorUI.imageData = new ImageDataStorage.ImageData();
+        }
+    }
+
+    private Rect DrawLeftSection(Rect position)
+    {
         // Left section
         GUILayout.BeginVertical(GUILayout.Width(position.width * 0.85f));
         float requiredWidth = itemsPerRow * (256 + padding) + padding;
@@ -63,7 +164,6 @@ public class PixelEditorUI
                 if (GUI.Button(boxRect, ""))
                 {
                     selectedTexture = texture;
-                    selectedTextureIndex = i;
                 }
                 GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
             }
@@ -74,195 +174,62 @@ public class PixelEditorUI
         }
         GUI.EndScrollView();
         GUILayout.EndVertical();
-
-        GUILayout.FlexibleSpace();
-
-        // Right section
-        GUILayout.BeginVertical(GUILayout.Width(position.width * 0.15f));
+        return position;
+    }
     
-        GUILayout.Label("Pixelate Image", EditorStyles.boldLabel);
-        if (currentImage == null)
-        {   
-            Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
-            GUI.Box(dropArea, "Drag & Drop an image here");
-
-            Rect buttonRect = new Rect(dropArea.center.x - 50f, dropArea.center.y - 15f, 100f, 30f);
-            if (GUI.Button(buttonRect, "Choose Image")) 
+    private void FetchPixelatedImage(string imgUrl)
+    {
+        string json = "";
+        
+        if (assetId == "")
+        {
+            var payload = new
             {
-                string imagePath = EditorUtility.OpenFilePanel("Choose Image", "", "png,jpg,jpeg");
-                if (!string.IsNullOrEmpty(imagePath)) 
-                {
-                    currentImage = new Texture2D(2, 2);
-                    byte[] imageData = File.ReadAllBytes(imagePath);
-                    currentImage.LoadImage(imageData);
-
-                    PixelEditorUI.imageData = new ImageDataStorage.ImageData();
-                }
-            }
-
-            Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
-            {
-                if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-                {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-                    if (currentEvent.type == EventType.DragPerform)
-                    {
-                        DragAndDrop.AcceptDrag();
-                        string path = DragAndDrop.paths[0];
-                        if (System.IO.File.Exists(path) && (System.IO.Path.GetExtension(path).ToLower() == ".png" || System.IO.Path.GetExtension(path).ToLower() == ".jpg" || System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
-                        {
-                            currentImage = new Texture2D(2, 2);
-                            byte[] imageData = File.ReadAllBytes(path);
-                            currentImage.LoadImage(imageData);
-                        }
-                    }
-                    currentEvent.Use();
-                }
-            }
+                image = imgUrl,
+                pixelGridSize = pixelGridSize,
+                removeNoise = removeNoise,
+                removeBackground = removeBackground,
+                returnImage = returnImage,
+                name = "",
+                colorPalette = ""
+            };
+            json = JsonConvert.SerializeObject(payload);
         }
         else
         {
-            Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
-            GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
-
-            if (GUILayout.Button("Clear Image")) 
+            var payload = new
             {
-                currentImage = null;
-            }
+                image = imgUrl,
+                assetId = assetId,
+                pixelGridSize = pixelGridSize,
+                removeNoise = removeNoise,
+                removeBackground = removeBackground,
+                returnImage = returnImage,
+                name = CommonUtils.GetRandomImageFileName(),
+                colorPalette = ""
+            };
+            json = JsonConvert.SerializeObject(payload);
         }
-
-
-        GUILayout.Label("Pixel Grid Size:");
-        int pixelGridSizeIndex = Array.IndexOf(allowedPixelGridSizes, (int)pixelGridSize);
-        if (pixelGridSizeIndex == -1)
+        
+        ApiClient.RestPut("images/pixelate", json, response =>
         {
-            pixelGridSizeIndex = 0;
-        }
-        selectedGridSizeIndex = GUILayout.SelectionGrid(selectedGridSizeIndex, Array.ConvertAll(allowedPixelGridSizes, x => x.ToString()), allowedPixelGridSizes.Length);
-        pixelGridSize = allowedPixelGridSizes[selectedGridSizeIndex];
-        removeNoise = EditorGUILayout.Toggle("Remove Noise", removeNoise);
-        removeBackground = EditorGUILayout.Toggle("Remove Background", removeBackground);
-
-        if (GUILayout.Button("Pixelate Image"))
-        {
-            if (currentImage != null)
+            var pixelatedResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+            var texture = CommonUtils.DataURLToTexture2D(pixelatedResponse.image);
+            var newImageData = new ImageDataStorage.ImageData
             {
-                var imgBytes = currentImage.EncodeToPNG();
-                string base64String = Convert.ToBase64String(imgBytes);
-                imageDataUrl = $"data:image/png;base64,{base64String}";
-                
-                assetId = imageData.Id;
-                FetchPixelatedImage(imageDataUrl);
-            }
-        }
-
-        if (selectedTexture != null)
-        {
-            if (GUILayout.Button("Download"))
-            {
-                string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-                DownloadImage(fileName, selectedTexture.EncodeToPNG());
-            }
-        }
-
-        GUILayout.EndVertical();
-
-        GUILayout.EndHorizontal();
+                Id = pixelatedResponse.asset.id,
+                Url = pixelatedResponse.image, 
+                InferenceId = pixelatedResponse.asset.ownerId,
+            };
+            pixelatedImages.Insert(0, texture);
+            imageDataList.Insert(0, newImageData);
+        });
     }
-
-    private void DownloadImage(string fileName, byte[] pngBytes)
-    {
-        var downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
-        string filePath = downloadPath + "/" + fileName;
-        File.WriteAllBytes(filePath, pngBytes);
-        EditorCoroutineUtility.StartCoroutineOwnerless(RefreshDatabase());
-        Debug.Log("Downloaded image to: " + filePath);
-    }
-
-    IEnumerator RefreshDatabase()
-    {
-        yield return null;
-        AssetDatabase.Refresh();
-    }
-
-    private async void FetchPixelatedImage(string imgUrl)
-    {
-        try
-        {
-            string json = "";
-
-            if (assetId == "")
-            {
-                var payload = new
-                {
-                    image = imgUrl,
-                    pixelGridSize = pixelGridSize,
-                    removeNoise = removeNoise,
-                    removeBackground = removeBackground,
-                    returnImage = returnImage,
-                    name = "",
-                    colorPalette = ""
-                };
-                json = JsonConvert.SerializeObject(payload);
-            }
-            else
-            {
-                var payload = new
-                {
-                    image = imgUrl,
-                    assetId = assetId,
-                    pixelGridSize = pixelGridSize,
-                    removeNoise = removeNoise,
-                    removeBackground = removeBackground,
-                    returnImage = returnImage,
-                    name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png",
-                    colorPalette = ""
-                };
-                json = JsonConvert.SerializeObject(payload);
-            }
-
-            Debug.Log(json);
-
-            var client = new RestClient(ApiClient.apiUrl + "/images/pixelate");
-            var request = new RestRequest(Method.PUT);
-            request.AddHeader("accept", "application/json");
-            request.AddHeader("content-type", "application/json");
-            request.AddHeader("Authorization", "Basic " + PluginSettings.EncodedAuth);
-            request.AddParameter("application/json", json, ParameterType.RequestBody);
-            IRestResponse response = await client.ExecuteAsync(request);
-
-            if (response.StatusCode == HttpStatusCode.OK)
-            {
-                Debug.Log(response);
-                var pixelatedResponse = JsonConvert.DeserializeObject<Root>(response.Content);
-                string base64 = pixelatedResponse.image.Replace("data:image/png;base64,","");
-                byte[] pngBytes = Convert.FromBase64String(base64);
-                Texture2D texture = new Texture2D(1,1);
-                ImageConversion.LoadImage(texture, pngBytes);
-                ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
-                {
-                    Id = pixelatedResponse.asset.id,
-                    Url = pixelatedResponse.image, 
-                    InferenceId = pixelatedResponse.asset.ownerId,
-                };
-                pixelatedImages.Insert(0, texture);
-                imageDataList.Insert(0, newImageData);
-            }
-            else
-            {
-                Debug.LogError(response.ResponseStatus + " " + response.ErrorMessage);
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex.Message);
-        }
-    }
-
 }
 
-[System.Serializable]
+#region API_DTOS
+
+[Serializable]
 public class Asset
 {
     public string id { get; set; }
@@ -277,14 +244,14 @@ public class Asset
     public List<object> collectionIds { get; set; }
 }
 
-[System.Serializable]
+[Serializable]
 public class Root
 {
     public Asset asset { get; set; }
     public string image { get; set; }
 }
 
-[System.Serializable]
+[Serializable]
 public class Type
 {
     public string source { get; set; }
@@ -296,3 +263,4 @@ public class Type
     public bool removeBackground { get; set; }
 }
 
+#endregion

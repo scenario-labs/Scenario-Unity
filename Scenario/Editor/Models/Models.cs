@@ -1,140 +1,228 @@
 using UnityEditor;
 using UnityEngine;
-using System.Threading.Tasks;
 using Newtonsoft.Json;
 using System.Collections.Generic;
 using System;
-using UnityEngine.Networking;
-using Cysharp.Threading.Tasks;
+using System.Threading.Tasks;
 
 public class Models : EditorWindow
 {
-    public static List<string> loadedModels = new List<string>();
-    public static List<ModelData> models = new List<ModelData>();
+    private static readonly float MinimumWidth = 1000f;
 
-    private static readonly string apiEndpoint = "/models";
-    private static readonly string tokenEndpoint = "/token";
-    public static readonly string paginationTokenKey = "paginationToken";
+    public static List<ModelData> modelsPrivate = new();
+    public static List<ModelData> modelsPublic = new();
+    
+    public static List<TexturePair> texturesPrivate = new();
+    public static List<TexturePair> texturesPublic = new();
 
-    public static string paginationToken = "";
-    private static string privacy = "private";
+    public static string privacyPrivate = "private";
+    public static string privacyPublic = "public";
+    
+    private static ModelsUI modelsUI = new();
+    private static Models window;
+    
+    public static bool IsPrivateTab()
+    {
+        return CurrentPrivacy == privacyPrivate;
+    }
 
-    private static float minimumWidth = 1000f;
-
+    public static List<ModelData> GetModels()
+    {
+        return (IsPrivateTab()) ? modelsPrivate : modelsPublic;
+    }
+    
+    public static List<TexturePair> GetTextures()
+    {
+        return (IsPrivateTab()) ? texturesPrivate : texturesPublic;
+    }
+    
     [MenuItem("Window/Scenario/Models")]
     public static void ShowWindow()
     {
-        ShowWindow("private");
+        SetTab(CurrentPrivacy);
         
-        Models window = GetWindow<Models>("Models");
-        window.minSize = new Vector2(minimumWidth, window.minSize.y);
+        window = GetWindow<Models>("Models");
+        window.minSize = new Vector2(MinimumWidth, window.minSize.y);
     }
 
-    public static async void ShowWindow(string privacySetting)
+    public static void SetTab(string privacySetting)
     {
-        privacy = privacySetting;
-        await GetModelsData(0);
-        await GetPaginationToken();
-        EditorWindow.GetWindow(typeof(Models));
-    }
-
-    private void OnDestroy()
-    {
-        modelsUI.ResetTabSelection();
-        modelsUI.ClearData();
-    }
-
-    internal static async Task GetModelsData(int updateType = 0)
-    {
-        models.Clear();
-
-        bool continueFetching = true;
-        while (continueFetching)
+        CurrentPrivacy = privacySetting;
+        
+        if (privacySetting == privacyPrivate)
         {
-            string endpoint = $"{apiEndpoint}?pageSize=15&status=trained&privacy={privacy}";
-
-            if (!string.IsNullOrEmpty(paginationToken) && updateType != 0)
-            {
-                endpoint += $"&paginationToken={paginationToken}";
-            }
-
-            try
-            {
-                string response = await ApiClient.GetAsync(endpoint);
-                if (response != null)
-                {
-                    var modelsResponse = JsonConvert.DeserializeObject<ModelsResponse>(response);
-                    models.AddRange(modelsResponse.models);
-
-                    if (modelsResponse.nextPaginationToken is null ||
-                        paginationToken == modelsResponse.nextPaginationToken)
-                    {
-                        paginationToken = "";
-                        continueFetching = false;
-                    }
-                    else
-                    {
-                        paginationToken = modelsResponse.nextPaginationToken;
-                        Debug.Log("fetching data...");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError(ex.Message);
-                continueFetching = false;
-            }
+            PopulatePrivateModels();
         }
-
-        if (updateType == 0)
+        else
         {
-            modelsUI.SetFirstPage();
-        }
-        else if (updateType == 1)
-        {
-            modelsUI.SetNextPage();
-        }
-        else if (updateType == -1)
-        {
-            modelsUI.SetPreviousPage();
-        }
-
-        await modelsUI.UpdatePage();
-        EditorWindow.GetWindow(typeof(Models)).Repaint();
-    }
-
-
-    public async static UniTask<Texture2D> LoadTexture(string url)
-    {
-        using (UnityWebRequest www = UnityWebRequest.Get(url))
-        {
-            DownloadHandlerTexture downloadHandlerTexture = new DownloadHandlerTexture(true);
-            www.downloadHandler = downloadHandlerTexture;
-            await www.SendWebRequest();
-            if (www.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError(www.error);
-                return null;
-            }
-            return downloadHandlerTexture.texture;
+            PopulatePublicModels();
         }
     }
 
-    private static async Task GetPaginationToken()
+    private static async void PopulatePublicModels()
     {
-        try
+        modelsPublic.Clear();
+        await FetchAllPublicModels();
+        FetchAllPublicTextures();
+        modelsUI.RedrawPage(0);
+    }
+
+    private static async void PopulatePrivateModels()
+    {
+        modelsPrivate.Clear();
+        await FetchAllPrivateModels();
+        FetchAllPrivateTextures();
+        modelsUI.RedrawPage(0);
+    }
+
+    private static void FetchAllPrivateTextures()
+    {
+        Debug.Log("Fetch Private Textures");
+        foreach (var item in modelsPrivate)
         {
-            string response = await ApiClient.GetAsync(tokenEndpoint);
-            if (response != null)
+            string downloadUrl = null;
+            
+            if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
             {
-                var tokenResponse = JsonConvert.DeserializeObject<TokenResponse>(response);
-                paginationToken = tokenResponse.nextPaginationToken;
-                EditorPrefs.SetString(paginationTokenKey, paginationToken);
+                downloadUrl = item.thumbnail.url;
             }
+            else if (item.trainingImages != null && item.trainingImages.Count > 0)
+            {
+                downloadUrl = item.trainingImages[0].downloadUrl;
+            }
+
+            if (string.IsNullOrEmpty(downloadUrl)) continue;
+
+            var texturePair = new TexturePair()
+            {
+                name = item.name,
+                texture = null,
+            };
+            
+            texturesPrivate.Add(texturePair);
+            
+            CommonUtils.FetchTextureFromURL(downloadUrl, texture =>
+            {
+                texturePair.texture = texture;
+            });
+
+            if (window != null) { window.Repaint(); }
+            
+            Debug.Log($"downloaded {item.name}");
         }
-        catch (Exception ex)
+    }
+    
+    private static void FetchAllPublicTextures()
+    {
+        Debug.Log("Fetch Public Textures");
+
+        foreach (var item in modelsPublic)
         {
-            Debug.LogError(ex.Message);
+            string downloadUrl = null;
+            
+            if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
+            {
+                downloadUrl = item.thumbnail.url;
+            }
+            else if (item.trainingImages != null && item.trainingImages.Count > 0)
+            {
+                downloadUrl = item.trainingImages[0].downloadUrl;
+            }
+
+            if (string.IsNullOrEmpty(downloadUrl)) continue;
+            
+            var texturePair = new TexturePair()
+            {
+                name = item.name,
+                texture = null,
+            };
+            
+            texturesPublic.Add(texturePair);
+            
+            CommonUtils.FetchTextureFromURL(downloadUrl, texture =>
+            {
+                texturePair.texture = texture;
+            });
+            
+            if (window != null) { window.Repaint(); }
+
+            //* Debug.Log($"downloaded {item.name}");
+        }
+    }
+    
+    private static async Task FetchAllPrivateModels()
+    {
+        //* Debug.Log("Fetch Private Models");
+
+        while (true)
+        {
+            string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPrivate}";
+
+            if (!string.IsNullOrEmpty(PagniationTokenPrivate))
+            {
+                endpoint += $"&paginationToken={PagniationTokenPrivate}";
+            }
+
+            string response = await ApiClient.RestGetAsync(endpoint);
+            if (response is null) { return; }
+
+            var modelsResponse = JsonConvert.DeserializeObject<ModelsResponse>(response);
+            if (modelsResponse is null) { return; }
+            
+            modelsPrivate.AddRange(modelsResponse.models);
+
+            if (modelsResponse.nextPaginationToken is null ||
+                PagniationTokenPrivate == modelsResponse.nextPaginationToken)
+            {
+                PagniationTokenPrivate = "";
+                Debug.Log("no next page to fetch.");
+            }
+            else
+            {
+                PagniationTokenPrivate = modelsResponse.nextPaginationToken;
+                Debug.Log("fetching next page data...");
+                continue;
+            }
+
+            break;
+        }
+    }
+    
+    private static async Task FetchAllPublicModels()
+    {
+        Debug.Log("Fetch Public Models");
+
+        while (true)
+        {
+            string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPublic}";
+
+            if (!string.IsNullOrEmpty(PagniationTokenPublic))
+            {
+                endpoint += $"&paginationToken={PagniationTokenPublic}";
+            }
+
+            string response = await ApiClient.RestGetAsync(endpoint);
+            if (response is null) { return; }
+
+            var modelsResponse = JsonConvert.DeserializeObject<ModelsResponse>(response);
+            if (modelsResponse is null) { return; }
+            
+            modelsPublic.AddRange(modelsResponse.models);
+
+            if (modelsResponse.nextPaginationToken is null ||
+                PagniationTokenPublic == modelsResponse.nextPaginationToken)
+            {
+                PagniationTokenPublic = "";
+                Debug.Log("no next page to fetch.");
+            }
+            else
+            {
+                PagniationTokenPublic = modelsResponse.nextPaginationToken;
+                Debug.Log("fetching next page data...");
+                continue;
+            }
+
+            break;
         }
     }
 
@@ -143,8 +231,31 @@ public class Models : EditorWindow
         modelsUI.OnGUI(this.position);
     }
 
-    private static List<ImageData> imageDataList = new List<ImageData>();
-    private static ModelsUI modelsUI = new ModelsUI();
+    public static string CurrentPrivacy
+    {
+        get => EditorPrefs.GetString("privacy", privacyPrivate);
+        set => EditorPrefs.SetString("privacy", value);
+    }
+    
+    public static string PagniationTokenPrivate
+    {
+        get => EditorPrefs.GetString("paginationTokenPrivate", "");
+        set => EditorPrefs.SetString("paginationTokenPrivate", value);
+    }
+    
+    public static string PagniationTokenPublic
+    {
+        get => EditorPrefs.GetString("paginationTokenPublic", "");
+        set => EditorPrefs.SetString("paginationTokenPublic", value);
+    }
+
+    public class TexturePair
+    {
+        public Texture2D texture;
+        public string name;
+    }
+    
+    #region API_DTO
 
     private class ImageData
     {
@@ -188,4 +299,6 @@ public class Models : EditorWindow
     {
         public string nextPaginationToken { get; set; }
     }
+
+    #endregion
 }

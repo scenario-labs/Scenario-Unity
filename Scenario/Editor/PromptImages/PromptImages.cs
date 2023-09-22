@@ -59,24 +59,22 @@ public class PromptImages : EditorWindow
         AssetDatabase.Refresh();
     }
 
-    private async static Task<Texture2D> LoadTexture(string url)
+    private static async Task<Texture2D> LoadTexture(string url)
     {
-        using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(url))
+        using UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
+        www.SendWebRequest();
+        while (!www.isDone)
         {
-            www.SendWebRequest();
-            while (!www.isDone)
-            {
-                await Task.Delay(10);
-            }
-
-            if (www.result != UnityWebRequest.Result.Success)
-            {
-                Debug.LogError(www.error);
-                return null;
-            }
-
-            return DownloadHandlerTexture.GetContent(www);
+            await Task.Delay(10);
         }
+
+        if (www.result != UnityWebRequest.Result.Success)
+        {
+            Debug.LogError(www.error);
+            return null;
+        }
+
+        return DownloadHandlerTexture.GetContent(www);
     }
 
     private void OnGUI()
@@ -156,15 +154,13 @@ public class PromptImages : EditorWindow
 
     internal void RemoveBackground(int selectedTextureIndex)
     {
-        var imgBytes = promptImagesUI.textures[selectedTextureIndex].EncodeToPNG();
-        string base64String = Convert.ToBase64String(imgBytes);
-        string dataUrl = $"data:image/png;base64,{base64String}";
+        string dataUrl = CommonUtils.Texture2DToDataURL(promptImagesUI.textures[selectedTextureIndex]);
         EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl));
     }
 
     IEnumerator PutRemoveBackground(string dataUrl)
     {
-        string name = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
+        string name = CommonUtils.GetRandomImageFileName();
 
         Debug.Log("Requesting background removal, please wait..");
 

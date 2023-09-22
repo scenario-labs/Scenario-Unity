@@ -1,217 +1,221 @@
 using UnityEngine;
 using UnityEditor;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Cysharp.Threading.Tasks;
+using System.Linq;
 using static Models;
 
 public class ModelsUI
 {
-    public List<(Texture2D, string)> textures = new List<(Texture2D, string)>();
-    public int itemsPerRow = 5;
-    public float padding = 10f;
-
-    private Vector2 scrollPosition = Vector2.zero;
+    public List<ModelData> pageModels = new();
+    private float padding = 10f;
+    private int itemsPerRow = 5;
+    private int firstImageIndex;
+    private int maxModelsPerPage;
     private int selectedTab = 0;
-
-    public int firstImageIndex;
-    public int pageImageCount;
-    public List<ModelData> pageList = new List<ModelData>();
-
-    private bool showNextButton = true;
+    private bool showNextButton = false;
     private bool showPreviousButton = false;
+    private bool drawTabs = false;
+    private Vector2 scrollPosition = Vector2.zero;
 
-    public void DisableNextButton()
+    private void SetFirstPage()
     {
-        showNextButton = false;
-    }
-
-    public void EnableNextButton()
-    {
-        showNextButton = true;
-    }
-
-    public void SetFirstPage()
-    {
+        selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
+        
         firstImageIndex = 0;
-        pageImageCount = 15;
+        maxModelsPerPage = 15;
 
         showPreviousButton = false;
+        showNextButton = false;
+
+        UpdatePage();
     }
 
-    public void SetNextPage()
+    private void SetNextPage()
     {
-        firstImageIndex += pageImageCount;
-        if (firstImageIndex > Models.models.Count - pageImageCount)
+        firstImageIndex += maxModelsPerPage;
+
+        var models = Models.GetModels();
+        
+        if (firstImageIndex > models.Count - maxModelsPerPage)
         {
-            firstImageIndex = Models.models.Count - pageImageCount;
+            firstImageIndex = models.Count - maxModelsPerPage;
+            showNextButton = false;
         }
         showPreviousButton = true;
+
+        UpdatePage();
     }
 
-    public void SetPreviousPage()
+    private void SetPreviousPage()
     {
-        firstImageIndex -= pageImageCount;
-         if (firstImageIndex <= 0)
-        {
-            showPreviousButton = false;
-        }
-        else
-        {
-            showPreviousButton = true;
-        }
+        firstImageIndex -= maxModelsPerPage;
+        showPreviousButton = firstImageIndex > maxModelsPerPage;
+        
+        UpdatePage();
     }
 
-    public void ResetPaginationToken()
+    private void UpdatePage()
     {
-        Models.paginationToken = "";
-        EditorPrefs.SetString(Models.paginationTokenKey, Models.paginationToken);
-    }
+        // clear page
+        pageModels.Clear();
+        
+        var models = Models.GetModels();
 
-    public async Task UpdatePage()
-    {
-        pageList.Clear();
-        if (models.Count < pageImageCount)
+        // Populate Page with models
+        for (int i = firstImageIndex; i < firstImageIndex + maxModelsPerPage; i++)
         {
-            pageList.AddRange(models);
-            DisableNextButton();
+            if (i > models.Count - 1)
+            {
+                continue;
+            }
+            
+            pageModels.Add(models[i]);
         }
-        else
+
+        if (models.Count > maxModelsPerPage && firstImageIndex != models.Count - maxModelsPerPage)
         {
-            pageList = Models.models.GetRange(firstImageIndex, pageImageCount);
-            if (Models.models.Count - (firstImageIndex + pageImageCount) >= 15)
-                EnableNextButton();
-            else
-                DisableNextButton();
+            showNextButton = true;
         }
-        Models.loadedModels.Clear();
-        foreach (var item in pageList)
+
+        if (pageModels.Count > maxModelsPerPage)
         {
-            Models.loadedModels.Add(item.id);
+            showNextButton = true;
         }
-        await UpdateTextures();
-    }
 
-    public void ResetTabSelection()
-    {
-        selectedTab = 0;
+        drawTabs = true;
     }
-
-    public void ClearData()
-    {
-        textures.Clear();
-    }
-
+    
     public void OnGUI(Rect position)
     {
-        Color backgroundColor = new Color32(18, 18, 18, 255);
-        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        DrawBackground(position);
 
-        string[] tabs = new string[] { "Private Models", "Public Models" };
-        int previousTab = selectedTab;
-        selectedTab = GUILayout.Toolbar(selectedTab, tabs);
-
-        if (previousTab != selectedTab)
+        if (drawTabs)
         {
-            ClearData();
-
-            if (selectedTab == 0)
-            {
-                Models.ShowWindow("private");
-            }
-            else if (selectedTab == 1)
-            {
-                Models.ShowWindow("public");
-            }
+            string[] tabs = { "Private Models", "Public Models" };
+            HandleTabSelection(tabs);    
         }
 
-        float boxWidth = (position.width - padding * (itemsPerRow - 1)) / itemsPerRow;
-        float boxHeight = boxWidth;
-
-        int numRows = Mathf.CeilToInt((float)textures.Count / itemsPerRow);
-        float rowPadding = 10f;
-        float scrollViewHeight = (boxHeight + padding + rowPadding) * numRows - rowPadding;
-
-        scrollPosition = GUI.BeginScrollView(new Rect(0, 70, position.width, position.height - 20), scrollPosition, new Rect(0, 0, position.width - 20, scrollViewHeight));
-
-        GUIStyle style = new GUIStyle(GUI.skin.label);
-        style.alignment = TextAnchor.MiddleCenter;
-        for (int i = 0; i < textures.Count; i++)
-        {
-            int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
-            int colIndex = i % itemsPerRow;
-
-            Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding + rowPadding), boxWidth, boxHeight);
-            Texture2D texture = textures[i].Item1;
-            string name = textures[i].Item2;
-
-            if (texture != null)
-            {
-                if (GUI.Button(boxRect, texture))
-                {
-                    if (i >= 0 && i < Models.loadedModels.Count)
-                    {
-                        EditorPrefs.SetString("SelectedModelId", Models.loadedModels[i].ToString());
-                        EditorPrefs.SetString("SelectedModelName", name);
-                    }
-
-                    EditorWindow window = EditorWindow.GetWindow(typeof(Models));
-                    window.Close();
-                }
-                GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);
-            }
-            else
-            {
-                GUI.Box(boxRect, "Loading...");
-            }
-        }
-
-        GUI.EndScrollView();
+        DrawModelsGrid(position);
 
         GUILayout.BeginArea(new Rect(0, position.height - 50, position.width, 50));
         GUILayout.BeginHorizontal();
 
-        if (showPreviousButton && GUILayout.Button("Previous Page"))
+        if (showPreviousButton)
         {
-            RunModelsDataOperation(-1);
+            EditorStyle.Button("Previous Page", () => { RedrawPage(-1); });
         }
 
-        if (showNextButton && GUILayout.Button("Next Page"))
+        if (showNextButton)
         {
-            RunModelsDataOperation(1);
+            EditorStyle.Button("Next Page", () => { RedrawPage(1); });
         }
 
         GUILayout.EndHorizontal();
         GUILayout.EndArea();
     }
 
-    private async void RunModelsDataOperation(int direction)
+    private static void DrawBackground(Rect position)
     {
-        await Models.GetModelsData(direction).ConfigureAwait(false);
+        Color backgroundColor = EditorStyle.GetBackgroundColor();
+        EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
     }
 
-    public async Task UpdateTextures()
+    private void DrawModelsGrid(Rect position)
     {
-        textures.Clear();
-        
-        foreach (var item in pageList)
-        {
-            string downloadUrl = null;
-            
-            if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
-            {
-                downloadUrl = item.thumbnail.url;
-            }
-            else if (item.trainingImages != null && item.trainingImages.Count > 0)
-            {
-                downloadUrl = item.trainingImages[0].downloadUrl;
-            }
+        float boxWidth = (position.width - padding * (itemsPerRow - 1)) / itemsPerRow;
+        float boxHeight = boxWidth;
 
-            if (!string.IsNullOrEmpty(downloadUrl))
+        var textures = Models.GetTextures();
+
+        int numRows = Mathf.CeilToInt((float)maxModelsPerPage / itemsPerRow);
+        float rowPadding = 10f;
+        float scrollViewHeight = (boxHeight + padding + rowPadding) * numRows - rowPadding;
+
+        scrollPosition = GUI.BeginScrollView(new Rect(0, 70, position.width, position.height - 20), scrollPosition, new Rect(0, 0, position.width - 20, scrollViewHeight));
+        {
+            DrawTextureBox(boxWidth, boxHeight, rowPadding, textures);
+        }
+        GUI.EndScrollView();
+    }
+
+    private void DrawTextureBox(float boxWidth, float boxHeight, float rowPadding, List<TexturePair> textures)
+    {
+        var models = Models.GetModels();
+
+        for (int i = 0; i < pageModels.Count; i++)
+        {
+            int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
+            int colIndex = i % itemsPerRow;
+
+            var i1 = i;
+            var item = textures.FirstOrDefault(x => x.name == pageModels[i1].name);
+            if (item == null) { return; }
+
+            Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding + rowPadding), boxWidth, boxHeight);
+            Texture2D texture = item.texture;
+            string name = item.name;
+        
+            GUIStyle style = new GUIStyle(GUI.skin.label)
             {
-                Texture2D texture = await Models.LoadTexture(downloadUrl);
-                textures.Add((texture, item.name));
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            if (texture != null)
+            {
+                if (GUI.Button(boxRect, texture))
+                {
+                    if (i >= 0 && i < models.Count)
+                    {
+                        EditorPrefs.SetString("SelectedModelId", models[i].id);
+                        EditorPrefs.SetString("SelectedModelName", name);
+                    }
+
+                    EditorWindow window = EditorWindow.GetWindow(typeof(Models));
+                    window.Close();
+                }
+                
+                GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);
             }
+            else
+            {
+                GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading..", style);
+            }
+        }
+    }
+
+    private void HandleTabSelection(string[] tabs)
+    {
+        int previousTab = selectedTab;
+        selectedTab = GUILayout.Toolbar(selectedTab, tabs);
+
+        if (previousTab != selectedTab)
+        {
+            if (selectedTab == 0)
+            {
+                Models.SetTab(Models.privacyPrivate);
+                drawTabs = false;
+            }
+            else if (selectedTab == 1)
+            {
+                Models.SetTab(Models.privacyPublic);
+                drawTabs = false;
+            }
+        }
+    }
+
+    public void RedrawPage(int _updateType)
+    {
+        switch (_updateType)
+        {
+            case 0:
+                SetFirstPage();
+                break;
+            case 1:
+                SetNextPage();
+                break;
+            case -1:
+                SetPreviousPage();
+                break;
         }
     }
 }

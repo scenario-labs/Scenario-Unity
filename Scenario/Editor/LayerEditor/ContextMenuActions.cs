@@ -215,7 +215,7 @@ public class ContextMenuActions
             Texture2D texture2D = layerEditor.uploadedImages[index];
             string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
             string name = CommonUtils.GetRandomImageFileName();
-            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
+            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"format\":\"png\",\"returnImage\":\"false\"}}";
             Debug.Log(param);
 
             ApiClient.RestPut("images/erase-background",param,response =>

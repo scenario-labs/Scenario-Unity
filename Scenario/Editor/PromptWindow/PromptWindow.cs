@@ -18,7 +18,7 @@ public class PromptWindow : EditorWindow
     private EditorCoroutine inferenceStatusCoroutine;
     private bool processReceivedUploadImage = false;    // for main thread receiving callback
     private byte[] pngBytesUploadImage = null;
-    private string fielName;
+    private string fileName;
 
     [MenuItem("Window/Scenario/Prompt Window")]
     public static void ShowWindow()
@@ -45,7 +45,7 @@ public class PromptWindow : EditorWindow
         string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
         fielName = CommonUtils.GetRandomImageFileName();
         string url = $"images/erase-background";
-        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fielName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
+        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
 
         Debug.Log("Requesting background removal, please wait..");
 

@@ -100,7 +100,7 @@ public class Images : EditorWindow
     {
         string dataUrl = CommonUtils.Texture2DToDataURL(ImagesUI.textures[selectedTextureIndex]);
         string fileName =CommonUtils.GetRandomImageFileName();
-        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
+        string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"format\":\"png\",\"returnImage\":\"false\"}}";
 
         Debug.Log($"Requesting background removal, please wait..");
 

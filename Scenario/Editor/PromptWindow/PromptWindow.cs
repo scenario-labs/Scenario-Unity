@@ -43,7 +43,7 @@ public class PromptWindow : EditorWindow
     internal void RemoveBackground(Texture2D texture2D)
     {
         string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
-        fielName = CommonUtils.GetRandomImageFileName();
+        fileName = CommonUtils.GetRandomImageFileName();
         string url = $"images/erase-background";
         string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
 

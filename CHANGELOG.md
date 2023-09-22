@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.1](https://github.com/scenario-labs/Scenario-Unity/compare/v0.2.0...v0.2.1) (2023-09-22)
+
+
+### Bug Fixes
+
+* the name 'fielName' does not exist in the current context ([#74](https://github.com/scenario-labs/Scenario-Unity/issues/74)) ([f5b4249](https://github.com/scenario-labs/Scenario-Unity/commit/f5b4249b0f2a00bb4d56ca359c1ad425d18ab484))
+
 ## [0.2.0](https://github.com/scenario-labs/Scenario-Unity/compare/v0.1.1...v0.2.0) (2023-09-22)
 
 

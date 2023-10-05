@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.2](https://github.com/scenario-labs/Scenario-Unity/compare/v0.2.1...v0.2.2) (2023-10-05)
+
+
+### Bug Fixes
+
+* **inferences:** rely on final status rather than intermediates one to display the result ([#77](https://github.com/scenario-labs/Scenario-Unity/issues/77)) ([bbb3f4f](https://github.com/scenario-labs/Scenario-Unity/commit/bbb3f4f69edfcb65e8a42b71efa9171240de1009))
+
 ## [0.2.1](https://github.com/scenario-labs/Scenario-Unity/compare/v0.2.0...v0.2.1) (2023-09-22)
 
 

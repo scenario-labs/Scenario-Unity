@@ -314,7 +314,7 @@ public class PromptWindow : EditorWindow
         {
             InferenceStatusRoot inferenceStatusRoot = JsonConvert.DeserializeObject<InferenceStatusRoot>(response.Content);
 
-            if (inferenceStatusRoot.inference.status == "in-progress")
+            if (inferenceStatusRoot.inference.status == "in-progress" || inferenceStatusRoot.inference.status == "queued")
             {
                 Debug.Log("Commission in process, please wait..");
                 EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);

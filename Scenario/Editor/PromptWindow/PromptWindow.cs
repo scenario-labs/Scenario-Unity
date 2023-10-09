@@ -6,6 +6,7 @@ using System.Linq;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
+using Newtonsoft.Json;
 
 namespace Scenario
 {

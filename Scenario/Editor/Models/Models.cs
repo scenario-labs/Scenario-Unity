@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using Newtonsoft.Json;
 
 namespace Scenario
 {

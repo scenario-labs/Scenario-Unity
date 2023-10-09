@@ -17,7 +17,7 @@ namespace Scenario
         private readonly string[] imageFormats = { "JPEG", "PNG" };
         private readonly string[] imageFormatExtensions = { "jpeg", "png" };
 
-        private static string version = "Scenario Beta Version 0.2.3";
+        private static string version = "Scenario Beta Version 0.2.0";
 
         public static string EncodedAuth
         {

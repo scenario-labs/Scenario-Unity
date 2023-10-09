@@ -8,6 +8,7 @@ using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
+using Newtonsoft.Json;
 
 namespace Scenario
 {

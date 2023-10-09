@@ -1,6 +1,6 @@
 {
     "name": "com.scenario.editor",
-    "rootNamespace": "",
+    "rootNamespace": "Scenario",
     "references": [
         "Unity.EditorCoroutines.Editor"
     ],

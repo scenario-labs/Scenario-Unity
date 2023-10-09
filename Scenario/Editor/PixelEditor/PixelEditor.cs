@@ -1,38 +1,41 @@
 using UnityEditor;
 using UnityEngine;
 
-public class PixelEditor : EditorWindow
+namespace Scenario
 {
-    private static readonly float MinimumWidth = 1650f;
-    private PixelEditorUI pixelEditorUI = new();
-
-    [MenuItem("Window/Scenario/Pixel Editor")]
-    public static void ShowWindow()
+    public class PixelEditor : EditorWindow
     {
-        var window = EditorWindow.GetWindow(typeof(PixelEditor), false, "Pixel Editor") as PixelEditor;
-        if (window.pixelEditorUI != null)
+        private static readonly float MinimumWidth = 1650f;
+        private PixelEditorUI pixelEditorUI = new();
+
+        [MenuItem("Window/Scenario/Pixel Editor")]
+        public static void ShowWindow()
         {
-            window.pixelEditorUI.removeNoise = false;
-            window.pixelEditorUI.removeBackground = false;
+            var window = EditorWindow.GetWindow(typeof(PixelEditor), false, "Pixel Editor") as PixelEditor;
+            if (window.pixelEditorUI != null)
+            {
+                window.pixelEditorUI.removeNoise = false;
+                window.pixelEditorUI.removeBackground = false;
+            }
+
+            window.minSize = new Vector2(MinimumWidth, window.minSize.y);
         }
 
-        window.minSize = new Vector2(MinimumWidth, window.minSize.y);
-    }
+        public static void ShowWindow(Texture2D selectedTexture, ImageDataStorage.ImageData imageData)
+        {
+            PixelEditorUI.currentImage = selectedTexture;
+            PixelEditorUI.imageData = imageData;
+            ShowWindow();
+        }
 
-    public static void ShowWindow(Texture2D selectedTexture, ImageDataStorage.ImageData imageData)
-    {
-        PixelEditorUI.currentImage = selectedTexture;
-        PixelEditorUI.imageData = imageData;
-        ShowWindow();
-    }
+        private void OnGUI()
+        {
+            pixelEditorUI.OnGUI(this.position);
+        }
 
-    private void OnGUI()
-    {
-        pixelEditorUI.OnGUI(this.position);
-    }
-
-    private void OnDestroy()
-    {
-        PixelEditorUI.currentImage = null;
+        private void OnDestroy()
+        {
+            PixelEditorUI.currentImage = null;
+        }
     }
 }

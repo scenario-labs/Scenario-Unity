@@ -1,36 +1,39 @@
 using UnityEditor;
 using UnityEngine;
 
-public class InpaintingEditor : EditorWindow
+namespace Scenario
 {
-    private static readonly float MinimumWidth = 1775f;
-    private static InpaintingEditorUI inpaintingEditorUI;
-    private static Texture2D inpaintingTexture;
-
-    [MenuItem("Window/Scenario/Inpainting Editor")]
-    public static void ShowWindow()
+    public class InpaintingEditor : EditorWindow
     {
-        InpaintingEditor window = GetWindow<InpaintingEditor>("Inpainting Editor");
-        window.minSize = new Vector2(MinimumWidth, window.minSize.y);
-    }
+        private static readonly float MinimumWidth = 1775f;
+        private static InpaintingEditorUI inpaintingEditorUI;
+        private static Texture2D inpaintingTexture;
 
-    public static void ShowWindow(Texture2D texture2D)
-    {
-        InpaintingEditor window = GetWindow<InpaintingEditor>("Inpainting Editor");
-        inpaintingTexture = texture2D;
-        if (inpaintingTexture != null)
+        [MenuItem("Window/Scenario/Inpainting Editor")]
+        public static void ShowWindow()
         {
-            inpaintingEditorUI.SetImage(inpaintingTexture);
+            InpaintingEditor window = GetWindow<InpaintingEditor>("Inpainting Editor");
+            window.minSize = new Vector2(MinimumWidth, window.minSize.y);
         }
-    }
 
-    private void OnEnable()
-    {
-        inpaintingEditorUI = new InpaintingEditorUI(this);
-    }
+        public static void ShowWindow(Texture2D texture2D)
+        {
+            InpaintingEditor window = GetWindow<InpaintingEditor>("Inpainting Editor");
+            inpaintingTexture = texture2D;
+            if (inpaintingTexture != null)
+            {
+                inpaintingEditorUI.SetImage(inpaintingTexture);
+            }
+        }
 
-    private void OnGUI()
-    {
-        inpaintingEditorUI.DrawUI(this.position);
+        private void OnEnable()
+        {
+            inpaintingEditorUI = new InpaintingEditorUI(this);
+        }
+
+        private void OnGUI()
+        {
+            inpaintingEditorUI.DrawUI(this.position);
+        }
     }
 }

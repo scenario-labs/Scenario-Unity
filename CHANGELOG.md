@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.3](https://github.com/scenario-labs/Scenario-Unity/compare/v0.2.2...v0.2.3) (2023-10-11)
+
+
+### Bug Fixes
+
+* namespace and version ([#80](https://github.com/scenario-labs/Scenario-Unity/issues/80)) ([4ae138a](https://github.com/scenario-labs/Scenario-Unity/commit/4ae138a8c28452d1fc79dde64ee357e3882227d2))
+
 ## [0.2.2](https://github.com/scenario-labs/Scenario-Unity/compare/v0.2.1...v0.2.2) (2023-10-05)
 
 

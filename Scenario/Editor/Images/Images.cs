@@ -19,8 +19,6 @@ namespace Scenario
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
-            //Debug.Log(PluginSettings.EncodedAuth);
-
             Images window = GetWindow<Images>("Images");
         
             GetInferencesData();

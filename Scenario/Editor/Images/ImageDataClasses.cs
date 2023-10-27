@@ -28,12 +28,6 @@ namespace Scenario
         public string nextPaginationToken { get; set; }
     }
 
-   /* public class Inference
-    {
-        public string id { get; set; }
-        public List<Image> images { get; set; }
-    }*/
-
     public class Image
     {
         public string id { get; set; }

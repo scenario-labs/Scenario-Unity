@@ -1,7 +1,7 @@
 on:
     push:
       branches:
-        - develop
+        - chore/update-scenario-version
   
 permissions:
     contents: write

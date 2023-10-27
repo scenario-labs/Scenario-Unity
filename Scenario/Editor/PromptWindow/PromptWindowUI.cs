@@ -43,6 +43,7 @@ namespace Scenario
         internal int widthSliderValue = 512;
         internal int heightSliderValue = 512;
         internal float imagesliderValue = 4;
+        internal int imagesliderIntValue = 4;
         internal float samplesliderValue = 30;
         internal float influncesliderValue = 0.25f;
         internal float guidancesliderValue = 7;

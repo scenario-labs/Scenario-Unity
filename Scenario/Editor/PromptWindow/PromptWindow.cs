@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Unity.EditorCoroutines.Editor;
+using Unity.Plastic.Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-using Newtonsoft.Json;
 
 namespace Scenario
 {
@@ -226,7 +226,7 @@ namespace Scenario
             int width = (int)promptWindowUI.widthSliderValue;
             int height = (int)promptWindowUI.heightSliderValue;
             int numInferenceSteps = (int)promptWindowUI.samplesliderValue;
-            int numSamples = (int)promptWindowUI.imagesliderValue;
+            int numSamples = (int)promptWindowUI.imagesliderIntValue;
 
             string inputData = $@"{{
             ""parameters"": {{

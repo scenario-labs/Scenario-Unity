@@ -40,7 +40,8 @@ namespace Scenario
             int labelWidth = Mathf.RoundToInt(EditorGUIUtility.currentViewWidth * labelWidthPercentage);
             int sliderWidth = Mathf.RoundToInt(EditorGUIUtility.currentViewWidth * sliderWidthPercentage);
 
-            int imagesliderIntValue = Mathf.RoundToInt(imagesliderValue);
+            imagesliderIntValue = Mathf.RoundToInt(imagesliderValue);
+
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Images: " + imagesliderIntValue, GUILayout.Width(labelWidth));

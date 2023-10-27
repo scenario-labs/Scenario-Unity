@@ -5,10 +5,10 @@ using System.IO;
 using System.Threading.Tasks;
 using RestSharp;
 using Unity.EditorCoroutines.Editor;
+using Unity.Plastic.Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
-using Newtonsoft.Json;
 
 namespace Scenario
 {

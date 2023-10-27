@@ -1,6 +1,7 @@
 using System;
 using UnityEditor;
 using UnityEngine;
+using System.IO;
 
 namespace Scenario
 {
@@ -16,7 +17,25 @@ namespace Scenario
 
         private readonly string[] imageFormats = { "JPEG", "PNG" };
         private readonly string[] imageFormatExtensions = { "jpeg", "png" };
-        private static string version = "Scenario Beta Version 0.2.3";
+
+        private static string vnumber = "";
+        private static string version => $"Scenario Beta Version {vnumber}";
+
+        [System.Serializable]
+        private class PackageInfo
+        {
+            public string version;
+        }
+
+        [MenuItem("Scenario/Update Version")]
+        public static void UpdateVersionFromPackageJson()
+        {
+            string packageJsonPath = "Assets/Scenario/package.json";
+            string packageJsonContent = File.ReadAllText(packageJsonPath);
+            vnumber = JsonUtility.FromJson<PackageInfo>(packageJsonContent).version;
+
+            EditorWindow.GetWindow<PluginSettings>().Repaint();
+        }
 
         public static string EncodedAuth
         {
@@ -39,6 +58,12 @@ namespace Scenario
             GetWindow<PluginSettings>("Scenario Settings");
             PluginSettings window = GetWindow<PluginSettings>("Scenario Settings");
             window.minSize = new Vector2(minimumWidth, window.minSize.y);
+        }
+
+        private void OnEnable()
+        {
+            UpdateVersionFromPackageJson();
+            LoadSettings();
         }
 
         private void OnGUI()
@@ -83,13 +108,8 @@ namespace Scenario
                 SaveSettings();
             }
 
-            GUILayout.FlexibleSpace(); // This will push the version text to the bottom
-            GUILayout.Label(version, EditorStyles.boldLabel); // Add this line to display the version at the bottom
-        }
-
-        private void OnEnable()
-        {
-            LoadSettings();
+            GUILayout.FlexibleSpace();
+            GUILayout.Label(version, EditorStyles.boldLabel);
         }
 
         private void SaveSettings()

@@ -19,6 +19,8 @@ namespace Scenario
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
+            //Debug.Log(PluginSettings.EncodedAuth);
+
             Images window = GetWindow<Images>("Images");
         
             GetInferencesData();
@@ -71,7 +73,13 @@ namespace Scenario
                         {
                             Id = image.id,
                             Url = image.url,
-                            InferenceId = inference.id
+                            InferenceId = inference.id,
+                            Prompt = inference.parameters.prompt,
+                            Steps = inference.parameters.numInferenceSteps,
+                            Size = new Vector2(inference.parameters.width,inference.parameters.height),
+                            Guidance = inference.parameters.guidance,
+                            Scheduler = "Default",
+                            Seed = image.seed,
                         });
                     }
                 }

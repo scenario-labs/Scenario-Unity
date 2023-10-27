@@ -14,7 +14,7 @@ namespace Scenario
     {
         internal static List<ImageDataStorage.ImageData> generatedImagesData = new();
 
-        private PromptWindowUI promptWindowUI;
+        public static PromptWindowUI promptWindowUI;
 
         private string inferenceId = "";
         private EditorCoroutine inferenceStatusCoroutine;
@@ -333,7 +333,13 @@ namespace Scenario
                         {
                             Id = img.Id,
                             Url = img.Url,
-                            InferenceId = this.inferenceId
+                            InferenceId = this.inferenceId,
+                            Prompt = promptWindowUI.promptinputText,
+                            Steps = promptWindowUI.samplesliderValue,
+                            Size = new Vector2(promptWindowUI.widthSliderValue, promptWindowUI.heightSliderValue),
+                            Guidance = promptWindowUI.guidancesliderValue,
+                            Scheduler = "Default",
+                            Seed = promptWindowUI.seedinputText,
                         });
                     }
                     EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);

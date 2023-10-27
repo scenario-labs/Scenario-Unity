@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using static Scenario.ImageDataStorage;
@@ -119,6 +120,37 @@ namespace Scenario
             DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
         }
 
+        private void DrawImageData()
+        {
+            var currentImageData = PromptImages.imageDataList[selectedTextureIndex];
+            GUILayout.BeginVertical();
+            {
+                CustomStyle.Label("Prompt:");
+                CustomStyle.Label($"{currentImageData.Prompt}");
+                CustomStyle.Space(padding);
+                GUILayout.BeginHorizontal();
+                {
+                    CustomStyle.Label($"Steps: {currentImageData.Steps}");
+                    CustomStyle.Label($"Size: {currentImageData.Size}");
+                }
+                GUILayout.EndHorizontal();
+                CustomStyle.Space(padding);
+                GUILayout.BeginHorizontal();
+                {
+                    CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
+                    CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                }
+                GUILayout.EndHorizontal();
+                CustomStyle.Space(padding);
+                GUILayout.BeginHorizontal();
+                {
+                    CustomStyle.Label($"Seed: {currentImageData.Seed}");
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+        }
+
         private static void DrawBackground(Rect position)
         {
             Color backgroundColor = EditorStyle.GetBackgroundColor();
@@ -149,6 +181,7 @@ namespace Scenario
                 CustomStyle.Space(10);
                 DrawSecondButtons();
                 CustomStyle.Space(10);
+                DrawImageData();
             }
             GUILayout.EndVertical();
             CustomStyle.Space(10);
@@ -177,12 +210,33 @@ namespace Scenario
             }
         }
 
+        public void RefineImage()
+        {
+            if (PromptWindow.promptWindowUI == null)
+            {
+                Debug.LogError("Prompt Window not found: Open Prompt Window, and try again.");
+                return;
+            }
+            var imageData = ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex];
+            PromptWindowUI.imageUpload = selectedTexture;
+            PromptWindow.promptWindowUI.isImageToImage = true;
+            PromptWindow.promptWindowUI.isTextToImage = false;
+            PromptWindow.promptWindowUI.promptinputText = imageData.Prompt;
+            PromptWindow.promptWindowUI.tags = imageData.Prompt.Split(',').ToList();
+            PromptWindow.promptWindowUI.samplesliderValue = imageData.Steps;
+            PromptWindow.promptWindowUI.widthSliderValue = (int)imageData.Size.x;
+            PromptWindow.promptWindowUI.heightSliderValue = (int)imageData.Size.y;
+            PromptWindow.promptWindowUI.guidancesliderValue = imageData.Guidance;
+            PromptWindow.promptWindowUI.seedinputText = imageData.Seed;
+            PromptWindow.ShowWindow();
+        }
+
         private void DrawFirstButtons()
         {
             string[] buttonNames = { "Refine Image", "Download", "Delete" };
             System.Action[] buttonCallbacks =
             {
-                () => PromptWindowUI.imageUpload = selectedTexture,
+                () => RefineImage(),
                 () => CommonUtils.SaveTextureAsPNG(selectedTexture),
                 () =>
                 {

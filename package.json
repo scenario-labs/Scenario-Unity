@@ -6,6 +6,5 @@
   },
   "dependencies": {
     "release-please": "^15.13.0"
-  },
-  "version": "0.2.3"
+  }
 }

@@ -1,3 +1,10 @@
 {
-  "Scenario": "0.2.3"
+  ".": "0.3.0",
+  "extra-files": [
+    {
+      "type": "json",
+      "path": "Scenario/package.json",
+      "jsonpath": "$.version"
+    }
+  ]
 }

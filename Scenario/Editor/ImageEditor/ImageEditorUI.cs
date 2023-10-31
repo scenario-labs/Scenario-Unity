@@ -73,6 +73,7 @@ namespace Scenario
             new ActionButton { Text = "Save mask to file", Tooltip = "Save mask to file", OnClick = SaveMaskToFile },
             new ActionButton { Text = "Fill all", Tooltip = "Fill all", OnClick = FillAll },*/
                 new ActionButton { Text = "Create Image", Tooltip = "Create a new image", OnClick = CreateImage },
+                new ActionButton { Text = "Save Image", Tooltip = "Save image for later use", OnClick = SaveImage },
                 new ActionButton { Text = "Clear", Tooltip = "Clear", OnClick = Clear },
                 new ActionButton { Text = "Undo", Tooltip = "Undo", OnClick = UndoCanvas },
                 new ActionButton { Text = "Redo", Tooltip = "Redo", OnClick = RedoCanvas },
@@ -779,6 +780,15 @@ namespace Scenario
 
             uploadedImage.SetPixels(pixels);
             uploadedImage.Apply();
+        }
+
+        private void SaveImage()
+        {
+            string saveImagePath = EditorUtility.SaveFilePanel("Save image", "", "", "png,jpeg,jpg");
+            if (!string.IsNullOrEmpty(saveImagePath))
+            {
+                CommonUtils.SaveTextureAsPNGAtPath(canvasImage, saveImagePath);
+            }
         }
 
         /*private void FillAll()

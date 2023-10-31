@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -84,11 +85,12 @@ namespace Scenario
                 CustomStyle.Space(10);
                 DrawSecondButtons();
                 CustomStyle.Space(10);
+                DrawImageData();
             }
             GUILayout.EndVertical();
             CustomStyle.Space(10);
         }
-    
+
         private void DrawSelectedImage(float previewWidth)
         {
             GUILayout.Label("Selected Image", EditorStyles.boldLabel);
@@ -108,7 +110,38 @@ namespace Scenario
             }
             GUILayout.EndHorizontal();
         }
-    
+
+        private void DrawImageData()
+        {
+            var currentImageData = PromptImages.imageDataList[selectedTextureIndex];
+            GUILayout.BeginVertical();
+            {
+                CustomStyle.Label("Prompt:");
+                CustomStyle.Label($"{currentImageData.Prompt}");
+                CustomStyle.Space(padding);
+                GUILayout.BeginHorizontal();
+                {
+                    CustomStyle.Label($"Steps: {currentImageData.Steps}");
+                    CustomStyle.Label($"Size: {currentImageData.Size}");
+                }
+                GUILayout.EndHorizontal();
+                CustomStyle.Space(padding);
+                GUILayout.BeginHorizontal();
+                {
+                    CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
+                    CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                }
+                GUILayout.EndHorizontal();
+                CustomStyle.Space(padding);
+                GUILayout.BeginHorizontal();
+                {
+                    CustomStyle.Label($"Seed: {currentImageData.Seed}");
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+        }
+
         private void DrawFirstButtons()
         {
             string[] buttonNames = { "Refine Image", "Download", "Delete" };

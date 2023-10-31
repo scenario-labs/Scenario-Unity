@@ -92,7 +92,17 @@ namespace Scenario
             {
                 if (!imageDataList.Exists(x => x.Id == image.Id))
                 {
-                    ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData { Id = image.Id, Url = image.Url, InferenceId = image.InferenceId };
+                    ImageDataStorage.ImageData newImageData = new() {
+                        Id = image.Id,
+                        Url = image.Url,
+                        InferenceId = image.InferenceId,
+                        Prompt = image.Prompt,
+                        Steps = image.Steps,
+                        Size = image.Size,
+                        Guidance = image.Guidance,
+                        Scheduler = image.Scheduler,
+                        Seed = image.Seed,
+                    };
                     imageDataList.Insert(0, newImageData);
 
                     Texture2D texture = await LoadTexture(image.Url);

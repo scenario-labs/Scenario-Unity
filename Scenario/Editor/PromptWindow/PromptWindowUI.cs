@@ -49,12 +49,12 @@ namespace Scenario
         internal float guidancesliderValue = 7;
         internal string postedModelName = "Choose Model";
         internal string seedinputText = "";
-    
+        internal bool isTextToImage = true;
+
         private int dragFromIndex = -1;
         private int negativeDragFromIndex = -1;
         private string inputText = "";
         private string negativeInputText = "";
-        private bool isTextToImage = true;
         private bool showSettings = true;
         private bool controlNetFoldout = false;
         private Vector2 scrollPosition;
@@ -66,7 +66,7 @@ namespace Scenario
         private readonly int[] allowedWidthValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
         private readonly int[] allowedHeightValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
 
-        private List<string> tags = new();
+        internal List<string> tags = new();
         private List<Rect> tagRects = new();
         private List<string> negativeTags = new();
         private List<Rect> negativeTagRects = new();

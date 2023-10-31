@@ -18,7 +18,21 @@ namespace Scenario
             texture.Apply();
             return texture;
         }
-    
+
+        public static void SaveTextureAsPNGAtPath(Texture2D texture2D, string filePath)
+        {
+            if (filePath == null || filePath == "") { Debug.LogError("Must have valid file path"); return; }
+            byte[] pngBytes = texture2D.EncodeToPNG();
+            SaveImageBytesToPath(filePath, pngBytes);
+        }
+
+        public static void SaveImageBytesToPath(string filePath, byte[] pngBytes)
+        {
+            File.WriteAllBytes(filePath, pngBytes);
+            RefreshAssetDatabase();
+            Debug.Log("Saved image to: " + filePath);
+        }
+
         public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "")
         {
             if (fileName == null || fileName == "") { fileName = GetRandomImageFileName(); }

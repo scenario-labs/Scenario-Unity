@@ -63,8 +63,8 @@ namespace Scenario
         private Vector2 dragStartPos;
         private Vector2 negativeDragStartPos;
 
-        private readonly int[] allowedWidthValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
-        private readonly int[] allowedHeightValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+        private readonly int[] allowedWidthValues = { 512, 576, 640, 688, 704, 768, 912, 1024, 2048 };
+        private readonly int[] allowedHeightValues = { 512, 576, 640, 688, 704, 768, 912, 1024, 2048 };
 
         internal List<string> tags = new();
         private List<Rect> tagRects = new();

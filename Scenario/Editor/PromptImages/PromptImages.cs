@@ -3,9 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RestSharp;
 using Unity.EditorCoroutines.Editor;
-using Unity.Plastic.Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
@@ -102,6 +102,7 @@ namespace Scenario
                         Guidance = image.Guidance,
                         Scheduler = image.Scheduler,
                         Seed = image.Seed,
+                        CreatedAt = image.CreatedAt,
                     };
                     imageDataList.Insert(0, newImageData);
 

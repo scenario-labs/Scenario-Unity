@@ -19,6 +19,7 @@ namespace Scenario
             public float Guidance { get; set; }
             public string Scheduler { get; set; }
             public string Seed { get; set; }
+            public DateTime CreatedAt { get; set; }
         }
     }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using Unity.EditorCoroutines.Editor;
@@ -126,6 +127,11 @@ namespace Scenario
             Texture2D texture = new Texture2D(1,1);
             ImageConversion.LoadImage(texture, bytes);
             return texture;
+        }
+
+        public static string GetRandomSeedValue()
+        {
+            return UnityEngine.Random.Range(ulong.MinValue, ulong.MaxValue).ToString("n", CultureInfo.InvariantCulture).Replace(",", "").Substring(0, 19);
         }
     }
 }

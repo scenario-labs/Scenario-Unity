@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Unity.Plastic.Newtonsoft.Json;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -257,12 +257,6 @@ namespace Scenario
         }
     
         #region API_DTO
-
-        private class ImageData
-        {
-            public string Id { get; set; }
-            public string Url { get; set; }
-        }
 
         private class ModelsResponse
         {

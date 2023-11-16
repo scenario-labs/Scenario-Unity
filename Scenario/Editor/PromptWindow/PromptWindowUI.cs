@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEditor;
@@ -72,6 +73,8 @@ namespace Scenario
         private List<Rect> negativeTagRects = new();
 
         private PromptWindow promptWindow;
+        private bool shouldAutoGenerateSeed;
+        private bool shouldAutoGenerateSeedPrev;
 
         public string selectedModelName { get; set; } = "Choose Model";
 
@@ -103,14 +106,15 @@ namespace Scenario
             }
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
-        
-            CustomStyle.ButtonSecondary(selectedModelName, 30 , Models.ShowWindow);
+
+            CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
             CustomStyle.Separator();
             RenderPromptSection();
             CustomStyle.Space();
             RenderNegativePromptSection();
             CustomStyle.Separator();
 
+            // Updated seed generation logic
             bool shouldAutoGenerateSeed = imagesliderValue > 1;
             if (shouldAutoGenerateSeed) { seedinputText = "-1"; }
 
@@ -118,7 +122,7 @@ namespace Scenario
             {
                 promptinputText = SerializeTags(tags);
                 negativepromptinputText = SerializeTags(negativeTags);
-            
+
                 EditorPrefs.SetString("postedModelName", EditorPrefs.GetString("SelectedModelId"));
 
                 if (shouldAutoGenerateSeed)
@@ -140,7 +144,7 @@ namespace Scenario
             GUI.enabled = true;
 
             CustomStyle.Space();
-        
+
             int selectedTab = isTextToImage ? 0 : (isImageToImage ? 1 : 2);
             string[] tabLabels = { "Text to Image", "Image to Image", "Inpainting" };
             selectedTab = GUILayout.Toolbar(selectedTab, tabLabels, CustomStyle.GetTertiaryButtonStyle());

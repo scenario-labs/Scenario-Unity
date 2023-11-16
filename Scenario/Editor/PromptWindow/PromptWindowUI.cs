@@ -114,7 +114,6 @@ namespace Scenario
             RenderNegativePromptSection();
             CustomStyle.Separator();
 
-            // Updated seed generation logic
             bool shouldAutoGenerateSeed = imagesliderValue > 1;
             if (shouldAutoGenerateSeed) { seedinputText = "-1"; }
 

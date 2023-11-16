@@ -18,7 +18,7 @@ namespace Scenario
 
         private string inferenceId = "";
         private EditorCoroutine inferenceStatusCoroutine;
-        private bool processReceivedUploadImage = false;    // for main thread receiving callback
+        private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
         private string fileName;
 
@@ -221,7 +221,6 @@ namespace Scenario
             string prompt = promptWindowUI.promptinputText;
             string seedField = "";
             
-            // Check if the seed should be sent
             if (promptWindowUI.seedinputText != "-1")
             {
                 ulong seed = ulong.Parse(promptWindowUI.seedinputText);

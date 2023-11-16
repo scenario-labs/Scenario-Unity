@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using Unity.Plastic.Newtonsoft.Json;
+using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -59,7 +59,12 @@ namespace Scenario
             {
                 var inferencesResponse = JsonConvert.DeserializeObject<InferencesResponse>(response.Content);
                 _paginationToken = inferencesResponse.nextPaginationToken;
-                
+
+                if (inferencesResponse.inferences[0].status == "failed")
+                {
+                    Debug.LogError("Api Response: Status == failed, Try Again..");
+                }
+
                 ImageDataStorage.imageDataList.Clear();
                 ImagesUI.textures.Clear();
                 
@@ -78,6 +83,7 @@ namespace Scenario
                             Guidance = inference.parameters.guidance,
                             Scheduler = "Default",
                             Seed = image.seed,
+                            CreatedAt = inference.createdAt,
                         });
                     }
                 }

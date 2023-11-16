@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Newtonsoft.Json;
 using Unity.EditorCoroutines.Editor;
-using Unity.Plastic.Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -18,7 +18,7 @@ namespace Scenario
 
         private string inferenceId = "";
         private EditorCoroutine inferenceStatusCoroutine;
-        private bool processReceivedUploadImage = false;    // for main thread receiving callback
+        private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
         private string fileName;
 
@@ -219,7 +219,14 @@ namespace Scenario
             string image = $"\"{dataUrl}\"";
             string mask = $"\"{maskDataUrl}\"";
             string prompt = promptWindowUI.promptinputText;
-            int seed = int.Parse(promptWindowUI.seedinputText);
+            string seedField = "";
+            
+            if (promptWindowUI.seedinputText != "-1")
+            {
+                ulong seed = ulong.Parse(promptWindowUI.seedinputText);
+                seedField = $@"""seed"": {seed},";
+            }
+            
             string negativePrompt = promptWindowUI.negativepromptinputText;
             float strength = (float)Math.Round(promptWindowUI.influncesliderValue, 2);
             float guidance = promptWindowUI.guidancesliderValue;
@@ -229,23 +236,23 @@ namespace Scenario
             int numSamples = (int)promptWindowUI.imagesliderIntValue;
 
             string inputData = $@"{{
-            ""parameters"": {{
-                ""hideResults"": {hideResults.ToString().ToLower()},
-                ""type"": ""{type}"",
-                {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}
-                {(promptWindowUI.isControlNet || promptWindowUI.isAdvancedSettings ? $@"""modality"": ""{modality}""," : "")}
-                {(promptWindowUI.isInpainting ? $@"""mask"": ""{maskDataUrl}""," : "")}
-                ""prompt"": ""{prompt}"",
-                {(seed > 0 ? $@"""seed"": {seed}," : "")}
-                {(string.IsNullOrEmpty(negativePrompt) ? "" : $@"""negativePrompt"": ""{negativePrompt}"",")}
-                {(promptWindowUI.isImageToImage || promptWindowUI.isControlNet ? $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)}," : "")}
-                ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-                ""numInferenceSteps"": {numInferenceSteps},
-                ""width"": {width},
-                ""height"": {height},
-                ""numSamples"": {numSamples}
-            }}
-        }}";
+                ""parameters"": {{
+                    ""hideResults"": {hideResults.ToString().ToLower()},
+                    ""type"": ""{type}"",
+                    {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}
+                    {(promptWindowUI.isControlNet || promptWindowUI.isAdvancedSettings ? $@"""modality"": ""{modality}""," : "")}
+                    {(promptWindowUI.isInpainting ? $@"""mask"": ""{maskDataUrl}""," : "")}
+                    ""prompt"": ""{prompt}"",
+                    {seedField}
+                    {(string.IsNullOrEmpty(negativePrompt) ? "" : $@"""negativePrompt"": ""{negativePrompt}"",")}
+                    {(promptWindowUI.isImageToImage || promptWindowUI.isControlNet ? $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)}," : "")}
+                    ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
+                    ""numInferenceSteps"": {numInferenceSteps},
+                    ""width"": {width},
+                    ""height"": {height},
+                    ""numSamples"": {numSamples}
+                }}
+            }}";
             return inputData;
         }
 
@@ -324,6 +331,11 @@ namespace Scenario
                 }
                 else
                 {
+                    if (inferenceStatusRoot.inference.status == "failed")
+                    {
+                        Debug.LogError("Api Response: Status == failed, Try Again..");
+                    }
+
                     generatedImagesData.Clear();
                     foreach (var item in inferenceStatusRoot.inference.images)
                     {
@@ -340,6 +352,7 @@ namespace Scenario
                             Guidance = promptWindowUI.guidancesliderValue,
                             Scheduler = "Default",
                             Seed = promptWindowUI.seedinputText,
+                            CreatedAt = inferenceStatusRoot.inference.createdAt,
                         });
                     }
                     EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
@@ -404,7 +417,7 @@ namespace Scenario
             public double guidance { get; set; }
             public int numInferenceSteps { get; set; }
             public bool enableSafetyCheck { get; set; }
-            public int seed { get; set; }
+            public ulong seed { get; set; }
             public int width { get; set; }
             public int height { get; set; }
             public string type { get; set; }

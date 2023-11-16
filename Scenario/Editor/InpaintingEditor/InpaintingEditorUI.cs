@@ -62,7 +62,7 @@ namespace Scenario
             this.inpaintingEditor = inpaintingEditor;
 
             transparentImage = new Texture2D(1, 1);
-            selectedBrushSize = 6;
+            selectedBrushSize = 10;
             canvasHistory = new List<Texture2D>();
             canvasHistoryIndex = -1;
             redoHistory = new List<Texture2D>();
@@ -472,7 +472,7 @@ namespace Scenario
 
                 CustomStyle.Space(10);
 
-                int[] brushSizes = new int[] { 6, 12, 16, 24, 30, 40, 48, 64 };
+                int[] brushSizes = new int[] { 10, 12, 16, 24, 30, 40, 48, 64 };
 
                 GUILayout.BeginHorizontal();
                 {

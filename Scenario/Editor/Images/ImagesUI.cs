@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -54,7 +55,10 @@ namespace Scenario
 
         public void UpdatePage()
         {
-            pageList = ImageDataStorage.imageDataList.GetRange(firstImageIndex, pageImageCount);
+            pageList = ImageDataStorage.imageDataList
+                    .GetRange(firstImageIndex, pageImageCount)
+                    .OrderByDescending(x => x.CreatedAt) // Sort by newest first
+                    .ToList();
             FetchPageTextures();
         }
 
@@ -290,11 +294,7 @@ namespace Scenario
             Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding), boxWidth, boxHeight);
             Texture2D texture = textures[i];
 
-            if (texture == null)
-            {
-                GUI.Box(boxRect, "Loading...");
-            }
-            else
+            if (texture != null)
             {
                 if (GUI.Button(boxRect, ""))
                 {
@@ -303,6 +303,10 @@ namespace Scenario
                 }
 
                 GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
+            }
+            else
+            {
+                GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading..");
             }
         }
     }

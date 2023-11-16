@@ -82,13 +82,14 @@ namespace Scenario
                 if (shouldAutoGenerateSeed)
                 {
                     GUI.enabled = false;
-                    GUILayout.TextArea("-1", GUILayout.Height(20), GUILayout.Width(sliderWidth));
+                    seedinputText = GUILayout.TextField(seedinputText, GUILayout.Height(20), GUILayout.Width(sliderWidth));
+                    promptWindow.SetSeed(/*seedinputText == "-1" ? null : */seedinputText);
                 }
                 else
                 {
                     GUI.enabled = true;
                     seedinputText = GUILayout.TextField(seedinputText, GUILayout.Height(20), GUILayout.Width(sliderWidth));
-                    promptWindow.SetSeed(seedinputText == "-1" ? null : seedinputText);
+                    promptWindow.SetSeed(/*seedinputText == "-1" ? null : */seedinputText);
                 }
             }
             EditorGUILayout.EndHorizontal();

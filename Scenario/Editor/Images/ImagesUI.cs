@@ -56,20 +56,31 @@ namespace Scenario
         public void UpdatePage()
         {
             pageList = ImageDataStorage.imageDataList
-                    .GetRange(firstImageIndex, pageImageCount)
-                    .OrderByDescending(x => x.CreatedAt) // Sort by newest first
-                    .ToList();
+                        .GetRange(firstImageIndex, Math.Min(pageImageCount, ImageDataStorage.imageDataList.Count - firstImageIndex))
+                        .OrderByDescending(x => x.CreatedAt)
+                        .ToList();
+
             FetchPageTextures();
         }
 
         private void FetchPageTextures()
         {
-            textures.Clear();
-            foreach (var item in pageList)
+            var tempTextures = new Texture2D[pageList.Count];
+            int loadedCount = 0;
+
+            for (int i = 0; i < pageList.Count; i++)
             {
-                CommonUtils.FetchTextureFromURL(item.Url, texture =>
+                int index = i;
+                CommonUtils.FetchTextureFromURL(pageList[index].Url, texture =>
                 {
-                    textures.Add(texture);
+                    tempTextures[index] = texture;
+                    loadedCount++;
+
+                    if (loadedCount == pageList.Count)
+                    {
+                        textures.Clear();
+                        textures.AddRange(tempTextures);
+                    }
                 });
             }
         }

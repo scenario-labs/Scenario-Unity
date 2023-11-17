@@ -175,7 +175,7 @@ namespace Scenario
                     }
 
                     string modelType = models[i].type;
-                    string bubbleText = (modelType == "sd-xl-composition" || modelType == "sd-xl-lora") ? "SDXL" : "SD 1.5";
+                    string bubbleText = (modelType == "sd-xl-composition" || modelType == "sd-xl-lora" || modelType == "sd-xl") ? "SDXL" : "SD 1.5";
                     Rect bubbleRect = new Rect(boxRect.x + boxWidth - 40f, boxRect.y, 40f, 20f);
                     float cornerRadius = 10f;
 

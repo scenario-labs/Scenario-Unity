@@ -174,8 +174,22 @@ namespace Scenario
                         window.Close();
                     }
 
-                    string modelType = models[i].type;
-                    string bubbleText = (modelType == "sd-xl-composition" || modelType == "sd-xl-lora" || modelType == "sd-xl") ? "SDXL" : "SD 1.5";
+                    string modelType = pageModels[i].type;
+                    string bubbleText;
+
+                    if (modelType == "sd-xl-composition" || modelType == "sd-xl-lora" || modelType == "sd-xl")
+                    {
+                        bubbleText = "SDXL";
+                    }
+                    else if (modelType == "sd-1_5")
+                    {
+                        bubbleText = "SD1.5";
+                    }
+                    else
+                    {
+                        bubbleText = "Unknown";
+                    }
+
                     Rect bubbleRect = new Rect(boxRect.x + boxWidth - 40f, boxRect.y, 40f, 20f);
                     float cornerRadius = 10f;
 

@@ -12,12 +12,8 @@ namespace Scenario
 {
     public class PromptWindow : EditorWindow
     {
-        internal static List<ImageDataStorage.ImageData> generatedImagesData = new();
-
         public static PromptWindowUI promptWindowUI;
-
-        private string inferenceId = "";
-        private EditorCoroutine inferenceStatusCoroutine;
+        
         private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
         private string fileName;
@@ -41,51 +37,18 @@ namespace Scenario
                 UpdateSelectedModel();
             }
         }
-    
-        internal void RemoveBackground(Texture2D texture2D)
-        {
-            string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
-            fileName = CommonUtils.GetRandomImageFileName();
-            string url = $"images/erase-background";
-            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
-
-            Debug.Log("Requesting background removal, please wait..");
-
-            ApiClient.RestPut(url,param,response =>
-            {
-                try
-                {
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
-                    string imageUrl = jsonResponse.asset.url;
-                    CommonUtils.FetchTextureFromURL(imageUrl, texture =>
-                    {
-                        byte[] textureBytes = texture.EncodeToPNG();
-                        Callback_BackgroundRemoved(textureBytes);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
-                }
-            });
-        }
-    
-        private void Callback_BackgroundRemoved(byte[] textureBytes)
-        {
-            PromptWindowUI.imageUpload.LoadImage(textureBytes);
-        }
-
+        
         private void Update()
         {
             if (!processReceivedUploadImage) return;
         
             processReceivedUploadImage = false;
-            Callback_BackgroundRemoved(pngBytesUploadImage);
+            PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
         }
 
         private void UpdateSelectedModel()
         {
-            string selectedModelId = EditorPrefs.GetString("SelectedModelId");
+            string selectedModelId = DataCache.instance.SelectedModelId;
             string selectedModelName = EditorPrefs.GetString("SelectedModelName");
 
             if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
@@ -107,7 +70,7 @@ namespace Scenario
         {
             Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.selectedModelName + ", Seed: " + seed);
 
-            string modelId = EditorPrefs.GetString("SelectedModelId");
+            string modelId = DataCache.instance.SelectedModelId;
 
             EditorCoroutineUtility.StartCoroutineOwnerless(PostInferenceRequest(modelId));
         }
@@ -187,8 +150,17 @@ namespace Scenario
             ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
             {
                 InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<InferenceRoot>(response.Content);
-                inferenceId = inferenceRoot.inference.id;
-                inferenceStatusCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(GetInferenceStatus());
+                string inferenceId = inferenceRoot.inference.id;
+                int numImages = (int)promptWindowUI.imagesliderIntValue;
+                DataCache.instance.ReserveSpaceForImageDatas(numImages, inferenceId,
+                    promptWindowUI.promptinputText,
+                    promptWindowUI.samplesliderValue,
+                    promptWindowUI.widthSliderValue, 
+                    promptWindowUI.heightSliderValue,
+                    promptWindowUI.guidancesliderValue,
+                    "Default",
+                    promptWindowUI.seedinputText);
+                EditorCoroutineUtility.StartCoroutineOwnerless(GetInferenceStatus(inferenceId));
             });
         }
 
@@ -311,7 +283,7 @@ namespace Scenario
             modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
         }
 
-        private IEnumerator GetInferenceStatus()
+        private IEnumerator GetInferenceStatus(string inferenceId)
         {
             Debug.Log("Requesting status please wait..");
 
@@ -323,11 +295,11 @@ namespace Scenario
             {
                 InferenceStatusRoot inferenceStatusRoot = JsonConvert.DeserializeObject<InferenceStatusRoot>(response.Content);
 
-                if (inferenceStatusRoot.inference.status != "succeeded" && inferenceStatusRoot.inference.status != "failed" )
+                if (inferenceStatusRoot.inference.status != "succeeded" && 
+                    inferenceStatusRoot.inference.status != "failed" )
                 {
                     Debug.Log("Commission in process, please wait..");
-                    EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
-                    inferenceStatusCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(PeriodicStatusCheck());
+                    EditorCoroutineUtility.StartCoroutineOwnerless(PeriodicStatusCheck(inferenceId));
                 }
                 else
                 {
@@ -335,27 +307,14 @@ namespace Scenario
                     {
                         Debug.LogError("Api Response: Status == failed, Try Again..");
                     }
-
-                    generatedImagesData.Clear();
+                    
                     foreach (var item in inferenceStatusRoot.inference.images)
                     {
                         /*Debug.Log("Image URL: " + item);*/
                         var img = JsonConvert.DeserializeObject<ImageDataAPI>(item.ToString());
-                        generatedImagesData.Add(new ImageDataStorage.ImageData()
-                        {
-                            Id = img.Id,
-                            Url = img.Url,
-                            InferenceId = this.inferenceId,
-                            Prompt = promptWindowUI.promptinputText,
-                            Steps = promptWindowUI.samplesliderValue,
-                            Size = new Vector2(promptWindowUI.widthSliderValue, promptWindowUI.heightSliderValue),
-                            Guidance = promptWindowUI.guidancesliderValue,
-                            Scheduler = "Default",
-                            Seed = promptWindowUI.seedinputText,
-                            CreatedAt = inferenceStatusRoot.inference.createdAt,
-                        });
+                        DataCache.instance.FillReservedSpaceForImageData(inferenceId, img.Id,
+                            img.Url, inferenceStatusRoot.inference.createdAt);
                     }
-                    EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
                     EditorCoroutineUtility.StartCoroutineOwnerless(ShowPromptImagesWindow());
                 }
             });
@@ -373,11 +332,10 @@ namespace Scenario
             PromptImages.ShowWindow();
         }
 
-        private IEnumerator PeriodicStatusCheck()
+        private IEnumerator PeriodicStatusCheck(string inferenceId)
         {
             yield return new WaitForSecondsRealtime(4.0f);
-            EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
-            inferenceStatusCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(GetInferenceStatus());
+            EditorCoroutineUtility.StartCoroutineOwnerless(GetInferenceStatus(inferenceId));
         }
 
         public void SetSeed(string seed)

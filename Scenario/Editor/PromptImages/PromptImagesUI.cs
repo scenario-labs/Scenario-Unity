@@ -7,7 +7,6 @@ namespace Scenario
 {
     public class PromptImagesUI
     {
-        public List<Texture2D> textures = new List<Texture2D>();
         public int itemsPerRow = 5;
         public float padding = 10f;
         public Vector2 scrollPosition = Vector2.zero;
@@ -16,6 +15,7 @@ namespace Scenario
         internal PromptImages promptImages;
         private int selectedTextureIndex = 0;
         private bool isModalOpen = false;
+        
         public void Init(PromptImages promptImg)
         {
             promptImages = promptImg;
@@ -36,7 +36,7 @@ namespace Scenario
             float boxWidth = (scrollViewWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
             float boxHeight = boxWidth;
 
-            int numRows = Mathf.CeilToInt((float)textures.Count / itemsPerRow);
+            int numRows = Mathf.CeilToInt((float)DataCache.instance.GetImageDataCount() / itemsPerRow);
 
             float scrollViewHeight = (boxHeight + padding) * numRows;
 
@@ -113,7 +113,7 @@ namespace Scenario
 
         private void DrawImageData()
         {
-            var currentImageData = PromptImages.imageDataList[selectedTextureIndex];
+            var currentImageData = DataCache.instance.GetImageDataAtIndex(selectedTextureIndex);
             GUILayout.BeginVertical();
             {
                 CustomStyle.Label("Prompt:");
@@ -179,8 +179,8 @@ namespace Scenario
             System.Action[] buttonCallbacks =
             {
                 () => promptImages.RemoveBackground(selectedTextureIndex),
-                () => PixelEditor.ShowWindow(selectedTexture, PromptImages.imageDataList[selectedTextureIndex]),
-                () => UpscaleEditor.ShowWindow(selectedTexture, PromptImages.imageDataList[selectedTextureIndex]) /*,
+                () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex)),
+                () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex)) /*,
                 () => {
                     // TODO: Implement generate more images functionality
                 }*/
@@ -240,14 +240,19 @@ namespace Scenario
 
         private void DrawTextureBoxes(float boxWidth, float boxHeight)
         {
-            for (int i = 0; i < textures.Count; i++)
+            for (int i = 0; i < DataCache.instance.GetImageDataCount(); i++)
             {
                 int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
                 int colIndex = i % itemsPerRow;
 
                 Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding), boxWidth, boxHeight);
-                Texture2D texture = textures[i];
+                Texture2D texture = DataCache.instance.GetImageDataAtIndex(i).texture;
 
+                GUIStyle style = new GUIStyle(GUI.skin.label)
+                {
+                    alignment = TextAnchor.MiddleCenter
+                };
+                
                 if (texture != null)
                 {
                     // Detect double click
@@ -269,7 +274,8 @@ namespace Scenario
                 }
                 else
                 {
-                    GUI.Box(boxRect, "Loading...");
+                    GUI.color = Color.white;
+                    GUI.Label(boxRect, "Loading...", style);
                 }
             }
         }

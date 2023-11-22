@@ -1,25 +1,27 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using UnityEngine;
 
 namespace Scenario
 {
     public static class ImageDataStorage
     {
-        public static List<ImageData> imageDataList = new List<ImageData>();
-
+        [System.Serializable]
         public class ImageData
         {
-            public string Id { get; set; }
-            public string Url { get; set; }
-            public string InferenceId { get; set; }
-            public string Prompt { get; set; }
-            public float Steps { get; set; }
-            public UnityEngine.Vector2 Size { get; set; }
-            public float Guidance { get; set; }
-            public string Scheduler { get; set; }
-            public string Seed { get; set; }
-            public DateTime CreatedAt { get; set; }
+            [SerializeField] public string Id;
+            [SerializeField] public string Url;
+            [SerializeField] public string InferenceId;
+            [SerializeField] public string Prompt;
+            [SerializeField] public float Steps;
+            [SerializeField] public UnityEngine.Vector2 Size;
+            [SerializeField] public float Guidance;
+            [SerializeField] public string Scheduler;
+            [SerializeField] public string Seed;
+            [SerializeField] public DateTime CreatedAt;
+            [SerializeField] public Texture2D texture;
+            [SerializeField] public bool isProcessedByPromptImages;
         }
     }
 

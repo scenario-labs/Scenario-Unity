@@ -122,7 +122,7 @@ namespace Scenario
                 promptinputText = SerializeTags(tags);
                 negativepromptinputText = SerializeTags(negativeTags);
 
-                EditorPrefs.SetString("postedModelName", EditorPrefs.GetString("SelectedModelId"));
+                EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
 
                 if (shouldAutoGenerateSeed)
                 {
@@ -273,7 +273,10 @@ namespace Scenario
                 toolsMenu.AddItem(new GUIContent("Remove bg"), false, () =>
                 {
                     Debug.Log("Remove bg button pressed");
-                    promptWindow.RemoveBackground(imageUpload);
+                    BackgroundRemoval.RemoveBackground(imageUpload, bytes =>
+                    {
+                        imageUpload.LoadImage(bytes);
+                    });
                 });
             
                 toolsMenu.AddItem(new GUIContent("Adjust aspect ratio"), false, () =>

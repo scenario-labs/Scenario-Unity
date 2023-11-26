@@ -11,7 +11,7 @@ namespace Scenario
     {
         #region ImageDataList
 
-        [SerializeField] private List<ImageDataStorage.ImageData> imageDataList;
+        [SerializeField] private List<ImageDataStorage.ImageData> imageDataList = new();
 
         public ImageDataStorage.ImageData GetImageDataAtIndex(int index)
         {
@@ -78,7 +78,7 @@ namespace Scenario
         {
             for (int i = 0; i < numImages; i++)
             {
-                imageDataList.Add(new ImageDataStorage.ImageData()
+                AddImageDataInFront(new ImageDataStorage.ImageData()
                 {
                     Id = "-1",
                     InferenceId = inferenceId,
@@ -94,10 +94,38 @@ namespace Scenario
 
         #endregion
 
+        public ImageDataStorage.ImageData GetImageDataByUrl(string url)
+        {
+            var data = imageDataList.FirstOrDefault(x => x.Url == url);
+            return data;
+        }
+        
+        public int GetImageDataIndexByUrl(string url)
+        {
+            var data = imageDataList.FirstOrDefault(x => x.Url == url);
+            var index = imageDataList.IndexOf(data);
+            return index;
+        }
+
+        public void RemoveImageDataAtIndex(int index)
+        {
+            imageDataList.RemoveAt(index);
+        }
+
+        public void RemoveInferenceData(string inferenceId)
+        {
+            imageDataList.RemoveAll(x => x.InferenceId == inferenceId);
+        }
+
         public string SelectedModelId
         {
             get => EditorPrefs.GetString("SelectedModelId", "");
             set => EditorPrefs.SetString("SelectedModelId", value);
+        }
+
+        public int GetReservedSpaceCount()
+        {
+            return imageDataList.Count(x => x.Id == "-1");
         }
     }
 }

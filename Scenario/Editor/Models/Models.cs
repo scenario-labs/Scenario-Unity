@@ -78,7 +78,6 @@ namespace Scenario
 
         private static void FetchAllPrivateTextures()
         {
-            Debug.Log("Fetch Private Textures");
             foreach (var item in modelsPrivate)
             {
                 string downloadUrl = null;
@@ -108,14 +107,11 @@ namespace Scenario
                 });
 
                 if (window != null) { window.Repaint(); }
-            
-                Debug.Log($"downloaded {item.name}");
             }
         }
     
         private static void FetchAllPublicTextures()
         {
-            Debug.Log("Fetch Public Textures");
 
             foreach (var item in modelsPublic)
             {
@@ -146,14 +142,11 @@ namespace Scenario
                 });
             
                 if (window != null) { window.Repaint(); }
-
-                //* Debug.Log($"downloaded {item.name}");
             }
         }
     
         private static async Task FetchAllPrivateModels()
         {
-            //* Debug.Log("Fetch Private Models");
 
             while (true)
             {
@@ -191,8 +184,6 @@ namespace Scenario
     
         private static async Task FetchAllPublicModels()
         {
-            Debug.Log("Fetch Public Models");
-
             while (true)
             {
                 string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPublic}";
@@ -268,6 +259,7 @@ namespace Scenario
         {
             public string id { get; set; }
             public string name { get; set; }
+            public string type { get; set; }
             public ClassData classData { get; set; }
             public string privacy { get; set; }
             public string status { get; set; }

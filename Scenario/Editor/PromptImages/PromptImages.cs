@@ -15,9 +15,7 @@ namespace Scenario
     public class PromptImages : EditorWindow
     {
         public static PromptImagesUI promptImagesUI = new();
-    
         public static string downloadPath;
-
 
         [MenuItem("Window/Scenario/Prompt Images")]
         public static void ShowWindow()
@@ -46,12 +44,14 @@ namespace Scenario
         private static async Task<Texture2D> LoadTexture(string url)
         {
             using UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
+            
             www.SendWebRequest();
+            
             while (!www.isDone)
             {
                 await Task.Delay(10);
             }
-
+            
             if (www.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError(www.error + $"\n{url}");
@@ -68,13 +68,15 @@ namespace Scenario
 
         private static async void UpdateImages()
         {
-            for (int i = 0; i < DataCache.instance.GetImageDataCount(); i++)
+            for (int i = DataCache.instance.GetImageDataCount() - 1; i >= 0; i--)
             {
                 var imageData = DataCache.instance.GetImageDataAtIndex(i);
 
                 if (imageData.Url != null && imageData.Url.Length > 10 && imageData.texture == null)
                 {
-                    imageData.texture = await LoadTexture(imageData.Url);
+                    var tex = await LoadTexture(imageData.Url);
+                    
+                    imageData.texture = tex;
                     if (promptImagesUI != null)
                     {
                         if (promptImagesUI.promptImages != null)
@@ -83,6 +85,14 @@ namespace Scenario
                         }   
                     }
                 }
+            }
+
+            if (promptImagesUI != null)
+            {
+                if (promptImagesUI.promptImages != null)
+                {
+                    promptImagesUI.promptImages.Repaint();
+                }   
             }
         }
 

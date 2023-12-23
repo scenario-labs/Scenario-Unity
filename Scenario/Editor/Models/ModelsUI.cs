@@ -164,9 +164,10 @@ namespace Scenario
                 {
                     if (GUI.Button(boxRect, texture))
                     {
-                        if (i >= 0 && i < models.Count)
+                        int globalIndex = firstImageIndex + i;
+                        if (globalIndex >= 0 && globalIndex < models.Count)
                         {
-                            DataCache.instance.SelectedModelId = models[i].id;
+                            DataCache.instance.SelectedModelId = models[globalIndex].id;
                             EditorPrefs.SetString("SelectedModelName", name);
                         }
 

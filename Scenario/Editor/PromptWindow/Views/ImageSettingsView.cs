@@ -33,6 +33,15 @@ namespace Scenario
             EditorGUILayout.EndHorizontal();
 
             CustomStyle.Space();
+
+            EditorGUILayout.BeginHorizontal();
+            {
+                GUILayout.Label("Scheduler: ");
+                schedulerIndex = EditorGUILayout.Popup(schedulerIndex, schedulerOptions);
+            }
+            EditorGUILayout.EndHorizontal();
+
+            CustomStyle.Space();
         
             float labelWidthPercentage = 0.2f;
             float sliderWidthPercentage = 0.78f;

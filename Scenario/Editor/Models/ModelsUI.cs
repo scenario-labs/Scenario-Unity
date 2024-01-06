@@ -58,12 +58,10 @@ namespace Scenario
 
         private void UpdatePage()
         {
-            // clear page
             pageModels.Clear();
         
             var models = Models.GetModels();
 
-            // Populate Page with models
             for (int i = firstImageIndex; i < firstImageIndex + maxModelsPerPage; i++)
             {
                 if (i > models.Count - 1)
@@ -156,7 +154,7 @@ namespace Scenario
                 Rect boxRect = new Rect(colIndex * (boxWidth + padding), rowIndex * (boxHeight + padding + rowPadding), boxWidth, boxHeight);
                 Texture2D texture = item.texture;
                 string name = item.name;
-        
+
                 GUIStyle style = new GUIStyle(GUI.skin.label)
                 {
                     alignment = TextAnchor.MiddleCenter
@@ -166,16 +164,42 @@ namespace Scenario
                 {
                     if (GUI.Button(boxRect, texture))
                     {
-                        if (i >= 0 && i < models.Count)
+                        int globalIndex = firstImageIndex + i;
+                        if (globalIndex >= 0 && globalIndex < models.Count)
                         {
-                            EditorPrefs.SetString("SelectedModelId", models[i].id);
+                            DataCache.instance.SelectedModelId = models[globalIndex].id;
                             EditorPrefs.SetString("SelectedModelName", name);
                         }
 
                         EditorWindow window = EditorWindow.GetWindow(typeof(Models));
                         window.Close();
                     }
-                
+
+                    string modelType = pageModels[i].type;
+                    string bubbleText;
+
+                    if (modelType == "sd-xl-composition" || modelType == "sd-xl-lora" || modelType == "sd-xl")
+                    {
+                        bubbleText = "SDXL";
+                    }
+                    else if (modelType == "sd-1_5")
+                    {
+                        bubbleText = "SD1.5";
+                    }
+                    else
+                    {
+                        bubbleText = "Unknown";
+                    }
+
+                    Rect bubbleRect = new Rect(boxRect.x + boxWidth - 40f, boxRect.y, 40f, 20f);
+                    float cornerRadius = 25f;
+
+                    GUIStyle bubbleStyle = new GUIStyle(GUI.skin.box);
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.black);
+                    bubbleStyle.border = new RectOffset((int)cornerRadius, (int)cornerRadius, (int)cornerRadius, (int)cornerRadius);
+
+                    GUI.Box(bubbleRect, bubbleText, bubbleStyle);
+
                     GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);
                 }
                 else
@@ -183,6 +207,21 @@ namespace Scenario
                     GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading..", style);
                 }
             }
+        }
+
+        private Texture2D MakeTex(int width, int height, Color col)
+        {
+            Color[] pix = new Color[width * height];
+            for (int i = 0; i < pix.Length; ++i)
+            {
+                pix[i] = col;
+            }
+
+            Texture2D result = new Texture2D(width, height);
+            result.SetPixels(pix);
+            result.Apply();
+
+            return result;
         }
 
         private void HandleTabSelection(string[] tabs)

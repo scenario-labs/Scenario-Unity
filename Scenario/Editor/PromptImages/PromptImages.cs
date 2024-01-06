@@ -14,16 +14,13 @@ namespace Scenario
 {
     public class PromptImages : EditorWindow
     {
-        public static List<ImageDataStorage.ImageData> imageDataList = ImageDataStorage.imageDataList;
-        public static PromptImagesUI promptImagesUI = new PromptImagesUI();
-    
+        public static PromptImagesUI promptImagesUI = new();
         public static string downloadPath;
-
 
         [MenuItem("Window/Scenario/Prompt Images")]
         public static void ShowWindow()
         {
-            FetchGeneratedImages();
+            UpdateImages();
         
             var promptImages = (PromptImages) EditorWindow.GetWindow(typeof(PromptImages));
 
@@ -34,46 +31,34 @@ namespace Scenario
 
         public void DeleteImageAtIndex(int selectedTextureIndex)
         {
-            promptImagesUI.textures.RemoveAt(selectedTextureIndex);
-
-            string imageId = imageDataList[selectedTextureIndex].Id;
-            string modelId = EditorPrefs.GetString("SelectedModelId", "");
-            string inferenceId = imageDataList[selectedTextureIndex].InferenceId;
+            var imgData = DataCache.instance.GetImageDataAtIndex(selectedTextureIndex); 
+            
+            string imageId = imgData.Id;
+            string modelId = DataCache.instance.SelectedModelId;
+            string inferenceId = imgData.InferenceId;
             EditorCoroutineUtility.StartCoroutineOwnerless(DeleteImageRequest(inferenceId, modelId, imageId));
 
             Repaint();
         }
-
-        public void DownloadImage(string fileName, byte[] pngBytes)
-        {
-            string filePath = downloadPath + "/" + fileName;
-            File.WriteAllBytes(filePath, pngBytes);
-            EditorCoroutineUtility.StartCoroutineOwnerless(RefreshDatabase());
-            Debug.Log("Downloaded image to: " + filePath);
-        }
-
-        IEnumerator RefreshDatabase()
-        {
-            yield return null;
-            AssetDatabase.Refresh();
-        }
-
-        private static async Task<Texture2D> LoadTexture(string url)
+        
+        private static async void LoadTexture(string url, Action<Texture2D> result)
         {
             using UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
+            
             www.SendWebRequest();
+            
             while (!www.isDone)
             {
                 await Task.Delay(10);
             }
-
+            
             if (www.result != UnityWebRequest.Result.Success)
             {
-                Debug.LogError(www.error);
-                return null;
+                Debug.LogError(www.error + $"\n{url}");
+                result(null);
             }
 
-            return DownloadHandlerTexture.GetContent(www);
+            result(DownloadHandlerTexture.GetContent(www));
         }
 
         private void OnGUI()
@@ -81,41 +66,36 @@ namespace Scenario
             promptImagesUI.OnGUI(this.position);
         }
 
-        private static async void FetchGeneratedImages()
+        private static void UpdateImages()
         {
-            Debug.Log("Fetching new images, please wait..");
-
-            int oldImageCount = PromptWindow.generatedImagesData.Count;
-            int newImageCount = 0;
-
-            foreach (var image in PromptWindow.generatedImagesData)
+            for (int i = DataCache.instance.GetImageDataCount() - 1; i >= 0; i--)
             {
-                if (!imageDataList.Exists(x => x.Id == image.Id))
+                var imageData = DataCache.instance.GetImageDataAtIndex(i);
+
+                if (imageData.Url != null && imageData.Url.Length > 10 && imageData.texture == null)
                 {
-                    ImageDataStorage.ImageData newImageData = new() {
-                        Id = image.Id,
-                        Url = image.Url,
-                        InferenceId = image.InferenceId,
-                        Prompt = image.Prompt,
-                        Steps = image.Steps,
-                        Size = image.Size,
-                        Guidance = image.Guidance,
-                        Scheduler = image.Scheduler,
-                        Seed = image.Seed,
-                        CreatedAt = image.CreatedAt,
-                    };
-                    imageDataList.Insert(0, newImageData);
-
-                    Texture2D texture = await LoadTexture(image.Url);
-                    promptImagesUI.textures.Insert(0, texture);
-
-                    newImageCount++;
+                    LoadTexture(imageData.Url, result =>
+                    {
+                        imageData.texture = result;
+                        
+                        if (promptImagesUI != null)
+                        {
+                            if (promptImagesUI.promptImages != null)
+                            {
+                                promptImagesUI.promptImages.Repaint();
+                            }   
+                        } 
+                    });
                 }
             }
 
-            Debug.Log("Retrieved " + newImageCount + " new images. Total images: " + imageDataList.Count + ".");
-
-            promptImagesUI?.promptImages?.Repaint();
+            if (promptImagesUI != null)
+            {
+                if (promptImagesUI.promptImages != null)
+                {
+                    promptImagesUI.promptImages.Repaint();
+                }   
+            }
         }
 
         IEnumerator DeleteImageRequest(string inferenceId, string modelId, string imageId)
@@ -145,7 +125,7 @@ namespace Scenario
 
         private void OnDestroy()
         {
-            ClearData();
+            //ClearData();
             promptImagesUI.selectedTexture = null;
             promptImagesUI.selectedImageId = null;
         }
@@ -156,82 +136,18 @@ namespace Scenario
             promptImagesUI.selectedImageId = null;
         }
 
-        private void ClearData()
+        /*private void ClearData()
         {
-            imageDataList.Clear();
-            promptImagesUI.textures.Clear();
-        }
+            DataCache.instance.ClearAllImageData();
+        }*/
 
         internal void RemoveBackground(int selectedTextureIndex)
         {
-            string dataUrl = CommonUtils.Texture2DToDataURL(promptImagesUI.textures[selectedTextureIndex]);
-            EditorCoroutineUtility.StartCoroutineOwnerless(PutRemoveBackground(dataUrl));
-        }
-
-        IEnumerator PutRemoveBackground(string dataUrl)
-        {
-            string name = CommonUtils.GetRandomImageFileName();
-
-            Debug.Log("Requesting background removal, please wait..");
-
-            string url = $"{PluginSettings.ApiUrl}/images/erase-background";
-            Debug.Log(url);
-
-            RestClient client = new RestClient(url);
-            RestRequest request = new RestRequest(Method.PUT);
-
-            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
-            Debug.Log(param);
-
-            request.AddHeader("accept", "application/json");
-            request.AddHeader("content-type", "application/json");
-            request.AddHeader("Authorization", $"Basic {PluginSettings.EncodedAuth}");
-            request.AddParameter("application/json",
-                param, ParameterType.RequestBody);
-
-            yield return client.ExecuteAsync(request, response =>
+            BackgroundRemoval.RemoveBackground(DataCache.instance.GetImageDataAtIndex(selectedTextureIndex).texture, bytes =>
             {
-                if (response.ErrorException != null)
-                {
-                    Debug.LogError($"Error: {response.ErrorException.Message}");
-                }
-                else
-                {
-                    Debug.Log($"Response: {response.Content}");
-
-                    try
-                    {
-                        dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
-                        string imageUrl = jsonResponse.asset.url;
-
-                        EditorCoroutineUtility.StartCoroutineOwnerless(DownloadImageFromUrl(imageUrl));
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.LogError("An error occurred while processing the response: " + ex.Message);
-                    }
-                }
+                string fileName = CommonUtils.GetRandomImageFileName();
+                CommonUtils.SaveImageBytesToFile(fileName, bytes);
             });
-        }
-
-        IEnumerator DownloadImageFromUrl(string imageUrl)
-        {
-            using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(imageUrl))
-            {
-                yield return www.SendWebRequest();
-                if (www.result != UnityWebRequest.Result.Success)
-                {
-                    Debug.LogError(www.error);
-                }
-                else
-                {
-                    Texture2D texture = DownloadHandlerTexture.GetContent(www);
-                    byte[] pngBytes = texture.EncodeToPNG();
-                
-                    string fileName = "image" + System.DateTime.Now.ToString("yyyyMMddHHmmssfff") + ".png";
-                    DownloadImage(fileName, pngBytes);
-                }
-            }
         }
     }
 }

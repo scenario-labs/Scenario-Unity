@@ -38,7 +38,7 @@ namespace Scenario
         public void SetNextPage()
         {
             firstImageIndex += pageImageCount;
-            if (firstImageIndex >= ImageDataStorage.imageDataList.Count - pageImageCount)
+            if (firstImageIndex >= Images._imageDataList.Count - pageImageCount)
             {
                 firstImageIndex -= pageImageCount;
             }
@@ -55,8 +55,8 @@ namespace Scenario
 
         public void UpdatePage()
         {
-            pageList = ImageDataStorage.imageDataList
-                        .GetRange(firstImageIndex, Math.Min(pageImageCount, ImageDataStorage.imageDataList.Count - firstImageIndex))
+            pageList = Images._imageDataList
+                        .GetRange(firstImageIndex, Math.Min(pageImageCount, Images._imageDataList.Count - firstImageIndex))
                         .OrderByDescending(x => x.CreatedAt)
                         .ToList();
 
@@ -121,7 +121,7 @@ namespace Scenario
                     SetPreviousPage();
                     UpdatePage();
                 }
-                if (firstImageIndex < imageDataList.Count - pageImageCount && GUILayout.Button("Next Page"))
+                if (firstImageIndex < Images._imageDataList.Count - pageImageCount && GUILayout.Button("Next Page"))
                 {
                     SetNextPage();
                     UpdatePage();
@@ -137,7 +137,7 @@ namespace Scenario
 
         private void DrawImageData()
         {
-            var currentImageData = PromptImages.imageDataList[selectedTextureIndex];
+            var currentImageData = Images._imageDataList[selectedTextureIndex];
             GUILayout.BeginVertical();
             {
                 CustomStyle.Label("Prompt:");
@@ -208,8 +208,8 @@ namespace Scenario
             System.Action[] buttonCallbacks =
             {
                 () => images.RemoveBackgroundForImageAtIndex(selectedTextureIndex + firstImageIndex),
-                () => PixelEditor.ShowWindow(selectedTexture, ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex]),
-                () => UpscaleEditor.ShowWindow(selectedTexture, ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex]) /*,
+                () => PixelEditor.ShowWindow(selectedTexture, Images._imageDataList[selectedTextureIndex + firstImageIndex]),
+                () => UpscaleEditor.ShowWindow(selectedTexture, Images._imageDataList[selectedTextureIndex + firstImageIndex]) /*,
             () => {
                 // TODO: Implement generate more images functionality
             }*/
@@ -232,7 +232,7 @@ namespace Scenario
                 Debug.LogError("Prompt Window not found: Open Prompt Window, and try again.");
                 return;
             }
-            var imageData = ImageDataStorage.imageDataList[selectedTextureIndex + firstImageIndex];
+            var imageData = Images._imageDataList[selectedTextureIndex + firstImageIndex];
             PromptWindowUI.imageUpload = selectedTexture;
             PromptWindow.promptWindowUI.isImageToImage = true;
             PromptWindow.promptWindowUI.isTextToImage = false;

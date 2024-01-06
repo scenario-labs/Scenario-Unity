@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using UnityEditor;
@@ -26,6 +25,15 @@ namespace Scenario
             "normal-map",
             "shuffle"
         };
+
+        internal readonly string[] schedulerOptions = new string[] // Scheduler options extracted from your HTML
+        {
+            "None", "DDIMScheduler", "DDPMScheduler", "DEISMultistepScheduler", "DPMSolverMultistepScheduler",
+            "DPMSolverSinglestepScheduler", "EulerAncestralDiscreteScheduler", "EulerDiscreteScheduler",
+            "HeunDiscreteScheduler", "KDPM2AncestralDiscreteScheduler", "KDPM2DiscreteScheduler",
+            "LCMScheduler", "LMSDiscreteScheduler", "PNDMScheduler", "UniPCMultistepScheduler"
+        };
+
         public string selectedPreset = "";
         public int selectedOption1Index = 0;
         public int selectedOption2Index = 0;
@@ -51,6 +59,7 @@ namespace Scenario
         internal string postedModelName = "Choose Model";
         internal string seedinputText = "";
         internal bool isTextToImage = true;
+        internal int schedulerIndex = 0; // Store the current selection index
 
         private int dragFromIndex = -1;
         private int negativeDragFromIndex = -1;

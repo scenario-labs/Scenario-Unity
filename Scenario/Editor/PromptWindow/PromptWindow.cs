@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Newtonsoft.Json;
-using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -178,6 +175,7 @@ namespace Scenario
             int height = (int)promptWindowUI.heightSliderValue;
             int numInferenceSteps = (int)promptWindowUI.samplesliderValue;
             int numSamples = (int)promptWindowUI.imagesliderIntValue;
+            string scheduler = promptWindowUI.schedulerOptions[promptWindowUI.schedulerIndex];
 
             string inputData = $@"{{
                 ""parameters"": {{
@@ -195,6 +193,7 @@ namespace Scenario
                     ""width"": {width},
                     ""height"": {height},
                     ""numSamples"": {numSamples}
+                    {(scheduler != "None" ? $@",""scheduler"": ""{scheduler}""" : "")}
                 }}
             }}";
             return inputData;

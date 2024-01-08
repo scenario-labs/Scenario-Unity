@@ -193,7 +193,7 @@ namespace Scenario
                     ""width"": {width},
                     ""height"": {height},
                     ""numSamples"": {numSamples}
-                    {(scheduler != "None" ? $@",""scheduler"": ""{scheduler}""" : "")}
+                    {(scheduler != "Default" ? $@",""scheduler"": ""{scheduler}""" : "")}
                 }}
             }}";
             return inputData;

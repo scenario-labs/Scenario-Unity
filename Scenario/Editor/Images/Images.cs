@@ -14,7 +14,7 @@ namespace Scenario
         private static readonly ImagesUI ImagesUI = new();
     
         private static string _paginationToken = "";
-        private static List<ImageDataStorage.ImageData> _imageDataList = ImageDataStorage.imageDataList;
+        internal static List<ImageDataStorage.ImageData> _imageDataList = new();
 
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
@@ -65,14 +65,14 @@ namespace Scenario
                     Debug.LogError("Api Response: Status == failed, Try Again..");
                 }
 
-                ImageDataStorage.imageDataList.Clear();
+                _imageDataList.Clear();
                 ImagesUI.textures.Clear();
                 
                 foreach (var inference in inferencesResponse.inferences)
                 {
                     foreach (var image in inference.images)
                     {
-                        ImageDataStorage.imageDataList.Add(new ImageDataStorage.ImageData
+                        _imageDataList.Add(new ImageDataStorage.ImageData
                         {
                             Id = image.id,
                             Url = image.url,

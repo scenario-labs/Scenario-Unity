@@ -1,10 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Newtonsoft.Json;
-using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,12 +9,8 @@ namespace Scenario
 {
     public class PromptWindow : EditorWindow
     {
-        internal static List<ImageDataStorage.ImageData> generatedImagesData = new();
-
         public static PromptWindowUI promptWindowUI;
-
-        private string inferenceId = "";
-        private EditorCoroutine inferenceStatusCoroutine;
+        
         private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
         private string fileName;
@@ -41,51 +34,18 @@ namespace Scenario
                 UpdateSelectedModel();
             }
         }
-    
-        internal void RemoveBackground(Texture2D texture2D)
-        {
-            string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
-            fileName = CommonUtils.GetRandomImageFileName();
-            string url = $"images/erase-background";
-            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
-
-            Debug.Log("Requesting background removal, please wait..");
-
-            ApiClient.RestPut(url,param,response =>
-            {
-                try
-                {
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
-                    string imageUrl = jsonResponse.asset.url;
-                    CommonUtils.FetchTextureFromURL(imageUrl, texture =>
-                    {
-                        byte[] textureBytes = texture.EncodeToPNG();
-                        Callback_BackgroundRemoved(textureBytes);
-                    });
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
-                }
-            });
-        }
-    
-        private void Callback_BackgroundRemoved(byte[] textureBytes)
-        {
-            PromptWindowUI.imageUpload.LoadImage(textureBytes);
-        }
-
+        
         private void Update()
         {
             if (!processReceivedUploadImage) return;
         
             processReceivedUploadImage = false;
-            Callback_BackgroundRemoved(pngBytesUploadImage);
+            PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
         }
 
         private void UpdateSelectedModel()
         {
-            string selectedModelId = EditorPrefs.GetString("SelectedModelId");
+            string selectedModelId = DataCache.instance.SelectedModelId;
             string selectedModelName = EditorPrefs.GetString("SelectedModelName");
 
             if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
@@ -106,20 +66,27 @@ namespace Scenario
         public void GenerateImage(string seed)
         {
             Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.selectedModelName + ", Seed: " + seed);
-
-            string modelId = EditorPrefs.GetString("SelectedModelId");
-
-            EditorCoroutineUtility.StartCoroutineOwnerless(PostInferenceRequest(modelId));
+            if (IsPromptDataValid(out string inputData))
+            {
+                PromptFetcher.PostInferenceRequest(inputData,
+                    promptWindowUI.imagesliderIntValue,
+                    promptWindowUI.promptinputText,
+                    promptWindowUI.samplesliderValue,
+                    promptWindowUI.widthSliderValue,
+                    promptWindowUI.heightSliderValue,
+                    promptWindowUI.guidancesliderValue,
+                    promptWindowUI.seedinputText);
+            }
         }
 
-        private IEnumerator PostInferenceRequest(string modelId)
+        private bool IsPromptDataValid(out string inputData)
         {
-            Debug.Log("Requesting image generation please wait..");
-        
             string modality = "";
             string operationType = "txt2img";
             string dataUrl = "\"\"";
             string maskDataUrl = "\"\"";
+            
+            inputData = "";
 
             if (promptWindowUI.isImageToImage)
             {
@@ -128,7 +95,7 @@ namespace Scenario
                 if (PromptWindowUI.imageUpload == null)
                 {
                     Debug.LogError("Img2Img Must have a image uploaded.");
-                    yield break;
+                    return false;
                 }
 
                 dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
@@ -140,7 +107,7 @@ namespace Scenario
                 if (PromptWindowUI.imageUpload == null)
                 {
                     Debug.LogError("ControlNet Must have a image uploaded.");
-                    yield break;
+                    return false;
                 }
 
                 dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
@@ -162,7 +129,7 @@ namespace Scenario
                 if (PromptWindowUI.imageUpload == null)
                 {
                     Debug.LogError("Inpainting Must have an image uploaded.");
-                    yield break;
+                    return false;
                 }
                 else
                 {
@@ -172,7 +139,7 @@ namespace Scenario
                 if (PromptWindowUI.imageMask == null)
                 {
                     Debug.LogError("Inpainting Must have a mask uploaded.");
-                    yield break;
+                    return false;
                 }
                 else
                 {
@@ -180,38 +147,12 @@ namespace Scenario
                 }
             }
 
-            string inputData = PrepareInputData(modality, operationType, dataUrl, maskDataUrl);
-
+            inputData = PrepareInputData(modality, operationType, dataUrl, maskDataUrl);
             Debug.Log("Input Data: " + inputData);
 
-            ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
-            {
-                InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<InferenceRoot>(response.Content);
-                inferenceId = inferenceRoot.inference.id;
-                inferenceStatusCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(GetInferenceStatus());
-            });
+            return true;
         }
 
-        private static string ProcessMask()
-        {
-            Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
-
-            Color[] pixels = processedMask.GetPixels();
-
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                if (pixels[i].a == 0)
-                {
-                    pixels[i] = Color.black;
-                }
-            }
-
-            processedMask.SetPixels(pixels);
-            processedMask.Apply();
-
-            return CommonUtils.Texture2DToDataURL(processedMask);
-        }
-    
         private string PrepareInputData(string modality, string operationType, string dataUrl, string maskDataUrl)
         {
             bool hideResults = false;
@@ -234,6 +175,7 @@ namespace Scenario
             int height = (int)promptWindowUI.heightSliderValue;
             int numInferenceSteps = (int)promptWindowUI.samplesliderValue;
             int numSamples = (int)promptWindowUI.imagesliderIntValue;
+            string scheduler = promptWindowUI.schedulerOptions[promptWindowUI.schedulerIndex];
 
             string inputData = $@"{{
                 ""parameters"": {{
@@ -251,36 +193,10 @@ namespace Scenario
                     ""width"": {width},
                     ""height"": {height},
                     ""numSamples"": {numSamples}
+                    {(scheduler != "Default" ? $@",""scheduler"": ""{scheduler}""" : "")}
                 }}
             }}";
             return inputData;
-        }
-
-        private string PrepareModality(Dictionary<string, string> modalitySettings)
-        {
-            string modality;
-            if (promptWindowUI.isControlNet && promptWindowUI.isAdvancedSettings)
-            {
-                modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
-            }
-            else
-            {
-                modality = promptWindowUI.selectedPreset;
-            }
-
-            return modality;
-        }
-
-        private Dictionary<string, string> PrepareModalitySettings(ref string modality, ref string operationType)
-        {
-            Dictionary<string, string> modalitySettings = new();
-
-            if (promptWindowUI.isAdvancedSettings)
-            {
-                PrepareAdvancedModalitySettings(out modality, out operationType, modalitySettings);
-            }
-
-            return modalitySettings;
         }
 
         private void PrepareAdvancedModalitySettings(out string modality, out string operationType, Dictionary<string, string> modalitySettings)
@@ -310,74 +226,52 @@ namespace Scenario
 
             modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
         }
-
-        private IEnumerator GetInferenceStatus()
+        
+        private string PrepareModality(Dictionary<string, string> modalitySettings)
         {
-            Debug.Log("Requesting status please wait..");
-
-            yield return new WaitForSecondsRealtime(1.0f);
-
-            string modelId = UnityEditor.EditorPrefs.GetString("postedModelName");
-
-            ApiClient.RestGet($"models/{modelId}/inferences/{inferenceId}",response =>
+            string modality;
+            if (promptWindowUI.isControlNet && promptWindowUI.isAdvancedSettings)
             {
-                InferenceStatusRoot inferenceStatusRoot = JsonConvert.DeserializeObject<InferenceStatusRoot>(response.Content);
+                modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
+            }
+            else
+            {
+                modality = promptWindowUI.selectedPreset;
+            }
 
-                if (inferenceStatusRoot.inference.status != "succeeded" && inferenceStatusRoot.inference.status != "failed" )
+            return modality;
+        }
+
+        private Dictionary<string, string> PrepareModalitySettings(ref string modality, ref string operationType)
+        {
+            Dictionary<string, string> modalitySettings = new();
+
+            if (promptWindowUI.isAdvancedSettings)
+            {
+                PrepareAdvancedModalitySettings(out modality, out operationType, modalitySettings);
+            }
+
+            return modalitySettings;
+        }
+        
+        private static string ProcessMask()
+        {
+            Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
+
+            Color[] pixels = processedMask.GetPixels();
+
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                if (pixels[i].a == 0)
                 {
-                    Debug.Log("Commission in process, please wait..");
-                    EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
-                    inferenceStatusCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(PeriodicStatusCheck());
+                    pixels[i] = Color.black;
                 }
-                else
-                {
-                    if (inferenceStatusRoot.inference.status == "failed")
-                    {
-                        Debug.LogError("Api Response: Status == failed, Try Again..");
-                    }
+            }
 
-                    generatedImagesData.Clear();
-                    foreach (var item in inferenceStatusRoot.inference.images)
-                    {
-                        /*Debug.Log("Image URL: " + item);*/
-                        var img = JsonConvert.DeserializeObject<ImageDataAPI>(item.ToString());
-                        generatedImagesData.Add(new ImageDataStorage.ImageData()
-                        {
-                            Id = img.Id,
-                            Url = img.Url,
-                            InferenceId = this.inferenceId,
-                            Prompt = promptWindowUI.promptinputText,
-                            Steps = promptWindowUI.samplesliderValue,
-                            Size = new Vector2(promptWindowUI.widthSliderValue, promptWindowUI.heightSliderValue),
-                            Guidance = promptWindowUI.guidancesliderValue,
-                            Scheduler = "Default",
-                            Seed = promptWindowUI.seedinputText,
-                            CreatedAt = inferenceStatusRoot.inference.createdAt,
-                        });
-                    }
-                    EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
-                    EditorCoroutineUtility.StartCoroutineOwnerless(ShowPromptImagesWindow());
-                }
-            });
-        }
+            processedMask.SetPixels(pixels);
+            processedMask.Apply();
 
-        public class ImageDataAPI
-        {
-            public string Id { get; set; }
-            public string Url { get; set; }
-        }
-
-        private IEnumerator ShowPromptImagesWindow()
-        {
-            yield return null;
-            PromptImages.ShowWindow();
-        }
-
-        private IEnumerator PeriodicStatusCheck()
-        {
-            yield return new WaitForSecondsRealtime(4.0f);
-            EditorCoroutineUtility.StopCoroutine(inferenceStatusCoroutine);
-            inferenceStatusCoroutine = EditorCoroutineUtility.StartCoroutineOwnerless(GetInferenceStatus());
+            return CommonUtils.Texture2DToDataURL(processedMask);
         }
 
         public void SetSeed(string seed)

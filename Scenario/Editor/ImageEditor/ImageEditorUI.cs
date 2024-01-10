@@ -145,7 +145,7 @@ namespace Scenario
         private void DrawMiddleSection(Rect position)
         {
             // Middle Section
-            float middleSectionWidth = position.width * 0.8f;
+            float middleSectionWidth = position.width * 0.4f;
             EditorGUILayout.BeginVertical(GUILayout.Width(middleSectionWidth));
             {
                 CustomStyle.Space(18);
@@ -352,7 +352,7 @@ namespace Scenario
                     float aspectRatio = (float)uploadedImage.width / (float)uploadedImage.height;
                     float width = Mathf.Min(uploadedImage.width, maxSize);
                     float height = width / aspectRatio;
-                
+
                     Rect rect = GUILayoutUtility.GetRect(width, height, GUILayout.ExpandWidth(false),
                         GUILayout.ExpandHeight(false));
 
@@ -452,9 +452,12 @@ namespace Scenario
                 CustomStyle.Space(10);
 
                 GUILayout.Label("Color", EditorStyles.boldLabel);
-            
+
                 int colorButtonSize = 40;
-                int numColumns = Mathf.FloorToInt((leftSectionWidth - 0) / colorButtonSize);
+                int numColumns = 4;
+
+                //Save the original color of the GUI background color
+                Color originalColor = GUI.backgroundColor;
 
                 for (int i = 0; i < 35; i++)
                 {
@@ -462,7 +465,7 @@ namespace Scenario
 
                     GUIStyle colorButtonStyle = new GUIStyle(GUI.skin.button);
                     Color color = Color.HSVToRGB((float)i / 35, 1, 1);
-                    colorButtonStyle.normal.background = MakeTex(2, 2, color);
+                    GUI.backgroundColor = color; //swap the background color to the color we want. so every new GUI component will get this color
 
                     if (GUILayout.Button("", colorButtonStyle, GUILayout.Width(colorButtonSize),
                             GUILayout.Height(colorButtonSize)))
@@ -472,6 +475,9 @@ namespace Scenario
 
                     if (i % numColumns == numColumns - 1 || i == 34) EditorGUILayout.EndHorizontal();
                 }
+
+                //GUI will now draw with default color
+                GUI.backgroundColor = originalColor;
 
                 CustomStyle.Space(10);
 
@@ -520,7 +526,7 @@ namespace Scenario
                 GUILayout.EndHorizontal();
             }
             EditorGUILayout.EndVertical();
-        
+
             return position;
         }
 
@@ -734,7 +740,7 @@ namespace Scenario
         private void UndoCanvas()
         {
             if (canvasHistoryIndex <= 0) return;
-        
+
             // Save the current state to the redo stack
             Texture2D redoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
             redoImage.SetPixels(canvasImage.GetPixels());
@@ -750,7 +756,7 @@ namespace Scenario
         private void RedoCanvas()
         {
             if (redoHistory.Count <= 0) return;
-        
+
             // Save the current state to the undo stack
             Texture2D undoImage = new Texture2D(canvasImage.width, canvasImage.height, TextureFormat.RGBA32, false, true);
             undoImage.SetPixels(canvasImage.GetPixels());

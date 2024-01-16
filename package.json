@@ -1,11 +1,10 @@
 {
-  "devDependencies": {
-    "@commitlint/cli": "^17.7.1",
-    "@commitlint/config-conventional": "^17.7.0",
-    "husky": "^8.0.3"
-  },
-  "dependencies": {
-    "release-please": "^15.13.0"
-  },
-  "version": "0.3.0"
+    "name": "com.scenario.editor",
+    "displayName": "Scenario Unity Plugin",
+    "version": "0.3.0",
+    "unity": "2022.3",
+    "dependencies": {
+        "com.unity.editorcoroutines": "1.0.0",
+        "com.unity.nuget.newtonsoft-json": "2.0.0"
+    }
 }

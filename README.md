@@ -1,4 +1,4 @@
-![Untitled design](resources/social-header.png)
+![Untitled design](Documentation/Resources/resources/social-header.png)
 
 # Scenario Unity Plugin
 

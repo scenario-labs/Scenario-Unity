@@ -1,9 +1,10 @@
 {
     "name": "com.scenario.editor",
-    "rootNamespace": "Scenario",
+    "rootNamespace": "Scenario.Editor",
     "references": [
         "Unity.EditorCoroutines.Editor",
-        "RestSharp.Unity"
+        "RestSharp.Unity",
+        "Needle.Deeplink"
     ],
     "includePlatforms": [
         "Editor"

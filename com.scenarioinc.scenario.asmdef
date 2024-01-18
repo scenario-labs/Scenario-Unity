@@ -1,6 +1,6 @@
 {
     "name": "com.scenario.scenario",
-    "rootNamespace": "",
+    "rootNamespace": "Scenario",
     "references": [],
     "includePlatforms": [],
     "excludePlatforms": [],

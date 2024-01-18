@@ -1,4 +1,4 @@
-![Header](Documentation/Resources/social-header.png)
+![Header](resources/social-header.png)
 
 # Scenario Unity Plugin
 
@@ -15,6 +15,15 @@ Whether you're an expert Unity developer or just venturing into the world of gam
 With an open dialogue and shared passion for innovation, we look forward to the outstanding contributions we can make to the gaming community together. Let's redefine asset creation, and happy coding!
 
 Learn more about Scenario on our [website](https://scenario.com/).
+
+## Quick Install
+
+To import the package in Unity,
+1. Open the package manager
+2. Click [+] 
+3. Click "Add package from Git URL"
+4. Copy past this link `https://github.com/scenario-labs/Scenario-Unity.git?path=/package`
+5. Click "Add"
 
 ## License
 

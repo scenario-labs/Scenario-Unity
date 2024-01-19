@@ -2,11 +2,13 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 
 namespace Scenario
 {
     public class PluginSettings : EditorWindow
     {
+        private static string assemblyDefinitionFileName = "com.scenarioinc.scenario.editor";
         private string apiKey;
         private string secretKey;
         private string saveFolder;
@@ -33,17 +35,24 @@ namespace Scenario
         /// <returns>The version of the plugin, as a string</returns>
         private static string GetVersionFromPackageJson()
         {
-
-            // Find all Texture2Ds that have 'com.scenario.editor' in their filename which is an assembly definition
-            string[] guids = AssetDatabase.FindAssets("com.scenario.editor t:assemblydefinitionasset");
+            //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
+            string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
+            
             if (guids.Length > 1)
             {
-                Debug.LogError("it seems that you have multiple file 'com.scenario.editor.asmdf'. Please delete one");
+                Debug.LogError($"it seems that you have multiple file '{assemblyDefinitionFileName}.asmdef'. Please delete one");
+                return "0";
+            }
+
+            if (guids.Length == 0)
+            {
+                Debug.LogError($"It seems that you don't have the file '{assemblyDefinitionFileName}.asmdef'. Please redownload the plugin from the asset store.");
+                return "0";
             }
 
             //find the folder of that file
             string folderPath = AssetDatabase.GUIDToAssetPath(guids[0]);
-            folderPath = folderPath.Remove(folderPath.IndexOf("com.scenario.editor.asmdef"));
+            folderPath = folderPath.Remove(folderPath.IndexOf($"Editor/{assemblyDefinitionFileName}.asmdef"));
 
             //find the package.json inside this folder
             string packageJsonPath = $"{folderPath}/package.json";

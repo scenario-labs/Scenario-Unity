@@ -1,13 +1,8 @@
 {
-    "name": "com.scenario.editor",
+    "name": "com.scenario.scenario",
     "rootNamespace": "Scenario",
-    "references": [
-        "Unity.EditorCoroutines.Editor",
-        "RestSharp.Unity"
-    ],
-    "includePlatforms": [
-        "Editor"
-    ],
+    "references": [],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

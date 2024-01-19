@@ -14,7 +14,7 @@ namespace Scenario
         public static void ShowWindow()
         {
             ImageEditor window = GetWindow<ImageEditor>("Image Editor");
-            window.minSize = new Vector2(minimumWidth, window.minSize.y);
+            window.minSize = new Vector2(GetScreenWidth() * 0.8f, window.minSize.y);
         }
 
         public static void ShowWindow(Texture2D texture2D)
@@ -35,6 +35,15 @@ namespace Scenario
         private void OnGUI()
         {
             imageEditorUI.DrawUI(this.position);
+        }
+
+        private static int GetScreenWidth()
+        {
+#if UNITY_EDITOR_OSX
+            return Screen.resolutions[Screen.resolutions.Length - 1].width / 2;
+#else
+            return Screen.currentResolution.width;
+#endif
         }
     }
 }

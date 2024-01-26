@@ -1,5 +1,5 @@
-
-*.meta
+/*.meta
+/resources/*.meta
 node_modules/
 ./idea*
 Scenario/.idea/*

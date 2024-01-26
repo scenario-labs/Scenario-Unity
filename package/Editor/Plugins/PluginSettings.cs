@@ -2,11 +2,13 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
+using System.Linq;
 
 namespace Scenario
 {
     public class PluginSettings : EditorWindow
     {
+        private static string assemblyDefinitionFileName = "com.scenarioinc.scenario.editor";
         private string apiKey;
         private string secretKey;
         private string saveFolder;
@@ -18,7 +20,7 @@ namespace Scenario
         private readonly string[] imageFormats = { "JPEG", "PNG" };
         private readonly string[] imageFormatExtensions = { "jpeg", "png" };
 
-        private static string vnumber = "";
+        private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
 
         [System.Serializable]
@@ -27,14 +29,35 @@ namespace Scenario
             public string version;
         }
 
-        [MenuItem("Scenario/Update Version")]
-        public static void UpdateVersionFromPackageJson()
+        /// <summary>
+        /// Get the correct version number from the package JSON
+        /// </summary>
+        /// <returns>The version of the plugin, as a string</returns>
+        private static string GetVersionFromPackageJson()
         {
-            string packageJsonPath = "Assets/Scenario/package.json";
-            string packageJsonContent = File.ReadAllText(packageJsonPath);
-            vnumber = JsonUtility.FromJson<PackageInfo>(packageJsonContent).version;
+            //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
+            string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
+            
+            if (guids.Length > 1)
+            {
+                Debug.LogError($"it seems that you have multiple file '{assemblyDefinitionFileName}.asmdef'. Please delete one");
+                return "0";
+            }
 
-            EditorWindow.GetWindow<PluginSettings>().Repaint();
+            if (guids.Length == 0)
+            {
+                Debug.LogError($"It seems that you don't have the file '{assemblyDefinitionFileName}.asmdef'. Please redownload the plugin from the asset store.");
+                return "0";
+            }
+
+            //find the folder of that file
+            string folderPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+            folderPath = folderPath.Remove(folderPath.IndexOf($"Editor/{assemblyDefinitionFileName}.asmdef"));
+
+            //find the package.json inside this folder
+            string packageJsonPath = $"{folderPath}/package.json";
+            string packageJsonContent = File.ReadAllText(packageJsonPath);
+            return JsonUtility.FromJson<PackageInfo>(packageJsonContent).version;
         }
 
         public static string EncodedAuth
@@ -62,7 +85,7 @@ namespace Scenario
 
         private void OnEnable()
         {
-            UpdateVersionFromPackageJson();
+            GetVersionFromPackageJson();
             LoadSettings();
         }
 
@@ -70,7 +93,7 @@ namespace Scenario
         {
             Color backgroundColor = new Color32(18, 18, 18, 255);
             EditorGUI.DrawRect(new Rect(0, 0, Screen.width, Screen.height), backgroundColor);
-        
+
             GUILayout.Space(10);
 
             apiKey = EditorGUILayout.TextField("API Key", apiKey);

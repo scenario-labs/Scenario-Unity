@@ -85,23 +85,25 @@ namespace Scenario
         /// <param name="scrollViewWidth">The width of the scrollable area.</param>
         private void DrawSelectedTextureSection(Rect position, float previewWidth, float scrollViewWidth)
         {
-            if (selectedTexture == null)
-            {
+            if (selectedTexture == null || DataCache.instance.GetImageDataCount() <= 0)
                 return;
-            }
-
-            if (DataCache.instance.GetImageDataCount() <= 0)
-            {
-                return;
-            }
-
-            float paddedPreviewWidth = previewWidth - 2 * padding;
-            float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
-            float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
 
             GUILayout.BeginArea(new Rect(scrollViewWidth, 20, previewWidth, position.height - 20));
             {
-                DrawScrollableArea(previewWidth, position.height - 20);
+                CustomStyle.Space(5);
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.Label("Selected Image", EditorStyles.boldLabel);
+                    GUILayout.FlexibleSpace();
+                    if (GUILayout.Button("Close", EditorStyles.miniButtonRight, GUILayout.Width(50)))
+                    {
+                        promptImages.CloseSelectedTextureSection();
+                    }
+                }
+                GUILayout.EndHorizontal();
+
+                if (selectedTexture != null) //if you click on close, the selected texture can be null
+                    DrawScrollableArea(previewWidth, position.height - 20);
             }
             GUILayout.EndArea();
         }
@@ -112,21 +114,6 @@ namespace Scenario
         /// <param name="previewWidth">The width of the preview section.</param>
         private void DrawScrollableArea(float previewWidth, float previewHeight)
         {
-            CustomStyle.Space(5);
-            GUILayout.BeginHorizontal();
-            {
-                GUILayout.Label("Selected Image", EditorStyles.boldLabel);
-                GUILayout.FlexibleSpace();
-                if (GUILayout.Button("Close", EditorStyles.miniButtonRight, GUILayout.Width(50)))
-                {
-                    promptImages.CloseSelectedTextureSection();
-                    GUILayout.EndHorizontal(); //need to end the horizontal in case we close the panel
-                    return;
-                }
-            }
-            GUILayout.EndHorizontal();
-            CustomStyle.Space(10);
-
             var scrollViewRect = new Rect(0, 30, previewWidth, previewHeight - 90);
             var viewRect = new Rect(0, 0, previewWidth - 20, previewHeight);
 

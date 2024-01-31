@@ -27,11 +27,22 @@ namespace Scenario
         /// </summary>
         private Action buttonDetailPanelDrawFunction = null;
 
+        #region Initialization
+
+        /// <summary>
+        /// Initializes the PromptImagesUI class with the provided PromptImages instance.
+        /// </summary>
+        /// <param name="promptImg">The PromptImages instance to initialize with.</param>
         public void Init(PromptImages promptImg)
         {
             promptImages = promptImg;
             InitializeButtons();
         }
+
+        #endregion
+
+
+        #region UI Drawing
 
         /// <summary>
         /// Draws the background of the UI element with the specified position.
@@ -100,8 +111,7 @@ namespace Scenario
         }
 
         /// <summary>
-        /// Handles the GUI rendering and interaction for the Prompt Images UI.
-        /// This function is responsible for rendering image boxes, buttons, and modal pop-ups.
+        /// This function is responsible for rendering all the interface
         /// </summary>
         /// <param name="position">The position and dimensions of the UI element.</param>
         public void OnGUI(Rect position)
@@ -368,6 +378,13 @@ namespace Scenario
                 }
             }
         }
+
+
+        #endregion
+
+
+        #region Utility Methods
+
         /// <summary>
         /// Calculates the position and dimensions of each texture box within the grid based on the specified box width, box height, row index, and column index.
         /// </summary>
@@ -461,14 +478,7 @@ namespace Scenario
             GUI.Label(boxRect, "Loading...", style);
         }
 
-        private void DrawDownloadAsTextureDetailPanel()
-        {
-        }
-
-        private void DrawRemoveBackgroundDetailPanel()
-        {
-
-        }
+        #endregion
 
     }
 }

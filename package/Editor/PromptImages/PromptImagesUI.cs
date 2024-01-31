@@ -77,7 +77,7 @@ namespace Scenario
         }
 
         /// <summary>
-        /// Draws the section displaying the selected texture along with its details.
+        /// Draws the section displaying the title, the close button, the selected texture along with its details.
         /// This function calculates and renders the selected image, its dimensions, and associated UI elements.
         /// </summary>
         /// <param name="position">The position and dimensions of the UI element.</param>
@@ -103,19 +103,20 @@ namespace Scenario
                 GUILayout.EndHorizontal();
 
                 if (selectedTexture != null) //if you click on close, the selected texture can be null
-                    DrawScrollableArea(previewWidth, position.height - 20);
+                    DrawScrollableArea(previewWidth, position.height);
             }
             GUILayout.EndArea();
         }
 
         /// <summary>
-        /// Draws the scrollable area containing the title, the close button, the selected image, the action buttons, and the image data.
+        /// Draws the scrollable area containing the selected image, the action buttons, and the image data.
         /// </summary>
-        /// <param name="previewWidth">The width of the preview section.</param>
+        /// <param name="previewWidth">The width of the scrollable area.</param>
+        /// <param name="previewHeight">The height of the scrollable area.</param>
         private void DrawScrollableArea(float previewWidth, float previewHeight)
         {
-            var scrollViewRect = new Rect(0, 30, previewWidth, previewHeight - 90);
-            var viewRect = new Rect(0, 0, previewWidth - 20, previewHeight);
+            var scrollViewRect = new Rect(0, 30, previewWidth, previewHeight);
+            var viewRect = new Rect(0, 0, previewWidth - 20, previewHeight + 150);
 
             selectedTextureSectionScrollPosition = GUI.BeginScrollView(scrollViewRect, selectedTextureSectionScrollPosition, viewRect);
             {

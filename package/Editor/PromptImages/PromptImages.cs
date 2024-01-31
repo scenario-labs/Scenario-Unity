@@ -21,9 +21,8 @@ namespace Scenario
         public static void ShowWindow()
         {
             UpdateImages();
-        
-            var promptImages = (PromptImages) EditorWindow.GetWindow(typeof(PromptImages));
 
+            var promptImages = (PromptImages)GetWindow(typeof(PromptImages));
             promptImagesUI.Init(promptImages);
 
             downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
@@ -40,7 +39,14 @@ namespace Scenario
 
             Repaint();
         }
-        
+
+        public void CloseSelectedTextureSection()
+        {
+            //ClearData();
+            promptImagesUI.selectedTexture = null;
+            promptImagesUI.selectedImageId = null;
+        }
+
         private static async void LoadTexture(string url, Action<Texture2D> result)
         {
             using UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
@@ -123,17 +129,17 @@ namespace Scenario
             });
         }
 
-        private void OnDestroy()
+        /// <summary>
+        /// When Unity reset the GUI (after compiling for example), the link between this script and the GUI can be broken, so I update it
+        /// </summary>
+        private void OnValidate()
         {
-            //ClearData();
-            promptImagesUI.selectedTexture = null;
-            promptImagesUI.selectedImageId = null;
+            ShowWindow();
         }
 
-        private void OnLostFocus()
+        private void OnDestroy()
         {
-            promptImagesUI.selectedTexture = null;
-            promptImagesUI.selectedImageId = null;
+            CloseSelectedTextureSection();
         }
 
         /*private void ClearData()

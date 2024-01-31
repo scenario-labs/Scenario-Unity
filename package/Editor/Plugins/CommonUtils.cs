@@ -33,7 +33,7 @@ namespace Scenario
             RefreshAssetDatabase();
             Debug.Log("Saved image to: " + filePath);
         }
-
+        //possible improvement : Implement error handling and messages for cases where image loading or actions like "Download as Texture" fail. Inform the user of the issue and provide options for resolution or retries.
         public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "")
         {
             if (fileName == null || fileName == "") { fileName = GetRandomImageFileName(); }

@@ -30,8 +30,8 @@ namespace Scenario
 
         public void DeleteImageAtIndex(int selectedTextureIndex)
         {
-            var imgData = DataCache.instance.GetImageDataAtIndex(selectedTextureIndex); 
-            
+            var imgData = DataCache.instance.GetImageDataAtIndex(selectedTextureIndex);
+
             string imageId = imgData.Id;
             string modelId = DataCache.instance.SelectedModelId;
             string inferenceId = imgData.InferenceId;
@@ -50,14 +50,14 @@ namespace Scenario
         private static async void LoadTexture(string url, Action<Texture2D> result)
         {
             using UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
-            
+
             www.SendWebRequest();
-            
+
             while (!www.isDone)
             {
                 await Task.Delay(10);
             }
-            
+
             if (www.result != UnityWebRequest.Result.Success)
             {
                 Debug.LogError(www.error + $"\n{url}");
@@ -83,14 +83,14 @@ namespace Scenario
                     LoadTexture(imageData.Url, result =>
                     {
                         imageData.texture = result;
-                        
+
                         if (promptImagesUI != null)
                         {
                             if (promptImagesUI.promptImages != null)
                             {
                                 promptImagesUI.promptImages.Repaint();
-                            }   
-                        } 
+                            }
+                        }
                     });
                 }
             }
@@ -100,7 +100,7 @@ namespace Scenario
                 if (promptImagesUI.promptImages != null)
                 {
                     promptImagesUI.promptImages.Repaint();
-                }   
+                }
             }
         }
 

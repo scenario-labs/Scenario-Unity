@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 namespace Scenario
 {
@@ -114,7 +113,6 @@ namespace Scenario
                 Debug.Log("Clearing Prompt Images");
                 DataCache.instance.ClearAllImageData();
             }
-
             float previewWidth = 309f;
             float scrollViewWidth = selectedTexture != null ? position.width - previewWidth : position.width;
             float boxWidth = (scrollViewWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
@@ -469,7 +467,7 @@ namespace Scenario
 
         private void DrawRemoveBackgroundDetailPanel()
         {
-            
+
         }
 
     }

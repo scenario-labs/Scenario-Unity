@@ -139,7 +139,7 @@ namespace Scenario
                 DrawZoomedImage(new Rect(0, 0, position.width, position.height));
             }
 
-                DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
+            DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
         }
 
         /// <summary>
@@ -436,6 +436,7 @@ namespace Scenario
         {
             selectedTexture = texture;
             selectedTextureIndex = index;
+            buttonDetailPanelDrawFunction = null; //reset the button detail panel when you select a new image
         }
 
         /// <summary>

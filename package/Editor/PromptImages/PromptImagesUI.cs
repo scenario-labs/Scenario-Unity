@@ -15,12 +15,12 @@ namespace Scenario
         internal PromptImages promptImages;
         private int selectedTextureIndex = 0;
         private bool isModalOpen = false;
-        
+
         public void Init(PromptImages promptImg)
         {
             promptImages = promptImg;
         }
-    
+
         private static void DrawBackground(Rect position)
         {
             Color backgroundColor = EditorStyle.GetBackgroundColor();
@@ -36,7 +36,7 @@ namespace Scenario
                 Debug.Log("Clearing Prompt Images");
                 DataCache.instance.ClearAllImageData();
             }
-            
+
             float previewWidth = 309f;
             float scrollViewWidth = selectedTexture != null ? position.width - previewWidth : position.width;
             float boxWidth = (scrollViewWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
@@ -47,8 +47,8 @@ namespace Scenario
             float scrollViewHeight = (boxHeight + padding) * numRows;
             var scrollViewRect = new Rect(0, 20, scrollViewWidth, position.height - 70);
             var viewRect = new Rect(0, 0, scrollViewWidth - 20, scrollViewHeight);
-            
-            scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition,viewRect);
+
+            scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
             {
                 DrawTextureBoxes(boxWidth, boxHeight);
             }
@@ -60,7 +60,7 @@ namespace Scenario
             {
                 DrawImageModal(new Rect(0, 0, position.width, position.height));
             }
-        
+
             DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
         }
 
@@ -75,7 +75,7 @@ namespace Scenario
             {
                 return;
             }
-        
+
             float paddedPreviewWidth = previewWidth - 2 * padding;
             float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
             float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
@@ -86,19 +86,17 @@ namespace Scenario
             }
             GUILayout.EndArea();
         }
-    
+
         private void DrawScrollableArea(float previewWidth)
         {
             DrawSelectedImage(previewWidth);
             CustomStyle.Space(10);
             GUILayout.BeginVertical();
-            {
-                DrawFirstButtons();
-                CustomStyle.Space(10);
-                DrawSecondButtons();
-                CustomStyle.Space(10);
-                DrawImageData();
-            }
+
+            DrawButtons();
+            CustomStyle.Space(10);
+            DrawImageData();
+
             GUILayout.EndVertical();
             CustomStyle.Space(10);
         }
@@ -154,64 +152,44 @@ namespace Scenario
             GUILayout.EndVertical();
         }
 
-        private void DrawFirstButtons()
+        /// <summary>
+        /// Renders the UI in the modal of a selected image with a set of buttons, each associated with specific actions. 
+        /// The buttons are displayed horizontally, and when clicked, they trigger their respective actions.
+        /// </summary>
+        private void DrawButtons()
         {
-            string[] buttonNames = { "Refine Image", "Download", "Delete" };
-            System.Action[] buttonCallbacks =
+            // Dictionary containing button labels and associated actions
+            Dictionary<string, Action> buttons = new Dictionary<string, Action>()
             {
-                () => PromptWindowUI.imageUpload = selectedTexture,
-                () => CommonUtils.SaveTextureAsPNG(selectedTexture),
-                () =>
+                { "Refine Image", () => PromptWindowUI.imageUpload = selectedTexture },
+                { "Download",  () => CommonUtils.SaveTextureAsPNG(selectedTexture) },
+                { "Delete", () =>
                 {
+                    // Delete the image at the selected index and clear the selected texture
                     promptImages.DeleteImageAtIndex(selectedTextureIndex);
                     selectedTexture = null;
-                }
+                } },
+                { "Remove Background", () => promptImages.RemoveBackground(selectedTextureIndex) },
+                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))}
             };
 
-            GUILayout.BeginHorizontal();
-            for (int i = 0; i < buttonNames.Length; i++)
-            {
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
-                {
-                    buttonCallbacks[i]();
-                }
-
-                // Add spacing between buttons but not after the last button
-                if (i < buttonNames.Length - 1)
-                {
-                    CustomStyle.Space(10);
-                }
-            }
-            GUILayout.EndHorizontal();
-        }
-
-        private void DrawSecondButtons()
-        {
-            string[] buttonNames = { "Remove Background", "Pixelate Image", "Upscale Image" /*, "Generate More Images"*/ };
-            System.Action[] buttonCallbacks =
-            {
-                () => promptImages.RemoveBackground(selectedTextureIndex),
-                () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex)),
-                () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex)) /*,
-                () => {
-                    // TODO: Implement generate more images functionality
-                }*/
-            };
-
-            for (int i = 0; i < buttonNames.Length; i++)
+            // Iterate through the buttons and display them in a horizontal layout
+            foreach (var button in buttons)
             {
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button(buttonNames[i], GUILayout.Height(40)))
+                // Create a button with the button label
+                if (GUILayout.Button(button.Key, GUILayout.Height(40)))
                 {
-                    buttonCallbacks[i]();
+                    // When the button is clicked, execute the associated action
+                    button.Value();
                 }
                 GUILayout.EndHorizontal();
-                if (i < buttonNames.Length - 1)
-                {
-                    CustomStyle.Space(10);
-                }
+                // Add spacing between buttons for visual separation
+                CustomStyle.Space(5);
             }
         }
+
 
         private void DrawImageModal(Rect position)
         {
@@ -242,7 +220,7 @@ namespace Scenario
             GUI.DrawTexture(new Rect(imageX, imageY, imageWidth, imageHeight), selectedTexture, ScaleMode.ScaleToFit);
 
             // Close the modal if clicked outside the image
-            if (Event.current.type == EventType.MouseDown && 
+            if (Event.current.type == EventType.MouseDown &&
                 !new Rect(imageX, imageY, imageWidth, imageHeight).Contains(Event.current.mousePosition))
             {
                 isModalOpen = false;
@@ -264,7 +242,7 @@ namespace Scenario
                 {
                     alignment = TextAnchor.MiddleCenter
                 };
-                
+
                 if (texture != null)
                 {
                     // Detect double click
@@ -275,7 +253,7 @@ namespace Scenario
                         Event.current.Use();
                         return; // Exit early since we've handled the double-click
                     }
-                
+
                     if (GUI.Button(boxRect, ""))
                     {
                         selectedTexture = texture;

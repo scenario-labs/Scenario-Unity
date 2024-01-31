@@ -14,13 +14,24 @@ namespace Scenario
         public Vector2 selectedTextureSectionScrollPosition = Vector2.zero;
         public Texture2D selectedTexture = null;
         public string selectedImageId = null;
+
         internal PromptImages promptImages;
+
         private int selectedTextureIndex = 0;
         private bool isModalOpen = false;
+
+        // Dictionary containing button labels and associated actions
+        private Dictionary<string, Action> buttonActions = new Dictionary<string, Action>();
+
+        /// <summary>
+        /// Contain the draw function of the current Detail Panel according to the button clicked
+        /// </summary>
+        private Action buttonDetailPanelDrawFunction = null;
 
         public void Init(PromptImages promptImg)
         {
             promptImages = promptImg;
+            InitializeButtons();
         }
 
         /// <summary>
@@ -32,6 +43,59 @@ namespace Scenario
         {
             Color backgroundColor = EditorStyle.GetBackgroundColor();
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
+        }
+
+        private void InitializeButtons()
+        {
+            // Dictionary containing button labels and associated actions
+            buttonActions = new Dictionary<string, Action>()
+            {
+                {
+                    "Set Image as Reference", () =>
+                    {
+                        PromptWindowUI.imageUpload = selectedTexture;
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been set in the Image to Image parameter in the Prompt Window.", EditorStyles.wordWrappedLabel);
+                        };
+
+                    }
+                },
+                {
+                    "Download as Texture",  () =>
+                    {
+                        CommonUtils.SaveTextureAsPNG(selectedTexture);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                        };
+                    }
+                },
+                {
+                    "Delete", () =>
+                    {
+                        // Delete the image at the selected index and clear the selected texture
+                        promptImages.DeleteImageAtIndex(selectedTextureIndex);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been deleted.");
+                        };
+                        selectedTexture = null;
+                    }
+                },
+                {
+                    "Remove Background", () =>
+                    {
+                        promptImages.RemoveBackground(selectedTextureIndex);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been dowloaded without background in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                        };
+                    }
+                },
+                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))}
+            };
         }
 
         /// <summary>
@@ -73,7 +137,7 @@ namespace Scenario
                 DrawZoomedImage(new Rect(0, 0, position.width, position.height));
             }
 
-            DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
+                DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
         }
 
         /// <summary>
@@ -124,9 +188,16 @@ namespace Scenario
                 CustomStyle.Space(10);
                 GUILayout.BeginVertical();
                 {
-                    DrawButtons();
-                    CustomStyle.Space(10);
-                    DrawImageData();
+                    if (buttonDetailPanelDrawFunction != null)
+                    {
+                        DrawButtonDetailPanel();
+                    }
+                    else
+                    {
+                        DrawButtons();
+                        CustomStyle.Space(10);
+                        DrawImageData();
+                    }
                 }
                 GUILayout.EndVertical();
                 CustomStyle.Space(10);
@@ -153,6 +224,29 @@ namespace Scenario
                 CustomStyle.Space(padding);
             }
             GUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Renders the UI in the modal of a selected image with a set of buttons, each associated with specific actions. 
+        /// The buttons are displayed horizontally, and when clicked, they trigger their respective actions.
+        /// </summary>
+        private void DrawButtons()
+        {
+
+            // Iterate through the buttons and display them in a horizontal layout
+            foreach (var button in buttonActions)
+            {
+                GUILayout.BeginHorizontal();
+                // Create a button with the button label
+                if (GUILayout.Button(button.Key, GUILayout.Height(40)))
+                {
+                    // When the button is clicked, execute the associated action
+                    button.Value();
+                }
+                GUILayout.EndHorizontal();
+                // Add spacing between buttons for visual separation
+                CustomStyle.Space(5);
+            }
         }
 
         /// <summary>
@@ -191,42 +285,18 @@ namespace Scenario
         }
 
         /// <summary>
-        /// Renders the UI in the modal of a selected image with a set of buttons, each associated with specific actions. 
-        /// The buttons are displayed horizontally, and when clicked, they trigger their respective actions.
+        /// When using one of the action button, sometime they opens a panel with some informations and other steps
         /// </summary>
-        private void DrawButtons()
+        private void DrawButtonDetailPanel()
         {
-            // Dictionary containing button labels and associated actions
-            Dictionary<string, Action> buttons = new Dictionary<string, Action>()
-            {
-                { "Set Image as Reference", () => PromptWindowUI.imageUpload = selectedTexture },
-                { "Download as Texture",  () => CommonUtils.SaveTextureAsPNG(selectedTexture) },
-                { "Delete", () =>
-                {
-                    // Delete the image at the selected index and clear the selected texture
-                    promptImages.DeleteImageAtIndex(selectedTextureIndex);
-                    selectedTexture = null;
-                } },
-                { "Remove Background", () => promptImages.RemoveBackground(selectedTextureIndex) },
-                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))}
-            };
+            buttonDetailPanelDrawFunction?.Invoke();
 
-            // Iterate through the buttons and display them in a horizontal layout
-            foreach (var button in buttons)
+            if (GUILayout.Button("< Back", EditorStyles.miniButtonLeft))
             {
-                GUILayout.BeginHorizontal();
-                // Create a button with the button label
-                if (GUILayout.Button(button.Key, GUILayout.Height(40)))
-                {
-                    // When the button is clicked, execute the associated action
-                    button.Value();
-                }
-                GUILayout.EndHorizontal();
-                // Add spacing between buttons for visual separation
-                CustomStyle.Space(5);
+                buttonDetailPanelDrawFunction = null;
             }
         }
+
 
         /// <summary>
         /// Draws a modal displaying the selected image in a bigger size with the option to close it when clicking outside the image.
@@ -388,6 +458,15 @@ namespace Scenario
             };
             GUI.color = Color.white;
             GUI.Label(boxRect, "Loading...", style);
+        }
+
+        private void DrawDownloadAsTextureDetailPanel()
+        {
+        }
+
+        private void DrawRemoveBackgroundDetailPanel()
+        {
+            
         }
 
     }

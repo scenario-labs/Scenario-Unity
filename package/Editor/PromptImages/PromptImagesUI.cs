@@ -54,6 +54,8 @@ namespace Scenario
                     "Set Image as Reference", () =>
                     {
                         PromptWindowUI.imageUpload = selectedTexture;
+                        PromptWindow.ShowWindow();
+                        PromptWindow.SetImageControlTab(1);
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been set in the Image to Image parameter in the Prompt Window.", EditorStyles.wordWrappedLabel);

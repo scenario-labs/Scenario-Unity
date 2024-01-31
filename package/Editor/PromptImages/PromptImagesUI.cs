@@ -161,8 +161,8 @@ namespace Scenario
             // Dictionary containing button labels and associated actions
             Dictionary<string, Action> buttons = new Dictionary<string, Action>()
             {
-                { "Refine Image", () => PromptWindowUI.imageUpload = selectedTexture },
-                { "Download",  () => CommonUtils.SaveTextureAsPNG(selectedTexture) },
+                { "Set Image as Reference", () => PromptWindowUI.imageUpload = selectedTexture },
+                { "Download as Texture",  () => CommonUtils.SaveTextureAsPNG(selectedTexture) },
                 { "Delete", () =>
                 {
                     // Delete the image at the selected index and clear the selected texture

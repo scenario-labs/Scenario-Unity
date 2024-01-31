@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Scenario
 {
@@ -10,6 +11,7 @@ namespace Scenario
         public int itemsPerRow = 5;
         public float padding = 10f;
         public Vector2 scrollPosition = Vector2.zero;
+        public Vector2 selectedTextureSectionScrollPosition = Vector2.zero;
         public Texture2D selectedTexture = null;
         public string selectedImageId = null;
         internal PromptImages promptImages;
@@ -41,7 +43,7 @@ namespace Scenario
         {
             DrawBackground(position);
 
-            if (GUILayout.Button("Clear"))
+            if (GUILayout.Button("Clear All Images"))
             {
                 Debug.Log("Clearing Prompt Images");
                 DataCache.instance.ClearAllImageData();
@@ -55,7 +57,7 @@ namespace Scenario
             int numRows = Mathf.CeilToInt((float)DataCache.instance.GetImageDataCount() / itemsPerRow);
 
             float scrollViewHeight = (boxHeight + padding) * numRows;
-            var scrollViewRect = new Rect(0, 20, scrollViewWidth, position.height - 70);
+            var scrollViewRect = new Rect(0, 25, scrollViewWidth, position.height - 70);
             var viewRect = new Rect(0, 0, scrollViewWidth - 20, scrollViewHeight);
 
             scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
@@ -99,7 +101,7 @@ namespace Scenario
 
             GUILayout.BeginArea(new Rect(scrollViewWidth, 20, previewWidth, position.height - 20));
             {
-                DrawScrollableArea(previewWidth);
+                DrawScrollableArea(previewWidth, position.height - 20);
             }
             GUILayout.EndArea();
         }
@@ -108,7 +110,7 @@ namespace Scenario
         /// Draws the scrollable area containing the title, the close button, the selected image, the action buttons, and the image data.
         /// </summary>
         /// <param name="previewWidth">The width of the preview section.</param>
-        private void DrawScrollableArea(float previewWidth)
+        private void DrawScrollableArea(float previewWidth, float previewHeight)
         {
             CustomStyle.Space(5);
             GUILayout.BeginHorizontal();
@@ -123,19 +125,25 @@ namespace Scenario
                 }
             }
             GUILayout.EndHorizontal();
-
             CustomStyle.Space(10);
 
-            DrawSelectedImage(previewWidth);
-            CustomStyle.Space(10);
-            GUILayout.BeginVertical();
+            var scrollViewRect = new Rect(0, 30, previewWidth, previewHeight - 90);
+            var viewRect = new Rect(0, 0, previewWidth - 20, previewHeight);
+
+            selectedTextureSectionScrollPosition = GUI.BeginScrollView(scrollViewRect, selectedTextureSectionScrollPosition, viewRect);
             {
-                DrawButtons();
+                DrawSelectedImage(previewWidth);
                 CustomStyle.Space(10);
-                DrawImageData();
+                GUILayout.BeginVertical();
+                {
+                    DrawButtons();
+                    CustomStyle.Space(10);
+                    DrawImageData();
+                }
+                GUILayout.EndVertical();
+                CustomStyle.Space(10);
             }
-            GUILayout.EndVertical();
-            CustomStyle.Space(10);
+            GUI.EndScrollView();
         }
 
         /// <summary>

@@ -279,6 +279,14 @@ namespace Scenario
             // Set the seed value here
         }
 
+        /// <summary>
+        /// Force the Image Control Tab to opens at a spcifi tab
+        /// </summary>
+        public static void SetImageControlTab(int tabIndex)
+        {
+            promptWindowUI.imageControlTab = tabIndex;
+        }
+
         #region API_DTO
 
         [Serializable]

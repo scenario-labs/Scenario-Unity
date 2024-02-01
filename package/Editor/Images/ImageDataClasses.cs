@@ -46,7 +46,7 @@ namespace Scenario
     public class Parameters
     {
         public bool intermediateImages { get; set; }
-        public int guidance { get; set; }
+        public float guidance { get; set; }
         public int numInferenceSteps { get; set; }
         public int numSamples { get; set; }
         public int tokenMerging { get; set; }

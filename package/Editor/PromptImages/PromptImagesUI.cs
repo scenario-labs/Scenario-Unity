@@ -122,6 +122,7 @@ namespace Scenario
             {
                 Debug.Log("Clearing Prompt Images");
                 DataCache.instance.ClearAllImageData();
+                selectedTexture = null;
             }
             float previewWidth = 309f;
             float scrollViewWidth = selectedTexture != null ? position.width - previewWidth : position.width;

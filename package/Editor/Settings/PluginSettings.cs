@@ -2,7 +2,6 @@ using System;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
-using System.Linq;
 using UnityEditor.Presets;
 
 namespace Scenario
@@ -12,6 +11,7 @@ namespace Scenario
         #region Public Properties
 
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
+        public static Preset TexturePreset { get { return texturePreset; } }
 
         #endregion
 
@@ -23,7 +23,8 @@ namespace Scenario
         private string saveFolder;
         private int imageFormatIndex;
         private static float minimumWidth = 400f;
-        private Preset texturePreset = null;
+        private static Preset texturePreset = null;
+        private static Texture2D TEST_IMAGE = null;
 
         private string texturePresetGUID = "28269680c775243409a2d470907383f9"; //change this value in case the meta file change
         //private Preset spritePreset;

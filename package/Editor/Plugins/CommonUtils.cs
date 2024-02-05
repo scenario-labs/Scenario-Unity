@@ -22,22 +22,35 @@ namespace Scenario
             return texture;
         }
 
-        public static void SaveTextureAsPNGAtPath(Texture2D texture2D, string filePath)
+        /// <summary>
+        /// Take a byte array and save it as a file in the folder set in the Plugin Settings.
+        /// </summary>
+        /// <param name="pngBytes">The byte array to save as an image</param>
+        /// <param name="fileName">The file name you want. If null, it will take a random number</param>
+        /// <param name="importPreset">The preset you want to apply. if null, will use the default texture preset</param>
+        public static void SaveImageDataAsPNG(byte[] pngBytes, string fileName = "", Preset importPreset = null)
         {
-            if (filePath == null || filePath == "") { Debug.LogError("Must have valid file path"); return; }
-            byte[] pngBytes = texture2D.EncodeToPNG();
-            SaveImageBytesToPath(filePath, pngBytes);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                fileName = GetRandomImageFileName();
+            }
+
+            SaveImage(pngBytes, fileName, importPreset);
         }
 
-        public static void SaveImageBytesToPath(string filePath, byte[] pngBytes)
-        {
-            File.WriteAllBytes(filePath, pngBytes);
-            RefreshAssetDatabase();
-            Debug.Log("Saved image to: " + filePath);
-        }
-
-        //possible improvement : Implement error handling and messages for cases where image loading or actions like "Download as Texture" fail. Inform the user of the issue and provide options for resolution or retries.
+        /// <summary>
+        /// Take a Texture2D and save it as a file in the folder set in the Plugin Settings.
+        /// </summary>
+        /// <param name="pngBytes">The byte array to save as an image</param>
+        /// <param name="fileName">The file name you want. If null, it will take a random number</param>
+        /// <param name="importPreset">The preset you want to apply. if null, will use the default texture preset</param>
         public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "", Preset importPreset = null)
+        {
+            SaveImageDataAsPNG(texture2D.EncodeToPNG(), fileName, importPreset);
+        }
+        
+        //possible improvement : Implement error handling and messages for cases where image loading or actions like "Download as Texture" fail. Inform the user of the issue and provide options for resolution or retries.
+        private static void SaveImage(byte[] pngBytes, string fileName, Preset importPreset)
         {
             if (importPreset == null || string.IsNullOrEmpty(importPreset.name))
             {
@@ -45,20 +58,9 @@ namespace Scenario
                 importPreset = PluginSettings.TexturePreset;
             }
 
-            if (fileName == null || fileName == "") { fileName = GetRandomImageFileName(); }
-
-            byte[] pngBytes = texture2D.EncodeToPNG();
-            SaveImageBytesToFile(fileName, pngBytes, (filePath) =>
-            {
-                ApplyImportSettingsFromPreset(filePath, importPreset);
-            });
-        }
-
-
-        public static void SaveImageBytesToFile(string fileName, byte[] pngBytes, Action<string> callback_OnAssetSaved = null)
-        {
             string downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
-            string filePath = downloadPath + "/" + fileName;
+            string filePath = Path.Combine(downloadPath, fileName);
+
             File.WriteAllBytesAsync(filePath, pngBytes).ContinueWith(task =>
             {
                 try
@@ -66,7 +68,7 @@ namespace Scenario
                     RefreshAssetDatabase(() =>
                     {
                         Debug.Log("Downloaded image to: " + filePath);
-                        callback_OnAssetSaved?.Invoke(filePath);
+                        ApplyImportSettingsFromPreset(filePath, importPreset);
                     });
                 }
                 catch (Exception e)
@@ -175,8 +177,8 @@ namespace Scenario
                 //Debug.Log($"importPreset C {importPreset.name}");
                 //Debug.Log($"tImporter {tImporter}");
 
-                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
                 importPreset.ApplyTo(tImporter);
+                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
                 EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(filePath));
             }
             else

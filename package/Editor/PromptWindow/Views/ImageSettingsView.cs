@@ -78,9 +78,8 @@ namespace Scenario
             {
                 EditorGUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label(new GUIContent("Influence: " + influncesliderValue.ToString("0.00"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
-                    influncesliderValue =
-                        GUILayout.HorizontalSlider(influncesliderValue, 0.01f, 0.99f, GUILayout.Width(sliderWidth));
+                    GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
+                    influenceSliderValue = (int)GUILayout.HorizontalSlider(influenceSliderValue, 0, 99, GUILayout.Width(sliderWidth));
                 }
                 EditorGUILayout.EndHorizontal();
             }

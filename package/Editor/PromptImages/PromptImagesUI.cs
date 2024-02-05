@@ -84,18 +84,6 @@ namespace Scenario
                     }
                 },
                 {
-                    "Delete", () =>
-                    {
-                        // Delete the image at the selected index and clear the selected texture
-                        promptImages.DeleteImageAtIndex(selectedTextureIndex);
-                        buttonDetailPanelDrawFunction = () =>
-                        {
-                            GUILayout.Label("Your image has been deleted.");
-                        };
-                        selectedTexture = null;
-                    }
-                },
-                {
                     "Download as Sprite", () =>
                     {
                         if (PluginSettings.AlwaysRemoveBackgroundForSprites)
@@ -128,7 +116,19 @@ namespace Scenario
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))}
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
+                {
+                    "Delete", () =>
+                    {
+                        // Delete the image at the selected index and clear the selected texture
+                        promptImages.DeleteImageAtIndex(selectedTextureIndex);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been deleted.");
+                        };
+                        selectedTexture = null;
+                    }
+                }
             };
         }
 

@@ -3,15 +3,17 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using UnityEditor.Presets;
+using static Codice.Client.Common.Connection.AskCredentialsToUser;
 
 namespace Scenario
 {
+    [InitializeOnLoad]
     public class PluginSettings : EditorWindow
     {
         #region Public Properties
 
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
-        public static Preset TexturePreset { get { return texturePreset; } }
+        public static Preset TexturePreset { get { return GetTexturePreset(EditorPrefs.GetString("scenario/texturePreset")); } }
 
         #endregion
 
@@ -24,13 +26,12 @@ namespace Scenario
         private int imageFormatIndex;
         private static float minimumWidth = 400f;
         private static Preset texturePreset = null;
-        private static Texture2D TEST_IMAGE = null;
 
-        private string texturePresetGUID = "28269680c775243409a2d470907383f9"; //change this value in case the meta file change
+        private string texturePresetGUID = null;
         //private Preset spritePreset;
 
-        private readonly string[] imageFormats = { "JPEG", "PNG" };
-        private readonly string[] imageFormatExtensions = { "jpeg", "png" };
+        private static readonly string[] imageFormats = { "JPEG", "PNG" };
+        private static readonly string[] imageFormatExtensions = { "jpeg", "png" };
 
         private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
@@ -49,6 +50,12 @@ namespace Scenario
         {
             GetVersionFromPackageJson();
             LoadSettings();
+
+            /// Register default values
+            if (!EditorPrefs.HasKey("scenario/texturePreset"))
+            {
+                EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
+            }
         }
 
 
@@ -126,14 +133,21 @@ namespace Scenario
         private void DrawPresetSettings()
         {
             GUILayout.Label("Preset Settings", EditorStyles.boldLabel);
-
-            if(texturePresetGUID != null)
-            {
-                texturePreset = AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(texturePresetGUID));
-            }
-
             texturePreset = (Preset)EditorGUILayout.ObjectField("Texture Preset", texturePreset, typeof(Preset), false);
             texturePresetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(texturePreset));
+        }
+
+        private static Preset GetTexturePreset(string _GUID)
+        {
+            if (_GUID != null)
+            {
+                return AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(_GUID));
+            }
+            else
+            {
+                Debug.LogError("Cannot find a texture preset with a GUID that is null. Please go Windows/Scenario/ScenarioSettings and make sure the Texture Preset is set.");
+                return null;
+            }
         }
 
 
@@ -187,7 +201,6 @@ namespace Scenario
         private void SaveSettings()
         {
             EditorPrefs.SetString("scenario/texturePreset", texturePresetGUID);
-            Debug.Log($"saving scenario/texturePreset : {texturePresetGUID}");
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
@@ -202,7 +215,7 @@ namespace Scenario
             secretKey = EditorPrefs.GetString("SecretKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
             texturePresetGUID = EditorPrefs.GetString("scenario/texturePreset");
-            Debug.Log($"loading scenario/texturePreset : {texturePresetGUID}");
+            //Debug.Log($"loading scenario/texturePreset : {texturePresetGUID}");
 
             string imageFormat = EditorPrefs.GetString("ImageFormat", "jpeg");
             imageFormatIndex = Array.IndexOf(imageFormatExtensions, imageFormat);

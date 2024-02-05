@@ -76,7 +76,7 @@ namespace Scenario
                 {
                     "Download as Texture",  () =>
                     {
-                        CommonUtils.SaveTextureAsPNG(selectedTexture);
+                        CommonUtils.SaveTextureAsPNG(selectedTexture, importPreset:PluginSettings.TexturePreset);
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);

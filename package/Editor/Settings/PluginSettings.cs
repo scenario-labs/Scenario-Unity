@@ -13,8 +13,9 @@ namespace Scenario
         #region Public Properties
 
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
-        public static Preset TexturePreset { get { return GetTexturePreset(EditorPrefs.GetString("scenario/texturePreset")); } }
-
+        public static Preset TexturePreset { get { return GetPreset(EditorPrefs.GetString("scenario/texturePreset")); } }
+        public static Preset SpritePreset { get { return GetPreset(EditorPrefs.GetString("scenario/spritePreset")); } }
+        public static bool AlwaysRemoveBackgroundForSprites { get { return alwaysRemoveBackgroundForSprites; } }
         #endregion
 
         #region Private Properties
@@ -25,10 +26,12 @@ namespace Scenario
         private string saveFolder;
         private int imageFormatIndex;
         private static float minimumWidth = 400f;
-        private static Preset texturePreset = null;
-
+        private static Preset texturePreset;
         private string texturePresetGUID = null;
-        //private Preset spritePreset;
+
+        private Preset spritePreset;
+        private string spritePresetGUID = null;
+        private static bool alwaysRemoveBackgroundForSprites = true;
 
         private static readonly string[] imageFormats = { "JPEG", "PNG" };
         private static readonly string[] imageFormatExtensions = { "jpeg", "png" };
@@ -51,11 +54,6 @@ namespace Scenario
             GetVersionFromPackageJson();
             LoadSettings();
 
-            /// Register default values
-            if (!EditorPrefs.HasKey("scenario/texturePreset"))
-            {
-                EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
-            }
         }
 
 
@@ -78,7 +76,9 @@ namespace Scenario
             GUILayout.Space(10);
             DrawImageSettings();
             GUILayout.Space(10);
-            DrawPresetSettings();
+            DrawTextureSettings();
+            GUILayout.Space(10);
+            DrawSpriteSettings();
             GUILayout.Space(10);
 
             if (GUILayout.Button("Save"))
@@ -130,14 +130,28 @@ namespace Scenario
             EditorGUILayout.EndHorizontal();
         }
 
-        private void DrawPresetSettings()
+        private void DrawTextureSettings()
         {
-            GUILayout.Label("Preset Settings", EditorStyles.boldLabel);
+            GUILayout.Label("Texture Settings", EditorStyles.boldLabel);
             texturePreset = (Preset)EditorGUILayout.ObjectField("Texture Preset", texturePreset, typeof(Preset), false);
             texturePresetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(texturePreset));
         }
 
-        private static Preset GetTexturePreset(string _GUID)
+        private void DrawSpriteSettings()
+        {
+            GUILayout.Label("Sprite Settings", EditorStyles.boldLabel);
+            spritePreset = (Preset)EditorGUILayout.ObjectField("Sprite Preset", spritePreset, typeof(Preset), false);
+            spritePresetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(spritePreset));
+
+            alwaysRemoveBackgroundForSprites = GUILayout.Toggle(alwaysRemoveBackgroundForSprites, new GUIContent("Always Remove Background For Sprites", "Will call the remove background API before downloading your images as sprite."));
+        }
+
+        /// <summary>
+        /// Get a preset file from its GUID
+        /// </summary>
+        /// <param name="_GUID"></param>
+        /// <returns></returns>
+        private static Preset GetPreset(string _GUID)
         {
             if (_GUID != null)
             {
@@ -201,6 +215,7 @@ namespace Scenario
         private void SaveSettings()
         {
             EditorPrefs.SetString("scenario/texturePreset", texturePresetGUID);
+            EditorPrefs.SetString("scenario/spritePreset", spritePresetGUID);
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
@@ -211,11 +226,24 @@ namespace Scenario
 
         private void LoadSettings()
         {
+            //default settings
+            if (!EditorPrefs.HasKey("scenario/texturePreset"))
+            {
+                EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
+            }
+            if (!EditorPrefs.HasKey("scenario/spritePreset"))
+            {
+                EditorPrefs.SetString("scenario/spritePreset", "d87ceacdb68f56745951dadf104120b1"); //change this value in case the meta file change
+            }
+
+            //load values
             apiKey = EditorPrefs.GetString("ApiKey");
             secretKey = EditorPrefs.GetString("SecretKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
             texturePresetGUID = EditorPrefs.GetString("scenario/texturePreset");
-            //Debug.Log($"loading scenario/texturePreset : {texturePresetGUID}");
+            texturePreset = GetPreset(texturePresetGUID);
+            spritePresetGUID = EditorPrefs.GetString("scenario/spritePreset");
+            spritePreset = GetPreset(spritePresetGUID);
 
             string imageFormat = EditorPrefs.GetString("ImageFormat", "jpeg");
             imageFormatIndex = Array.IndexOf(imageFormatExtensions, imageFormat);
@@ -224,5 +252,6 @@ namespace Scenario
                 imageFormatIndex = 0;
             }
         }
+
     }
 }

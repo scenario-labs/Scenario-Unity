@@ -96,13 +96,35 @@ namespace Scenario
                     }
                 },
                 {
-                    "Remove Background", () =>
+                    "Download as Sprite", () =>
                     {
-                        promptImages.RemoveBackground(selectedTextureIndex);
-                        buttonDetailPanelDrawFunction = () =>
+                        if (PluginSettings.AlwaysRemoveBackgroundForSprites)
                         {
-                            GUILayout.Label("Your image has been dowloaded without background in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
-                        };
+                            promptImages.RemoveBackground(selectedTextureIndex, imagebytes =>
+                            {
+                                CommonUtils.SaveImageDataAsPNG(imagebytes, importPreset:PluginSettings.SpritePreset);
+
+                                buttonDetailPanelDrawFunction = () =>
+                                {
+                                    GUILayout.Label("The background of your image has been removed and the result has been downloaded in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                                };
+                            });
+
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label("Please wait... Your image is being downloaded in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                            };
+                        }
+                        else
+                        {
+                            CommonUtils.SaveTextureAsPNG(selectedTexture, importPreset: PluginSettings.SpritePreset);
+
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label("Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                            };
+                        }
+
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},

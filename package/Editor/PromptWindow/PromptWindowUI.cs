@@ -54,7 +54,7 @@ namespace Scenario
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
         internal float samplesliderValue = 30;
-        internal float influncesliderValue = 0.25f;
+        internal float influncesliderValue = 0.75f;
         internal float guidancesliderValue = 7;
         internal string postedModelName = "Choose Model";
         internal string seedinputText = "";

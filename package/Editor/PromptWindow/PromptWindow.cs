@@ -169,7 +169,7 @@ namespace Scenario
             }
             
             string negativePrompt = promptWindowUI.negativepromptinputText;
-            float strength = (float)Math.Round(promptWindowUI.influncesliderValue, 2);
+            float strength = Math.Clamp(1-(float)Math.Round(promptWindowUI.influncesliderValue, 2), 0.01f, 0.99f); //strength is 1-influence
             float guidance = promptWindowUI.guidancesliderValue;
             int width = (int)promptWindowUI.widthSliderValue;
             int height = (int)promptWindowUI.heightSliderValue;

@@ -30,9 +30,6 @@ namespace Scenario
         private string texturePresetGUID = null;
         //private Preset spritePreset;
 
-        private static readonly string[] imageFormats = { "JPEG", "PNG" };
-        private static readonly string[] imageFormatExtensions = { "jpeg", "png" };
-
         private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
 
@@ -99,10 +96,7 @@ namespace Scenario
 
         private void DrawImageSettings()
         {
-            GUILayout.Label("Image Settings", EditorStyles.boldLabel);
-
-            imageFormatIndex = EditorGUILayout.Popup("Image Format", imageFormatIndex, imageFormats);
-
+            GUILayout.Label("Download Settings", EditorStyles.boldLabel);
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Save Folder: ", GUILayout.Width(80));
             saveFolder = EditorGUILayout.TextField(saveFolder);
@@ -157,7 +151,7 @@ namespace Scenario
         {
             //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
             string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
-            
+
             if (guids.Length > 1)
             {
                 Debug.LogError($"it seems that you have multiple file '{assemblyDefinitionFileName}.asmdef'. Please delete one");
@@ -199,8 +193,6 @@ namespace Scenario
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
-            EditorPrefs.SetString("ImageFormat", imageFormatExtensions[imageFormatIndex]);
-
             PlayerPrefs.SetString("EncodedAuth", EncodedAuth);
         }
 
@@ -216,14 +208,7 @@ namespace Scenario
             secretKey = EditorPrefs.GetString("SecretKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
             texturePresetGUID = EditorPrefs.GetString("scenario/texturePreset");
-            texturePreset  = AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(texturePresetGUID));
-
-            string imageFormat = EditorPrefs.GetString("ImageFormat", "jpeg");
-            imageFormatIndex = Array.IndexOf(imageFormatExtensions, imageFormat);
-            if (imageFormatIndex < 0)
-            {
-                imageFormatIndex = 0;
-            }
+            texturePreset = AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(texturePresetGUID));
         }
     }
 }

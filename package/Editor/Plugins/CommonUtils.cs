@@ -24,22 +24,35 @@ namespace Scenario
             return texture;
         }
 
-        public static void SaveTextureAsPNGAtPath(Texture2D texture2D, string filePath)
+        /// <summary>
+        /// Take a byte array and save it as a file in the folder set in the Plugin Settings.
+        /// </summary>
+        /// <param name="pngBytes">The byte array to save as an image</param>
+        /// <param name="fileName">The file name you want. If null, it will take a random number</param>
+        /// <param name="importPreset">The preset you want to apply. if null, will use the default texture preset</param>
+        public static void SaveImageDataAsPNG(byte[] pngBytes, string fileName = "", Preset importPreset = null, Action<string> callback_OnSaved = null)
         {
-            if (filePath == null || filePath == "") { Debug.LogError("Must have valid file path"); return; }
-            byte[] pngBytes = texture2D.EncodeToPNG();
-            SaveImageBytesToPath(filePath, pngBytes);
+            if (string.IsNullOrEmpty(fileName))
+            {
+                fileName = GetRandomImageFileName();
+            }
+
+            SaveImage(pngBytes, fileName, importPreset, callback_OnSaved);
         }
 
-        public static void SaveImageBytesToPath(string filePath, byte[] pngBytes)
+        /// <summary>
+        /// Take a Texture2D and save it as a file in the folder set in the Plugin Settings.
+        /// </summary>
+        /// <param name="pngBytes">The byte array to save as an image</param>
+        /// <param name="fileName">The file name you want. If null, it will take a random number</param>
+        /// <param name="importPreset">The preset you want to apply. if null, will use the default texture preset</param>
+        public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "", Preset importPreset = null, Action<string> callback_OnSaved = null)
         {
-            File.WriteAllBytes(filePath, pngBytes);
-            RefreshAssetDatabase();
-            Debug.Log("Saved image to: " + filePath);
+            SaveImageDataAsPNG(texture2D.EncodeToPNG(), fileName, importPreset, callback_OnSaved);
         }
 
         //possible improvement : Implement error handling and messages for cases where image loading or actions like "Download as Texture" fail. Inform the user of the issue and provide options for resolution or retries.
-        public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "", Preset importPreset = null)
+        private static void SaveImage(byte[] pngBytes, string fileName, Preset importPreset, Action<string> callback_OnSaved = null)
         {
             if (importPreset == null || string.IsNullOrEmpty(importPreset.name))
             {
@@ -47,20 +60,9 @@ namespace Scenario
                 importPreset = PluginSettings.TexturePreset;
             }
 
-            if (fileName == null || fileName == "") { fileName = GetRandomImageFileName(); }
-
-            byte[] pngBytes = texture2D.EncodeToPNG();
-            SaveImageBytesToFile(fileName, pngBytes, (filePath) =>
-            {
-                ApplyImportSettingsFromPreset(filePath, importPreset);
-            });
-        }
-
-
-        public static void SaveImageBytesToFile(string fileName, byte[] pngBytes, Action<string> callback_OnAssetSaved = null)
-        {
             string downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
-            string filePath = downloadPath + "/" + fileName;
+            string filePath = Path.Combine(downloadPath, fileName);
+
             File.WriteAllBytesAsync(filePath, pngBytes).ContinueWith(task =>
             {
                 try
@@ -68,7 +70,8 @@ namespace Scenario
                     RefreshAssetDatabase(() =>
                     {
                         Debug.Log("Downloaded image to: " + filePath);
-                        callback_OnAssetSaved?.Invoke(filePath);
+                        ApplyImportSettingsFromPreset(filePath, importPreset);
+                        callback_OnSaved?.Invoke(filePath);
                     });
                 }
                 catch (Exception e)
@@ -165,6 +168,7 @@ namespace Scenario
 
         /// <summary>
         /// Use this function to apply a specific Importer Preset to an image. (for example: apply the sprite settings if the user wants to make a sprite out of a generated image)
+        /// Found here : https://discussions.unity.com/t/editor-class-quot-texture-importer-quot-apply-import-settings-question/2538/4
         /// </summary>
         /// <param name="image">The image to apply the parameters</param>
         /// <param name="preset">The preset that contains the parameter</param>
@@ -177,8 +181,8 @@ namespace Scenario
                 //Debug.Log($"importPreset C {importPreset.name}");
                 //Debug.Log($"tImporter {tImporter}");
 
-                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
                 importPreset.ApplyTo(tImporter);
+                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
                 EditorGUIUtility.PingObject(AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(filePath));
             }
             else
@@ -206,6 +210,28 @@ namespace Scenario
                 }
             }
             return ofType;
+        }
+
+        /// <summary>
+        /// Use this function to modify the Pixels per Unit parameter of the texture
+        /// </summary>
+        /// <param name="filePath"></param>
+        public static void ApplyPixelsPerUnit(string filePath)
+        {
+            TextureImporter tImporter = AssetImporter.GetAtPath(filePath) as TextureImporter;
+            if (tImporter != null)
+            {
+                int width = 0;
+                int height = 0;
+                tImporter.GetSourceTextureWidthAndHeight(out width, out height);
+
+                tImporter.spritePixelsPerUnit = width;
+                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
+            }
+            else
+            {
+                Debug.LogError("There was an issue when applying the Pixels Per Unit parameter. please restart the editor.");
+            }
         }
     }
 }

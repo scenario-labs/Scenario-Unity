@@ -86,25 +86,42 @@ namespace Scenario
                     }
                 },
                 {
-                    "Delete", () =>
+                    "Download as Sprite", () =>
                     {
-                        // Delete the image at the selected index and clear the selected texture
-                        promptImages.DeleteImageAtIndex(selectedTextureIndex);
-                        buttonDetailPanelDrawFunction = () =>
+                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+
+                        //What to do when file is downloaded
+                        Action<string> successAction = (filePath) =>
                         {
-                            GUILayout.Label("Your image has been deleted.");
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
+                            };
+
+                            if (PluginSettings.UsePixelsUnitsEqualToImage)
+                            {
+                                CommonUtils.ApplyPixelsPerUnit(filePath);
+                            }
                         };
-                        selectedTexture = null;
-                    }
-                },
-                {
-                    "Remove Background", () =>
-                    {
-                        promptImages.RemoveBackground(selectedTextureIndex);
-                        buttonDetailPanelDrawFunction = () =>
+
+
+                        if (PluginSettings.AlwaysRemoveBackgroundForSprites)
                         {
-                            GUILayout.Label("Your image has been dowloaded without background in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
-                        };
+                            promptImages.RemoveBackground(selectedTextureIndex, (imageBytes) =>
+                            {
+                                CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                            });
+
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
+                            };
+                        }
+                        else
+                        {
+                            CommonUtils.SaveTextureAsPNG(selectedTexture, null, PluginSettings.SpritePreset, successAction);
+                        }
                     }
                 },
                 {
@@ -116,7 +133,19 @@ namespace Scenario
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))}
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
+                {
+                    "Delete", () =>
+                    {
+                        // Delete the image at the selected index and clear the selected texture
+                        promptImages.DeleteImageAtIndex(selectedTextureIndex);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been deleted.");
+                        };
+                        selectedTexture = null;
+                    }
+                }
             };
         }
 
@@ -200,7 +229,7 @@ namespace Scenario
         /// <param name="previewHeight">The height of the scrollable area.</param>
         private void DrawScrollableArea(float previewWidth, float previewHeight)
         {
-            var scrollViewRect = new Rect(0, 30, previewWidth+20, previewHeight);
+            var scrollViewRect = new Rect(0, 30, previewWidth + 20, previewHeight);
             var viewRect = new Rect(0, 0, previewWidth, previewHeight + 150);
 
             selectedTextureSectionScrollPosition = GUI.BeginScrollView(scrollViewRect, selectedTextureSectionScrollPosition, viewRect);

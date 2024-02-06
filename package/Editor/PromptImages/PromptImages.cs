@@ -144,12 +144,16 @@ namespace Scenario
             DataCache.instance.ClearAllImageData();
         }*/
 
-        internal void RemoveBackground(int selectedTextureIndex)
+        /// <summary>
+        /// Find the selected texture according to the current user selection and call the API to remove its background
+        /// </summary>
+        /// <param name="selectedTextureIndex"></param>
+        /// <param name="callback_OnBackgroundRemoved">Returns a callback with the byte array corresponding of the image (withouth background) data</param>
+        internal void RemoveBackground(int selectedTextureIndex, Action<byte[]> callback_OnBackgroundRemoved)
         {
-            BackgroundRemoval.RemoveBackground(DataCache.instance.GetImageDataAtIndex(selectedTextureIndex).texture, bytes =>
+            BackgroundRemoval.RemoveBackground(DataCache.instance.GetImageDataAtIndex(selectedTextureIndex).texture, imageBytes =>
             {
-                string fileName = CommonUtils.GetRandomImageFileName();
-                CommonUtils.SaveImageBytesToFile(fileName, bytes);
+                callback_OnBackgroundRemoved?.Invoke(imageBytes);
             });
         }
     }

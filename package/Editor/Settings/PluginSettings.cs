@@ -51,11 +51,6 @@ namespace Scenario
             GetVersionFromPackageJson();
             LoadSettings();
 
-            /// Register default values
-            if (!EditorPrefs.HasKey("scenario/texturePreset"))
-            {
-                EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
-            }
         }
 
 
@@ -211,11 +206,17 @@ namespace Scenario
 
         private void LoadSettings()
         {
+            /// Register default values
+            if (!EditorPrefs.HasKey("scenario/texturePreset"))
+            {
+                EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
+            }
+
             apiKey = EditorPrefs.GetString("ApiKey");
             secretKey = EditorPrefs.GetString("SecretKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
             texturePresetGUID = EditorPrefs.GetString("scenario/texturePreset");
-            //Debug.Log($"loading scenario/texturePreset : {texturePresetGUID}");
+            texturePreset  = AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(texturePresetGUID));
 
             string imageFormat = EditorPrefs.GetString("ImageFormat", "jpeg");
             imageFormatIndex = Array.IndexOf(imageFormatExtensions, imageFormat);

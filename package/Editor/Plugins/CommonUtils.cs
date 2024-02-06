@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using UnityEditor;
 using UnityEditor.Presets;
 using UnityEngine;
 using UnityEngine.Networking;
+using Object = UnityEngine.Object;
 
 namespace Scenario
 {
@@ -183,6 +185,27 @@ namespace Scenario
             {
                 Debug.LogError("There was an issue when applying the preset. please restart the editor.");
             }
+        }
+
+        /// <summary>
+        /// Get all sub assets from an asset.
+        /// found here : https://forum.unity.com/threads/accessing-subobjects-in-an-asset.266731/#post-1762981
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="asset"></param>
+        /// <returns></returns>
+        public static List<T> GetSubObjectsOfType<T>(Object asset) where T : Object
+        {
+            Object[] objs = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
+            List<T> ofType = new List<T>();
+            foreach (Object o in objs)
+            {
+                if (o is T)
+                {
+                    ofType.Add(o as T);
+                }
+            }
+            return ofType;
         }
     }
 }

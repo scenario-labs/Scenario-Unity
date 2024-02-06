@@ -16,6 +16,7 @@ namespace Scenario
         public static Preset TexturePreset { get { return GetPreset(EditorPrefs.GetString("scenario/texturePreset")); } }
         public static Preset SpritePreset { get { return GetPreset(EditorPrefs.GetString("scenario/spritePreset")); } }
         public static bool AlwaysRemoveBackgroundForSprites { get { return alwaysRemoveBackgroundForSprites; } }
+        public static bool UsePixelsUnitsEqualToImage { get { return usePixelUnitsEqualToImage; } }
         #endregion
 
         #region Private Properties
@@ -32,6 +33,7 @@ namespace Scenario
         private Preset spritePreset;
         private string spritePresetGUID = null;
         private static bool alwaysRemoveBackgroundForSprites = true;
+        private static bool usePixelUnitsEqualToImage = true;
 
         private static readonly string[] imageFormats = { "JPEG", "PNG" };
         private static readonly string[] imageFormatExtensions = { "jpeg", "png" };
@@ -144,6 +146,7 @@ namespace Scenario
             spritePresetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(spritePreset));
 
             alwaysRemoveBackgroundForSprites = GUILayout.Toggle(alwaysRemoveBackgroundForSprites, new GUIContent("Always Remove Background For Sprites", "Will call the remove background API before downloading your images as sprite."));
+            usePixelUnitsEqualToImage = GUILayout.Toggle(usePixelUnitsEqualToImage, new GUIContent("Set Pixels Per Unit equal to image width", "If disable, the downloaded sprites will set the Pixels Per Unit settings equal to the value in the Preset. If enable, it will uses the width of the downloaded sprite as the value for Pixels per Unit."));
         }
 
         /// <summary>

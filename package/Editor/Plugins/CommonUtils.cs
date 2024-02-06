@@ -28,14 +28,14 @@ namespace Scenario
         /// <param name="pngBytes">The byte array to save as an image</param>
         /// <param name="fileName">The file name you want. If null, it will take a random number</param>
         /// <param name="importPreset">The preset you want to apply. if null, will use the default texture preset</param>
-        public static void SaveImageDataAsPNG(byte[] pngBytes, string fileName = "", Preset importPreset = null)
+        public static void SaveImageDataAsPNG(byte[] pngBytes, string fileName = "", Preset importPreset = null, Action<string> callback_OnSaved = null)
         {
             if (string.IsNullOrEmpty(fileName))
             {
                 fileName = GetRandomImageFileName();
             }
 
-            SaveImage(pngBytes, fileName, importPreset);
+            SaveImage(pngBytes, fileName, importPreset, callback_OnSaved);
         }
 
         /// <summary>
@@ -44,13 +44,13 @@ namespace Scenario
         /// <param name="pngBytes">The byte array to save as an image</param>
         /// <param name="fileName">The file name you want. If null, it will take a random number</param>
         /// <param name="importPreset">The preset you want to apply. if null, will use the default texture preset</param>
-        public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "", Preset importPreset = null)
+        public static void SaveTextureAsPNG(Texture2D texture2D, string fileName = "", Preset importPreset = null, Action<string> callback_OnSaved = null)
         {
-            SaveImageDataAsPNG(texture2D.EncodeToPNG(), fileName, importPreset);
+            SaveImageDataAsPNG(texture2D.EncodeToPNG(), fileName, importPreset, callback_OnSaved);
         }
         
         //possible improvement : Implement error handling and messages for cases where image loading or actions like "Download as Texture" fail. Inform the user of the issue and provide options for resolution or retries.
-        private static void SaveImage(byte[] pngBytes, string fileName, Preset importPreset)
+        private static void SaveImage(byte[] pngBytes, string fileName, Preset importPreset, Action<string> callback_OnSaved = null)
         {
             if (importPreset == null || string.IsNullOrEmpty(importPreset.name))
             {
@@ -69,6 +69,7 @@ namespace Scenario
                     {
                         Debug.Log("Downloaded image to: " + filePath);
                         ApplyImportSettingsFromPreset(filePath, importPreset);
+                        callback_OnSaved?.Invoke(filePath);
                     });
                 }
                 catch (Exception e)
@@ -165,6 +166,7 @@ namespace Scenario
 
         /// <summary>
         /// Use this function to apply a specific Importer Preset to an image. (for example: apply the sprite settings if the user wants to make a sprite out of a generated image)
+        /// Found here : https://discussions.unity.com/t/editor-class-quot-texture-importer-quot-apply-import-settings-question/2538/4
         /// </summary>
         /// <param name="image">The image to apply the parameters</param>
         /// <param name="preset">The preset that contains the parameter</param>
@@ -184,6 +186,29 @@ namespace Scenario
             else
             {
                 Debug.LogError("There was an issue when applying the preset. please restart the editor.");
+            }
+        }
+
+
+        /// <summary>
+        /// Use this function to modify the Pixels per Unit parameter of the texture
+        /// </summary>
+        /// <param name="filePath"></param>
+        public static void ApplyPixelsPerUnit(string filePath)
+        {
+            TextureImporter tImporter = AssetImporter.GetAtPath(filePath) as TextureImporter;
+            if (tImporter != null)
+            {
+                int width = 0;
+                int height = 0;
+                tImporter.GetSourceTextureWidthAndHeight(out width, out height);
+
+                tImporter.spritePixelsPerUnit = width;
+                AssetDatabase.ImportAsset(filePath, ImportAssetOptions.ForceUpdate);
+            }
+            else
+            {
+                Debug.LogError("There was an issue when applying the Pixels Per Unit parameter. please restart the editor.");
             }
         }
     }

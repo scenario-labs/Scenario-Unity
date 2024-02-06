@@ -86,33 +86,40 @@ namespace Scenario
                 {
                     "Download as Sprite", () =>
                     {
+                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+
+                        //What to do when file is downloaded
+                        Action<string> successAction = (filePath) =>
+                        {
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
+                            };
+
+                            if (PluginSettings.UsePixelsUnitsEqualToImage)
+                            {
+                                CommonUtils.ApplyPixelsPerUnit(filePath);
+                            }
+                        };
+
+
                         if (PluginSettings.AlwaysRemoveBackgroundForSprites)
                         {
-                            promptImages.RemoveBackground(selectedTextureIndex, imagebytes =>
+                            promptImages.RemoveBackground(selectedTextureIndex, (imageBytes) =>
                             {
-                                CommonUtils.SaveImageDataAsPNG(imagebytes, importPreset:PluginSettings.SpritePreset);
-
-                                buttonDetailPanelDrawFunction = () =>
-                                {
-                                    GUILayout.Label("The background of your image has been removed and the result has been downloaded in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
-                                };
+                                CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
                             });
 
                             buttonDetailPanelDrawFunction = () =>
                             {
-                                GUILayout.Label("Please wait... Your image is being downloaded in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                                GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
                             };
                         }
                         else
                         {
-                            CommonUtils.SaveTextureAsPNG(selectedTexture, importPreset: PluginSettings.SpritePreset);
-
-                            buttonDetailPanelDrawFunction = () =>
-                            {
-                                GUILayout.Label("Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
-                            };
+                            CommonUtils.SaveTextureAsPNG(selectedTexture, null, PluginSettings.SpritePreset, successAction);
                         }
-
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},

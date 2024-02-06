@@ -17,9 +17,6 @@ namespace Scenario
         public static string ApiKey => EditorPrefs.GetString("ApiKey");
         public static string SecretKey => EditorPrefs.GetString("SecretKey");
 
-        private readonly string[] imageFormats = { "JPEG", "PNG" };
-        private readonly string[] imageFormatExtensions = { "jpeg", "png" };
-
         private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
 
@@ -101,9 +98,7 @@ namespace Scenario
 
             GUILayout.Space(10);
 
-            GUILayout.Label("Image Settings", EditorStyles.boldLabel);
-
-            imageFormatIndex = EditorGUILayout.Popup("Image Format", imageFormatIndex, imageFormats);
+            GUILayout.Label("Download Settings", EditorStyles.boldLabel);
 
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label("Save Folder: ", GUILayout.Width(80));
@@ -140,7 +135,6 @@ namespace Scenario
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
-            EditorPrefs.SetString("ImageFormat", imageFormatExtensions[imageFormatIndex]);
 
             PlayerPrefs.SetString("EncodedAuth", EncodedAuth);
         }
@@ -150,13 +144,6 @@ namespace Scenario
             apiKey = EditorPrefs.GetString("ApiKey");
             secretKey = EditorPrefs.GetString("SecretKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
-
-            string imageFormat = EditorPrefs.GetString("ImageFormat", "jpeg");
-            imageFormatIndex = System.Array.IndexOf(imageFormatExtensions, imageFormat);
-            if (imageFormatIndex < 0)
-            {
-                imageFormatIndex = 0;
-            }
         }
     }
 }

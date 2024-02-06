@@ -7,11 +7,12 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class PromptImages : EditorWindow
     {
         public static PromptImagesUI promptImagesUI = new();
+        
         public static string downloadPath;
 
         [MenuItem("Window/Scenario/Prompt Images")]

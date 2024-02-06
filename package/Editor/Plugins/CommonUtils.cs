@@ -9,7 +9,7 @@ using UnityEditor.Presets;
 using UnityEngine;
 using UnityEngine.Networking;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     [ExecuteInEditMode]
     public static class CommonUtils

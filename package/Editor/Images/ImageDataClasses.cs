@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public static class ImageDataStorage
     {

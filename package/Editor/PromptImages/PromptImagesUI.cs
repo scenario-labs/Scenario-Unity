@@ -76,7 +76,7 @@ namespace Scenario
                 {
                     "Download as Texture",  () =>
                     {
-                        CommonUtils.SaveTextureAsPNG(selectedTexture);
+                        CommonUtils.SaveTextureAsPNG(selectedTexture, importPreset:PluginSettings.TexturePreset);
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
@@ -122,6 +122,7 @@ namespace Scenario
             {
                 Debug.Log("Clearing Prompt Images");
                 DataCache.instance.ClearAllImageData();
+                selectedTexture = null;
             }
             float previewWidth = 309f;
             float scrollViewWidth = selectedTexture != null ? position.width - previewWidth : position.width;

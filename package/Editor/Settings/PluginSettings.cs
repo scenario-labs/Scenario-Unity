@@ -25,7 +25,6 @@ namespace Scenario
         private string apiKey;
         private string secretKey;
         private string saveFolder;
-        private int imageFormatIndex;
         private static float minimumWidth = 400f;
         private static Preset texturePreset;
         private string texturePresetGUID = null;
@@ -239,13 +238,6 @@ namespace Scenario
             texturePreset = GetPreset(texturePresetGUID);
             spritePresetGUID = EditorPrefs.GetString("scenario/spritePreset");
             spritePreset = GetPreset(spritePresetGUID);
-
-            string imageFormat = EditorPrefs.GetString("ImageFormat", "jpeg");
-            imageFormatIndex = Array.IndexOf(imageFormatExtensions, imageFormat);
-            if (imageFormatIndex < 0)
-            {
-                imageFormatIndex = 0;
-            }
         }
 
     }

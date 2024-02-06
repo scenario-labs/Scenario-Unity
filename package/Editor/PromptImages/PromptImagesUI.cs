@@ -84,6 +84,47 @@ namespace Scenario
                     }
                 },
                 {
+                    "Download as Sprite", () =>
+                    {
+                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+
+                        //What to do when file is downloaded
+                        Action<string> successAction = (filePath) =>
+                        {
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
+                            };
+
+                            if (PluginSettings.UsePixelsUnitsEqualToImage)
+                            {
+                                CommonUtils.ApplyPixelsPerUnit(filePath);
+                            }
+                        };
+
+
+                        if (PluginSettings.AlwaysRemoveBackgroundForSprites)
+                        {
+                            promptImages.RemoveBackground(selectedTextureIndex, (imageBytes) =>
+                            {
+                                CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                            });
+
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
+                            };
+                        }
+                        else
+                        {
+                            CommonUtils.SaveTextureAsPNG(selectedTexture, null, PluginSettings.SpritePreset, successAction);
+                        }
+                    }
+                },
+                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
+                {
                     "Delete", () =>
                     {
                         // Delete the image at the selected index and clear the selected texture
@@ -94,19 +135,7 @@ namespace Scenario
                         };
                         selectedTexture = null;
                     }
-                },
-                {
-                    "Remove Background", () =>
-                    {
-                        promptImages.RemoveBackground(selectedTextureIndex);
-                        buttonDetailPanelDrawFunction = () =>
-                        {
-                            GUILayout.Label("Your image has been dowloaded without background in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
-                        };
-                    }
-                },
-                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))}
+                }
             };
         }
 

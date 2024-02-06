@@ -793,7 +793,7 @@ namespace Scenario
             string saveImagePath = EditorUtility.SaveFilePanel("Save image", "", "", "png,jpeg,jpg");
             if (!string.IsNullOrEmpty(saveImagePath))
             {
-                CommonUtils.SaveTextureAsPNGAtPath(canvasImage, saveImagePath);
+                CommonUtils.SaveTextureAsPNG(canvasImage, saveImagePath);
             }
         }
 

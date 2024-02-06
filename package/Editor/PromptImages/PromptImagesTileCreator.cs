@@ -53,8 +53,13 @@ namespace Scenario.Editor
 
             if(GUILayout.Button(new GUIContent("Download as Tile", "The image will be processed to remove background then downloaded as a sprite in the Scenario Settings save folder. Then a Tile asset will be created (in the same folder as your Tile Palette) out of this Sprite and added to the Tile Palette your referenced.")))
             {
-                promptImages.RemoveBackground(selectedTextureIndex);
-                //here I should get the filePath
+                promptImages.RemoveBackground(selectedTextureIndex, (imageBytes) =>
+                {
+                    CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, (filePath) =>
+                    {
+                        Debug.Log(filePath);
+                    });
+                });
             }
         }
 

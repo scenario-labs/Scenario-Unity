@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class DataCache : ScriptableSingleton<DataCache>
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class PromptImagesUI
     {

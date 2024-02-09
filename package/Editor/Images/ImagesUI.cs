@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using static Scenario.ImageDataStorage;
+using static Scenario.Editor.ImageDataStorage;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class ImagesUI
     {

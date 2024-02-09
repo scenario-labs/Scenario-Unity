@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class PromptFetcher
     {

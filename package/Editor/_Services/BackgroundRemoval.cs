@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class BackgroundRemoval
     {

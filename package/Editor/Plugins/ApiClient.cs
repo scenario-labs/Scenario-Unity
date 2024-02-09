@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using RestSharp;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public static class ApiClient
     {

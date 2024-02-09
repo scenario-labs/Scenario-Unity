@@ -2,7 +2,7 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class DataBuilder : EditorWindow
     {

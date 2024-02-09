@@ -3,9 +3,8 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using UnityEditor.Presets;
-using static Codice.Client.Common.Connection.AskCredentialsToUser;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     [InitializeOnLoad]
     public class PluginSettings : EditorWindow

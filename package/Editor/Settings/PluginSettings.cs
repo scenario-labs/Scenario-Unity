@@ -15,6 +15,7 @@ namespace Scenario
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
         public static Preset TexturePreset { get { return GetPreset(EditorPrefs.GetString("scenario/texturePreset")); } }
         public static Preset SpritePreset { get { return GetPreset(EditorPrefs.GetString("scenario/spritePreset")); } }
+        public static Preset TilePreset { get { return GetPreset(EditorPrefs.GetString("scenario/tilePreset")); } }
         public static bool AlwaysRemoveBackgroundForSprites { get { return alwaysRemoveBackgroundForSprites; } }
         public static bool UsePixelsUnitsEqualToImage { get { return usePixelUnitsEqualToImage; } }
         #endregion
@@ -26,6 +27,7 @@ namespace Scenario
         private string secretKey;
         private string saveFolder;
         private static float minimumWidth = 400f;
+
         private static Preset texturePreset;
         private string texturePresetGUID = null;
 
@@ -33,6 +35,9 @@ namespace Scenario
         private string spritePresetGUID = null;
         private static bool alwaysRemoveBackgroundForSprites = true;
         private static bool usePixelUnitsEqualToImage = true;
+
+        private Preset tilePreset;
+        private string tilePresetGUID = null;
 
         private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
@@ -77,6 +82,8 @@ namespace Scenario
             DrawTextureSettings();
             GUILayout.Space(10);
             DrawSpriteSettings();
+            GUILayout.Space(10);
+            DrawTileSettings();
             GUILayout.Space(10);
 
             if (GUILayout.Button("Save"))
@@ -139,6 +146,15 @@ namespace Scenario
             spritePresetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(spritePreset));
 
             alwaysRemoveBackgroundForSprites = GUILayout.Toggle(alwaysRemoveBackgroundForSprites, new GUIContent("Always Remove Background For Sprites", "Will call the remove background API before downloading your images as sprite."));
+            usePixelUnitsEqualToImage = GUILayout.Toggle(usePixelUnitsEqualToImage, new GUIContent("Set Pixels Per Unit equal to image width", "If disable, the downloaded sprites will set the Pixels Per Unit settings equal to the value in the Preset. If enable, it will uses the width of the downloaded sprite as the value for Pixels per Unit."));
+        }
+
+        private void DrawTileSettings()
+        {
+            GUILayout.Label("Tile Settings", EditorStyles.boldLabel);
+            tilePreset = (Preset)EditorGUILayout.ObjectField("Tile Preset", tilePreset, typeof(Preset), false);
+            tilePresetGUID = AssetDatabase.AssetPathToGUID(AssetDatabase.GetAssetPath(tilePreset));
+
             usePixelUnitsEqualToImage = GUILayout.Toggle(usePixelUnitsEqualToImage, new GUIContent("Set Pixels Per Unit equal to image width", "If disable, the downloaded sprites will set the Pixels Per Unit settings equal to the value in the Preset. If enable, it will uses the width of the downloaded sprite as the value for Pixels per Unit."));
         }
 
@@ -212,6 +228,7 @@ namespace Scenario
         {
             EditorPrefs.SetString("scenario/texturePreset", texturePresetGUID);
             EditorPrefs.SetString("scenario/spritePreset", spritePresetGUID);
+            EditorPrefs.SetString("scenario/tilePreset", tilePresetGUID);
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
@@ -229,15 +246,24 @@ namespace Scenario
             {
                 EditorPrefs.SetString("scenario/spritePreset", "d87ceacdb68f56745951dadf104120b1"); //change this value in case the meta file change
             }
+            if (!EditorPrefs.HasKey("scenario/tilePreset"))
+            {
+                EditorPrefs.SetString("scenario/tilePreset", "6d537ab5bf7649b44973f061c34b6151"); //change this value in case the meta file change
+            }
 
             //load values
             apiKey = EditorPrefs.GetString("ApiKey");
             secretKey = EditorPrefs.GetString("SecretKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
+
             texturePresetGUID = EditorPrefs.GetString("scenario/texturePreset");
             texturePreset = GetPreset(texturePresetGUID);
+
             spritePresetGUID = EditorPrefs.GetString("scenario/spritePreset");
             spritePreset = GetPreset(spritePresetGUID);
+
+            tilePresetGUID = EditorPrefs.GetString("scenario/tilePreset");
+            tilePreset = GetPreset(tilePresetGUID);
         }
 
     }

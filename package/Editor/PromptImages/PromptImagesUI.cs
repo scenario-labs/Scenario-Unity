@@ -1,3 +1,4 @@
+using Scenario.Editor;
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -26,6 +27,7 @@ namespace Scenario.Editor
         /// Contain the draw function of the current Detail Panel according to the button clicked
         /// </summary>
         private Action buttonDetailPanelDrawFunction = null;
+
 
         #region Initialization
 
@@ -120,6 +122,14 @@ namespace Scenario.Editor
                         {
                             CommonUtils.SaveTextureAsPNG(selectedTexture, null, PluginSettings.SpritePreset, successAction);
                         }
+                    }
+                },
+                {
+                    "Download as a Tile", () =>
+                    {
+                        /// Contains the side window when the user want to download an image as a tile
+                        PromptImagesTileCreator tileCreator = new(promptImages, selectedTextureIndex);
+                        buttonDetailPanelDrawFunction = tileCreator.OnGUI;
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, DataCache.instance.GetImageDataAtIndex(selectedTextureIndex))},
@@ -219,8 +229,8 @@ namespace Scenario.Editor
         /// <param name="previewHeight">The height of the scrollable area.</param>
         private void DrawScrollableArea(float previewWidth, float previewHeight)
         {
-            var scrollViewRect = new Rect(0, 30, previewWidth, previewHeight);
-            var viewRect = new Rect(0, 0, previewWidth - 20, previewHeight + 150);
+            var scrollViewRect = new Rect(0, 30, previewWidth + 20, previewHeight);
+            var viewRect = new Rect(0, 0, previewWidth, previewHeight + 150);
 
             selectedTextureSectionScrollPosition = GUI.BeginScrollView(scrollViewRect, selectedTextureSectionScrollPosition, viewRect);
             {

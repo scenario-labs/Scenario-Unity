@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
@@ -8,6 +9,7 @@ using UnityEditor;
 using UnityEditor.Presets;
 using UnityEngine;
 using UnityEngine.Networking;
+using Object = UnityEngine.Object;
 
 namespace Scenario.Editor
 {
@@ -48,7 +50,7 @@ namespace Scenario.Editor
         {
             SaveImageDataAsPNG(texture2D.EncodeToPNG(), fileName, importPreset, callback_OnSaved);
         }
-        
+
         //possible improvement : Implement error handling and messages for cases where image loading or actions like "Download as Texture" fail. Inform the user of the issue and provide options for resolution or retries.
         private static void SaveImage(byte[] pngBytes, string fileName, Preset importPreset, Action<string> callback_OnSaved = null)
         {
@@ -189,6 +191,26 @@ namespace Scenario.Editor
             }
         }
 
+        /// <summary>
+        /// Get all sub assets from an asset.
+        /// found here : https://forum.unity.com/threads/accessing-subobjects-in-an-asset.266731/#post-1762981
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="asset"></param>
+        /// <returns></returns>
+        public static List<T> GetSubObjectsOfType<T>(Object asset) where T : Object
+        {
+            Object[] objs = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
+            List<T> ofType = new List<T>();
+            foreach (Object o in objs)
+            {
+                if (o is T)
+                {
+                    ofType.Add(o as T);
+                }
+            }
+            return ofType;
+        }
 
         /// <summary>
         /// Use this function to modify the Pixels per Unit parameter of the texture

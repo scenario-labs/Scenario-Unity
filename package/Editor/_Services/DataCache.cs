@@ -21,6 +21,11 @@ namespace Scenario.Editor
             return imageDataList[index];
         }
 
+        public List<ImageDataStorage.ImageData> GetImageData()
+        {
+            return imageDataList;
+        }
+
         public void AddImageDataInFront(ImageDataStorage.ImageData imageData)
         {
             //Debug.Log($"add image data in front {imageData}");
@@ -73,6 +78,11 @@ namespace Scenario.Editor
             itm.Id = id;
             itm.Url = url;
             itm.CreatedAt = createdAt;
+            CommonUtils.FetchTextureFromURL(itm.Url, texture =>
+            {
+                itm.texture = texture;
+                RemoveImageDataAtIndex(GetImageDataIndexByUrl(itm.Url));
+            });
         }
         
         public void ReserveSpaceForImageDatas(int numImages, string inferenceId, string promptinputText,

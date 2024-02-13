@@ -80,34 +80,23 @@ namespace Scenario.Editor
                 }
 
                 imageDataList.AddRange(imageDataDownloaded);
-                FetchPageTextures(imageDataDownloaded, callback_OnDataGet);
+                foreach (ImageDataStorage.ImageData imageData in imageDataList)
+                {
+                    FetchTextureFor(imageData);
+                }
             });
         }
 
         /// <summary>
-        /// List of
+        /// Fetch a texture for a specific ImageData
         /// </summary>
-        /// <param name="_images">List of image to get the texture of</param>
-        private static void FetchPageTextures(List<ImageDataStorage.ImageData> _images, Action callback_OnTextureGet = null)
+        private static void FetchTextureFor(ImageDataStorage.ImageData _image, Action callback_OnTextureGet = null)
         {
-            var tempTextures = new Texture2D[_images.Count];
-            int loadedCount = 0;
-
-            for (int i = 0; i < _images.Count; i++)
+            CommonUtils.FetchTextureFromURL(_image.Url, texture =>
             {
-                int index = i;
-                CommonUtils.FetchTextureFromURL(_images[index].Url, texture =>
-                {
-                    tempTextures[index] = texture;
-                    loadedCount++;
-
-                    if (loadedCount == _images.Count)
-                    {
-                        ImagesUI.textures.AddRange(tempTextures);
-                        callback_OnTextureGet?.Invoke();
-                    }
-                });
-            }
+                _image.texture = texture;
+                callback_OnTextureGet?.Invoke();
+            });
         }
 
         public void DeleteImageAtIndex(int selectedTextureIndex)

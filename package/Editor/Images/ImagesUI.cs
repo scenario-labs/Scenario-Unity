@@ -215,7 +215,7 @@ namespace Scenario.Editor
         /// <param name="_leftPosition">The position, on X axe, where the selected texture section should begin to draw.</param>
         private void DrawSelectedTextureSection(Rect _parentDimension, float _sectionWidth, float _leftPosition)
         {
-            if (selectedTexture == null || textures.Count <= 0)
+            if (selectedTexture == null)
                 return;
 
             GUILayout.BeginArea(new Rect(_leftPosition, 20, _sectionWidth, _parentDimension.height - 20));
@@ -372,15 +372,28 @@ namespace Scenario.Editor
         {
             totalHeight = 0;
 
-            for (int i = 0; i < Images.imageDataList.Count; i++)
+            //Create a list of Image Data
+            List<ImageDataStorage.ImageData> imagesToDisplay = new List<ImageDataStorage.ImageData>();
+
+            //Add all the current image that are in the DataCache (the ones that the user generated this session)
+            imagesToDisplay.AddRange(DataCache.instance.GetImageData());
+
+            //add everything from the cloud that is not already in the DataCache
+            foreach(ImageDataStorage.ImageData imageData in Images.imageDataList)
+            {
+                if(!imagesToDisplay.Exists(x => x.Id == imageData.Id))
+                {
+                    imagesToDisplay.Add(imageData);
+                }
+            }
+
+            for (int i = 0; i < imagesToDisplay.Count; i++)
             {
                 int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
                 int colIndex = i % itemsPerRow;
 
                 Rect boxRect = CalculateBoxRect(boxWidth, boxHeight, rowIndex, colIndex);
-                Texture2D texture = null;
-                if (textures.Count > i && textures[i] != null)
-                    texture = textures[i];
+                Texture2D texture = imagesToDisplay[i].texture;
 
                 totalHeight = boxRect.y + boxRect.height;
 
@@ -465,7 +478,7 @@ namespace Scenario.Editor
                 alignment = TextAnchor.MiddleCenter
             };
             GUI.color = Color.white;
-            GUI.Label(boxRect, "Loading...", style);
+            GUI.Label(boxRect, $"Loading...", style);
         }
 
         public void CloseSelectedTextureSection()

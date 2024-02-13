@@ -37,7 +37,7 @@ namespace Scenario.Editor
                     "Default",
                     seedinputText);
                 
-                PromptImages.ShowWindow();
+                Images.ShowWindow();
 
                 GetInferenceStatus(inferenceId, modelId);
             });
@@ -89,8 +89,6 @@ namespace Scenario.Editor
                             img.Url,
                             inferenceStatusRoot.inference.createdAt);
                     }
-                    
-                    PromptImages.ShowWindow();
                 }
             });
         }

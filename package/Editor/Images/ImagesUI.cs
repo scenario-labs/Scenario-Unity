@@ -1,8 +1,5 @@
-using Scenario.Editor;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting.YamlDotNet.Core;
 using UnityEditor;
 using UnityEngine;
 
@@ -20,7 +17,6 @@ namespace Scenario.Editor
         internal Images images;
 
         private int selectedTextureIndex = 0;
-        private bool isModalOpen = false;
 
         // Dictionary containing button labels and associated actions
         private Dictionary<string, Action> buttonActions = new Dictionary<string, Action>();
@@ -29,6 +25,11 @@ namespace Scenario.Editor
         /// Contain the draw function of the current Detail Panel according to the button clicked
         /// </summary>
         private Action buttonDetailPanelDrawFunction = null;
+
+        /// <summary>
+        /// Usefull to show a small message when the images are loading
+        /// </summary>
+        private bool isLoading = false;
 
 
         #region Initialization
@@ -134,8 +135,8 @@ namespace Scenario.Editor
                         //buttonDetailPanelDrawFunction = tileCreator.OnGUI;
                     }
                 },
-                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images._imageDataList[selectedTextureIndex])},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, Images._imageDataList[selectedTextureIndex])},
+                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images.imageDataList[selectedTextureIndex])},
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, Images.imageDataList[selectedTextureIndex])},
                 {
                     "Delete", () =>
                     {
@@ -163,26 +164,43 @@ namespace Scenario.Editor
             float boxWidth = (imageListWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
             float boxHeight = boxWidth;
 
-            int numRows = Mathf.CeilToInt((float)Images._imageDataList.Count / itemsPerRow);
+            int numRows = Mathf.CeilToInt((float)Images.imageDataList.Count / itemsPerRow);
 
             float scrollViewHeight = (boxHeight + padding) * numRows;
-            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height - 70);
-            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight);
+            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height);
+            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight + 50);
+            float totalHeight = 0;
 
-            scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
+            if (textures.Count != Images.imageDataList.Count || textures.Count == 0 || isLoading)
             {
-                DrawTextureBoxes(boxWidth, boxHeight);
+                ShowLoadingPage();
             }
-            GUI.EndScrollView();
+            else
+            {
+                scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
+                {
+                    DrawTextureBoxes(boxWidth, boxHeight, out totalHeight);
+                }
+                if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
+                {
+                    isLoading = true;
+                    Images.GetInferencesData( () =>
+                    {
+                        isLoading = false;
+                        images.Repaint();
+                    });
+                }
+                GUI.EndScrollView();
+            }
 
             GUILayout.FlexibleSpace();
 
-            if (isModalOpen)
-            {
-                DrawZoomedImage(new Rect(0, 0, _dimension.width, _dimension.height));
-            }
-
             DrawSelectedTextureSection(_dimension, previewWidth, imageListWidth);
+        }
+
+        private void ShowLoadingPage()
+        {
+            CustomStyle.Label("Loading images...");
         }
 
         /// <summary>
@@ -196,7 +214,6 @@ namespace Scenario.Editor
         {
             if (selectedTexture == null || textures.Count <= 0)
                 return;
-
             GUILayout.BeginArea(new Rect(_leftPosition, 20, _sectionWidth, _parentDimension.height - 20));
             {
                 CustomStyle.Space(5);
@@ -239,12 +256,13 @@ namespace Scenario.Editor
                         DrawButtons();
                         CustomStyle.Space(10);
                         DrawImageData();
+                        
                     }
                 }
                 GUILayout.EndVertical();
                 CustomStyle.Space(10);
             }
-            GUI.EndScrollView();
+            GUILayout.EndScrollView();
         }
 
         /// <summary>
@@ -255,14 +273,13 @@ namespace Scenario.Editor
         private void DrawSelectedImage(float previewWidth)
         {
             float aspectRatio = (float)selectedTexture.width / selectedTexture.height;
-            float paddedPreviewWidth = previewWidth - 2 * padding;
+            float paddedPreviewWidth = previewWidth - 4 * padding;
             float paddedPreviewHeight = paddedPreviewWidth / aspectRatio;
 
             GUILayout.BeginHorizontal();
             {
                 CustomStyle.Space(padding);
-                GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth - 40),
-                GUILayout.Height(paddedPreviewHeight));
+                GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth), GUILayout.Height(paddedPreviewHeight));
                 CustomStyle.Space(padding);
             }
             GUILayout.EndHorizontal();
@@ -297,7 +314,7 @@ namespace Scenario.Editor
         /// </summary>
         private void DrawImageData()
         {
-            var currentImageData = Images._imageDataList[selectedTextureIndex];
+            var currentImageData = Images.imageDataList[selectedTextureIndex];
             GUILayout.BeginVertical();
             {
                 CustomStyle.Label("Prompt:");
@@ -337,75 +354,28 @@ namespace Scenario.Editor
             {
                 buttonDetailPanelDrawFunction = null;
             }
-        }
-
-
-        /// <summary>
-        /// Draws a modal displaying the selected image in a bigger size with the option to close it when clicking outside the image.
-        /// This function renders a modal pop-up for a selected image and allows it to be closed when clicking outside the image boundaries.
-        /// </summary>
-        /// <param name="position">The position and dimensions of the UI element.</param>
-        private void DrawZoomedImage(Rect position)
-        {
-            // Determine image dimensions at 2x scale
-            float imageWidth = selectedTexture.width * 2;
-            float imageHeight = selectedTexture.height * 2;
-
-            // If the scaled image exceeds the window dimensions, adjust it
-            if (imageWidth > position.width)
-            {
-                float ratio = position.width / imageWidth;
-                imageWidth = position.width;
-                imageHeight *= ratio;
-            }
-
-            if (imageHeight > position.height)
-            {
-                float ratio = position.height / imageHeight;
-                imageHeight = position.height;
-                imageWidth *= ratio;
-            }
-
-            // Compute the position to center the image in the window
-            float imageX = (position.width - imageWidth) / 2;
-            float imageY = (position.height - imageHeight) / 2;
-
-            // Draw the image
-            GUI.DrawTexture(new Rect(imageX, imageY, imageWidth, imageHeight), selectedTexture, ScaleMode.ScaleToFit);
-
-            // Close the modal if clicked outside the image
-            if (Event.current.type == EventType.MouseDown &&
-                !new Rect(imageX, imageY, imageWidth, imageHeight).Contains(Event.current.mousePosition))
-            {
-                isModalOpen = false;
-                Event.current.Use();
-            }
+            
         }
 
         /// <summary>
-        /// Draws a grid of texture boxes, each containing an image or loading indicator, and handles interactions like double-clicking.
-        /// This function renders a grid of image boxes and handles interactions such as double-clicking an image for further details.
+        /// Draws a grid of texture boxes, each containing an image or loading indicator, and handles interactions.
+        /// This function renders a grid of image boxes and handles interactions .
         /// Possible improvement : Provide visual feedback when images are being loaded. For example, display a loading spinner or progress bar within the texture boxes while images are being fetched or loaded asynchronously.
         /// </summary>
         /// <param name="boxWidth">The width of each texture box.</param>
         /// <param name="boxHeight">The height of each texture box.</param>
-        private void DrawTextureBoxes(float boxWidth, float boxHeight)
+        private void DrawTextureBoxes(float boxWidth, float boxHeight, out float totalHeight)
         {
-            if (textures.Count != Images._imageDataList.Count || textures.Count == 0)
-            {
-                CustomStyle.Label("Loading images...");
-                return;
-            }
+            totalHeight = 0;
 
-            Debug.Log($"Images._imageDataList.Count {Images._imageDataList.Count}");
-            Debug.Log($"textures.Count {textures.Count}");
-            for (int i = 0; i < Images._imageDataList.Count; i++)
+            for (int i = 0; i < Images.imageDataList.Count; i++)
             {
                 int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
                 int colIndex = i % itemsPerRow;
 
                 Rect boxRect = CalculateBoxRect(boxWidth, boxHeight, rowIndex, colIndex);
                 Texture2D texture = textures[i];
+                totalHeight = boxRect.y + boxRect.height;
 
                 if (texture != null)
                 {
@@ -442,45 +412,17 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Manages interactions with texture boxes, including detecting double-click events to trigger specific actions or selecting images when clicked.
+        /// Manages interactions with texture boxes, including selecting images when clicked.
         /// </summary>
         /// <param name="boxRect">The Rect representing the boundaries of the texture box.</param>
         /// <param name="texture">The Texture2D associated with the texture box.</param>
         /// <param name="index">The index of the texture box in the grid.</param>
         private void HandleImageClickEvents(Rect boxRect, Texture2D texture, int index)
         {
-            if (IsDoubleClick(boxRect))
-            {
-                HandleDoubleClickAction(texture, index);
-            }
-            else if (GUI.Button(boxRect, ""))
+            if (GUI.Button(boxRect, ""))
             {
                 HandleImageSelection(texture, index);
             }
-        }
-
-        /// <summary>
-        /// Determines whether a double-click event has occurred within the boundaries of a texture box, helping identify when to activate the enlarged view of an image.
-        /// </summary>
-        /// <param name="boxRect">The Rect representing the boundaries of the texture box.</param>
-        /// <returns>True if a double-click event occurred within the texture box; otherwise, false.</returns>
-        private bool IsDoubleClick(Rect boxRect)
-        {
-            return Event.current.type == EventType.MouseDown &&
-                   Event.current.clickCount == 2 &&
-                   boxRect.Contains(Event.current.mousePosition);
-        }
-
-        /// <summary>
-        /// Responds to a double-click event by displaying the selected image in an enlarged modal view and marking the modal as open.
-        /// </summary>
-        /// <param name="texture">The Texture2D to display in the enlarged view.</param>
-        /// <param name="index">The index of the selected image in the grid.</param>
-        private void HandleDoubleClickAction(Texture2D texture, int index)
-        {
-            selectedTexture = texture;
-            isModalOpen = true;
-            Event.current.Use();
         }
 
         /// <summary>

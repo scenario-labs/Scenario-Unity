@@ -11,11 +11,19 @@ namespace Scenario.Editor
     {
         private static readonly ImagesUI ImagesUI = new();
     
-        internal static List<ImageDataStorage.ImageData> _imageDataList = new();
+        internal static List<ImageDataStorage.ImageData> imageDataList = new();
+
+        /// <summary>
+        /// Contains a token that is useful to get the next page of inferences
+        /// </summary>
+        private static string lastPageToken = string.Empty;
 
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
+            ImagesUI.textures.Clear();
             GetInferencesData();
         
             var images = (Images)GetWindow(typeof(Images));
@@ -32,25 +40,30 @@ namespace Scenario.Editor
             ImagesUI.CloseSelectedTextureSection();
         }
     
-        private static void GetInferencesData() //why get inferences instead of getting the assets ??
+        public static void GetInferencesData(Action callback_OnDataGet = null) //why get inferences instead of getting the assets ??
         {
-            ApiClient.RestGet($"inferences", response =>
+            string request = $"inferences";
+            if (!string.IsNullOrEmpty(lastPageToken))
+                request = $"inferences?paginationToken={lastPageToken}";
+
+            ApiClient.RestGet(request, response =>
             {
                 var inferencesResponse = JsonConvert.DeserializeObject<InferencesResponse>(response.Content);
+
+                lastPageToken = inferencesResponse.nextPaginationToken;
 
                 if (inferencesResponse.inferences[0].status == "failed")
                 {
                     Debug.LogError("Api Response: Status == failed, Try Again..");
                 }
 
-                _imageDataList.Clear();
-                ImagesUI.textures.Clear();
+                List<ImageDataStorage.ImageData> imageDataDownloaded = new List<ImageDataStorage.ImageData>();
                 
                 foreach (var inference in inferencesResponse.inferences)
                 {
                     foreach (var image in inference.images)
                     {
-                        _imageDataList.Add(new ImageDataStorage.ImageData
+                        imageDataDownloaded.Add(new ImageDataStorage.ImageData
                         {
                             Id = image.id,
                             Url = image.url,
@@ -66,28 +79,32 @@ namespace Scenario.Editor
                     }
                 }
 
-                FetchPageTextures();
+                imageDataList.AddRange(imageDataDownloaded);
+                FetchPageTextures(imageDataDownloaded, callback_OnDataGet);
             });
         }
 
-        private static void FetchPageTextures()
+        /// <summary>
+        /// List of
+        /// </summary>
+        /// <param name="_images">List of image to get the texture of</param>
+        private static void FetchPageTextures(List<ImageDataStorage.ImageData> _images, Action callback_OnTextureGet = null)
         {
-            List<ImageDataStorage.ImageData> images = Images._imageDataList.OrderByDescending(x => x.CreatedAt).ToList();
-            var tempTextures = new Texture2D[images.Count];
+            var tempTextures = new Texture2D[_images.Count];
             int loadedCount = 0;
 
-            for (int i = 0; i < images.Count; i++)
+            for (int i = 0; i < _images.Count; i++)
             {
                 int index = i;
-                CommonUtils.FetchTextureFromURL(images[index].Url, texture =>
+                CommonUtils.FetchTextureFromURL(_images[index].Url, texture =>
                 {
                     tempTextures[index] = texture;
                     loadedCount++;
 
-                    if (loadedCount == images.Count)
+                    if (loadedCount == _images.Count)
                     {
-                        ImagesUI.textures.Clear();
                         ImagesUI.textures.AddRange(tempTextures);
+                        callback_OnTextureGet?.Invoke();
                     }
                 });
             }
@@ -97,9 +114,9 @@ namespace Scenario.Editor
         {
             ImagesUI.textures.RemoveAt(selectedTextureIndex);
 
-            string imageId = _imageDataList[selectedTextureIndex].Id;
+            string imageId = imageDataList[selectedTextureIndex].Id;
             string modelId = EditorPrefs.GetString("SelectedModelId", "");
-            string inferenceId = _imageDataList[selectedTextureIndex].InferenceId;
+            string inferenceId = imageDataList[selectedTextureIndex].InferenceId;
 
             Debug.Log("Requesting image deletion please wait..");
         

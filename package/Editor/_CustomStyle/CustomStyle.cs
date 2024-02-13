@@ -69,7 +69,7 @@ namespace Scenario.Editor
             bool bold = false,
             params GUILayoutOption[] layoutOptions)
         {
-            var style = new GUIStyle((bold)?EditorStyles.boldLabel:EditorStyles.label)
+            var style = new GUIStyle((bold) ? EditorStyles.boldLabel : EditorStyles.label)
             {
                 normal =
                 {
@@ -79,6 +79,7 @@ namespace Scenario.Editor
                 alignment = alignment,
                 fixedWidth = width,
                 fixedHeight = height,
+                wordWrap = true
             };
         
             GUILayout.Label(text, style, layoutOptions);

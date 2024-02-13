@@ -98,28 +98,29 @@ namespace Scenario.Editor
             });
         }
 
-        public void DeleteImageAtIndex(int selectedTextureIndex)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_id">The id of the image you want to delete</param>
+        public void DeleteImage(string _id)
         {
-            string imageId = imageDataList[selectedTextureIndex].Id;
-            string modelId = EditorPrefs.GetString("SelectedModelId", "");
-            string inferenceId = imageDataList[selectedTextureIndex].InferenceId;
+            ImageDataStorage.ImageData imageData = GetImageDataById(_id);
+            string modelId = EditorPrefs.GetString("SelectedModelId");
 
-            Debug.Log("Requesting image deletion please wait..");
-        
-            string url = $"models/{modelId}/inferences/{inferenceId}/images/{imageId}";
-        
+            string url = $"models/{modelId}/inferences/{imageData.InferenceId}/images/{imageData.Id}";
             ApiClient.RestDelete(url,null);
-
+            imageDataList.Remove(imageData);
             Repaint();
         }
 
-        /// <summary>
-        /// Find the selected texture according to the current user selection and call the API to remove its background
-        /// </summary>
-        /// <param name="selectedTextureIndex"></param>
-        /// <param name="callback_OnBackgroundRemoved">Returns a callback with the byte array corresponding of the image (withouth background) data</param>
-        internal void RemoveBackground(int selectedTextureIndex, Action<byte[]> callback_OnBackgroundRemoved)
+        public static ImageDataStorage.ImageData GetImageDataById(string _id)
         {
+            return imageDataList.Find(x => x.Id == _id);
+        }
+
+        public static Texture2D GetTextureByImageId(string _id)
+        {
+            return imageDataList.Find(x => x.Id == _id).texture;
         }
 
     }

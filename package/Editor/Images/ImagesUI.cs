@@ -15,7 +15,10 @@ namespace Scenario.Editor
 
         internal Images images;
 
-        private int selectedTextureIndex = 0;
+        /// <summary>
+        /// The id of the image that is currently selected
+        /// </summary>
+        private string selectedImageId = string.Empty;
 
         // Dictionary containing button labels and associated actions
         private Dictionary<string, Action> buttonActions = new Dictionary<string, Action>();
@@ -109,7 +112,7 @@ namespace Scenario.Editor
 
                         if (PluginSettings.AlwaysRemoveBackgroundForSprites)
                         {
-                            BackgroundRemoval.RemoveBackground(Images.imageDataList[selectedTextureIndex].texture, imageBytes =>
+                            BackgroundRemoval.RemoveBackground(Images.GetTextureByImageId(selectedImageId), imageBytes =>
                             {
                                 CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
                             });
@@ -133,13 +136,13 @@ namespace Scenario.Editor
                         //buttonDetailPanelDrawFunction = tileCreator.OnGUI;
                     }
                 },
-                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images.imageDataList[selectedTextureIndex])},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, Images.imageDataList[selectedTextureIndex])},
+                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images.GetImageDataById(selectedImageId))},
+                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, Images.GetImageDataById(selectedImageId))},
                 {
                     "Delete", () =>
                     {
                         // Delete the image at the selected index and clear the selected texture
-                        images.DeleteImageAtIndex(selectedTextureIndex);
+                        images.DeleteImage(selectedImageId);
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been deleted.");
@@ -316,7 +319,10 @@ namespace Scenario.Editor
         /// </summary>
         private void DrawImageData()
         {
-            var currentImageData = Images.imageDataList[selectedTextureIndex];
+            var currentImageData = Images.GetImageDataById(selectedImageId);
+            if (currentImageData == null)
+                return;
+
             GUILayout.BeginVertical();
             {
                 CustomStyle.Label("Prompt:");
@@ -397,7 +403,7 @@ namespace Scenario.Editor
 
                 if (texture != null)
                 {
-                    HandleImageClickEvents(boxRect, texture, i);
+                    HandleImageClickEvents(boxRect, texture, imagesToDisplay[i].Id);
                     RenderTextureBox(boxRect, texture);
                 }
                 else
@@ -434,25 +440,15 @@ namespace Scenario.Editor
         /// </summary>
         /// <param name="boxRect">The Rect representing the boundaries of the texture box.</param>
         /// <param name="texture">The Texture2D associated with the texture box.</param>
-        /// <param name="index">The index of the texture box in the grid.</param>
-        private void HandleImageClickEvents(Rect boxRect, Texture2D texture, int index)
+        /// <param name="_id">The id of the ImageData for which the texture is linked.</param>
+        private void HandleImageClickEvents(Rect boxRect, Texture2D texture, string _id)
         {
             if (GUI.Button(boxRect, ""))
             {
-                HandleImageSelection(texture, index);
+                selectedTexture = texture;
+                selectedImageId = _id;
+                buttonDetailPanelDrawFunction = null; //reset the button detail panel when you select a new image
             }
-        }
-
-        /// <summary>
-        /// Handles the selection of a texture box, setting the selected texture and index when clicked.
-        /// </summary>
-        /// <param name="texture">The Texture2D associated with the selected texture box.</param>
-        /// <param name="index">The index of the selected texture box in the grid.</param>
-        private void HandleImageSelection(Texture2D texture, int index)
-        {
-            selectedTexture = texture;
-            selectedTextureIndex = index;
-            buttonDetailPanelDrawFunction = null; //reset the button detail panel when you select a new image
         }
 
         /// <summary>

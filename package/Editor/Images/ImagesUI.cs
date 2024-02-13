@@ -171,7 +171,7 @@ namespace Scenario.Editor
             var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight + 50);
             float totalHeight = 0;
 
-            if (textures.Count != Images.imageDataList.Count || textures.Count == 0 || isLoading)
+            if (Images.imageDataList.Count == 0)
             {
                 ShowLoadingPage();
             }
@@ -181,14 +181,17 @@ namespace Scenario.Editor
                 {
                     DrawTextureBoxes(boxWidth, boxHeight, out totalHeight);
                 }
-                if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
+                if(!isLoading)
                 {
-                    isLoading = true;
-                    Images.GetInferencesData( () =>
+                    if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
                     {
-                        isLoading = false;
-                        images.Repaint();
-                    });
+                        isLoading = true;
+                        Images.GetInferencesData( () =>
+                        {
+                            isLoading = false;
+                            images.Repaint();
+                        });
+                    }
                 }
                 GUI.EndScrollView();
             }
@@ -214,6 +217,7 @@ namespace Scenario.Editor
         {
             if (selectedTexture == null || textures.Count <= 0)
                 return;
+
             GUILayout.BeginArea(new Rect(_leftPosition, 20, _sectionWidth, _parentDimension.height - 20));
             {
                 CustomStyle.Space(5);
@@ -374,7 +378,10 @@ namespace Scenario.Editor
                 int colIndex = i % itemsPerRow;
 
                 Rect boxRect = CalculateBoxRect(boxWidth, boxHeight, rowIndex, colIndex);
-                Texture2D texture = textures[i];
+                Texture2D texture = null;
+                if (textures.Count > i && textures[i] != null)
+                    texture = textures[i];
+
                 totalHeight = boxRect.y + boxRect.height;
 
                 if (texture != null)

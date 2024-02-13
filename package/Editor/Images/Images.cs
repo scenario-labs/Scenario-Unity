@@ -140,13 +140,5 @@ namespace Scenario.Editor
             });
         }
 
-        /// <summary>
-        /// When Unity reset the GUI (after compiling for example), the link between this script and the GUI can be broken, so I update it
-        /// </summary>
-        private void OnValidate()
-        {
-            ShowWindow();
-        }
-
     }
 }

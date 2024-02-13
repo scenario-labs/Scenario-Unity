@@ -38,13 +38,6 @@ namespace Scenario.Editor
             Repaint();
         }
 
-        public void CloseSelectedTextureSection()
-        {
-            //ClearData();
-            promptImagesUI.selectedTexture = null;
-            promptImagesUI.selectedImageId = null;
-        }
-
         private static async void LoadTexture(string url, Action<Texture2D> result)
         {
             using UnityWebRequest www = UnityWebRequestTexture.GetTexture(url);
@@ -137,13 +130,9 @@ namespace Scenario.Editor
 
         private void OnDestroy()
         {
-            CloseSelectedTextureSection();
+            promptImagesUI.CloseSelectedTextureSection();
         }
 
-        /*private void ClearData()
-        {
-            DataCache.instance.ClearAllImageData();
-        }*/
 
         /// <summary>
         /// Find the selected texture according to the current user selection and call the API to remove its background

@@ -211,7 +211,7 @@ namespace Scenario.Editor
                     GUILayout.FlexibleSpace();
                     if (GUILayout.Button("Close", EditorStyles.miniButtonRight, GUILayout.Width(50)))
                     {
-                        promptImages.CloseSelectedTextureSection();
+                        CloseSelectedTextureSection();
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -517,6 +517,14 @@ namespace Scenario.Editor
             GUI.color = Color.white;
             GUI.Label(boxRect, "Loading...", style);
         }
+
+        public void CloseSelectedTextureSection()
+        {
+            //ClearData();
+            selectedTexture = null;
+            selectedImageId = null;
+        }
+
 
         #endregion
 

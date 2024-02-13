@@ -7,6 +7,9 @@ using UnityEngine;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// Store the cache of images that has been newly generated
+    /// </summary>
     public class DataCache : ScriptableSingleton<DataCache>
     {
         #region ImageDataList

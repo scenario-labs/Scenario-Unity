@@ -70,7 +70,7 @@ namespace Scenario.Editor
         public string status { get; set; }
         public List<Image> images { get; set; }
         public int imagesNumber { get; set; }
-        public int progress { get; set; }
+        public float progress { get; set; }
         public string displayPrompt { get; set; }
     }
 

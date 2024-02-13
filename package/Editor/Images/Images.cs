@@ -23,7 +23,6 @@ namespace Scenario.Editor
         {
             lastPageToken = string.Empty;
             imageDataList.Clear();
-            ImagesUI.textures.Clear();
             GetInferencesData();
         
             var images = (Images)GetWindow(typeof(Images));
@@ -101,8 +100,6 @@ namespace Scenario.Editor
 
         public void DeleteImageAtIndex(int selectedTextureIndex)
         {
-            ImagesUI.textures.RemoveAt(selectedTextureIndex);
-
             string imageId = imageDataList[selectedTextureIndex].Id;
             string modelId = EditorPrefs.GetString("SelectedModelId", "");
             string inferenceId = imageDataList[selectedTextureIndex].InferenceId;
@@ -123,10 +120,6 @@ namespace Scenario.Editor
         /// <param name="callback_OnBackgroundRemoved">Returns a callback with the byte array corresponding of the image (withouth background) data</param>
         internal void RemoveBackground(int selectedTextureIndex, Action<byte[]> callback_OnBackgroundRemoved)
         {
-            BackgroundRemoval.RemoveBackground(ImagesUI.textures[selectedTextureIndex], imageBytes =>
-            {
-                callback_OnBackgroundRemoved?.Invoke(imageBytes);
-            });
         }
 
     }

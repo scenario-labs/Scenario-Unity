@@ -12,7 +12,6 @@ namespace Scenario.Editor
         public Vector2 scrollPosition = Vector2.zero;
         public Vector2 selectedTextureSectionScrollPosition = Vector2.zero;
         public Texture2D selectedTexture = null;
-        public List<Texture2D> textures = new List<Texture2D>();
 
         internal Images images;
 
@@ -108,10 +107,9 @@ namespace Scenario.Editor
                             }
                         };
 
-
                         if (PluginSettings.AlwaysRemoveBackgroundForSprites)
                         {
-                            images.RemoveBackground(selectedTextureIndex, (imageBytes) =>
+                            BackgroundRemoval.RemoveBackground(Images.imageDataList[selectedTextureIndex].texture, imageBytes =>
                             {
                                 CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
                             });

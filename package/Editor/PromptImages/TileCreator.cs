@@ -1,33 +1,26 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
-using UnityEditor.Presets;
 using UnityEngine;
 using UnityEngine.Tilemaps;
-using UnityEngine.UIElements;
-using static log4net.Appender.ColoredConsoleAppender;
 using static UnityEngine.GridLayout;
 
 namespace Scenario.Editor
 {
-    public class PromptImagesTileCreator
+    public class TileCreator
     {
         private GameObject tilePalette;
         private Grid grid;
         private GridPalette gridPalette;
         private CellLayout layout;
 
-        private PromptImages promptImages;
         private int selectedTextureIndex;
 
         private bool isProcessing = false;
 
 
-        public PromptImagesTileCreator(PromptImages _promptImages, int _selectedTextureIndex)
+        public TileCreator(int _selectedTextureIndex)
         {
-            promptImages = _promptImages;
             selectedTextureIndex = _selectedTextureIndex;
         }
 
@@ -60,7 +53,8 @@ namespace Scenario.Editor
                 if(GUILayout.Button(new GUIContent("Download as Tile", "The image will be processed to remove background then downloaded as a sprite in the Scenario Settings save folder. Then a Tile asset will be created (in the same folder as your Tile Palette) out of this Sprite and added to the Tile Palette your referenced.")))
                 {
                     isProcessing = true;
-                    promptImages.RemoveBackground(selectedTextureIndex, (imageBytes) =>
+
+                    BackgroundRemoval.RemoveBackground(Images.imageDataList[selectedTextureIndex].texture, imageBytes =>
                     {
                         CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
                         {

@@ -74,6 +74,7 @@ namespace Scenario.Editor
                             Scheduler = "Default", //TODO : change this to reflect the scheduler used for creating this image
                             Seed = image.seed,
                             CreatedAt = inference.createdAt,
+                            modelId = inference.modelId
                         });
                     }
                 }
@@ -105,9 +106,8 @@ namespace Scenario.Editor
         public void DeleteImage(string _id)
         {
             ImageDataStorage.ImageData imageData = GetImageDataById(_id);
-            string modelId = EditorPrefs.GetString("SelectedModelId");
 
-            string url = $"models/{modelId}/inferences/{imageData.InferenceId}/images/{imageData.Id}";
+            string url = $"models/{imageData.modelId}/inferences/{imageData.InferenceId}/images/{imageData.Id}";
             ApiClient.RestDelete(url,null);
             imageDataList.Remove(imageData);
             Repaint();

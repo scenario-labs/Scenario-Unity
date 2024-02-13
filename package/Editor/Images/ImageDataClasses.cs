@@ -22,6 +22,7 @@ namespace Scenario.Editor
             [SerializeField] public DateTime CreatedAt;
             [SerializeField] public Texture2D texture;
             [SerializeField] public bool isProcessedByPromptImages;
+            [SerializeField] public string modelId;
         }
     }
 

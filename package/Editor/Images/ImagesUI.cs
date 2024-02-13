@@ -154,20 +154,20 @@ namespace Scenario.Editor
         /// <summary>
         /// This function is responsible for rendering all the interface
         /// </summary>
-        /// <param name="position">The position and dimensions of the UI element.</param>
-        public void OnGUI(Rect position)
+        /// <param name="_dimension">The dimensions of the UI element.</param>
+        public void OnGUI(Rect _dimension)
         {
-            DrawBackground(position);
-            float previewWidth = 309f;
-            float scrollViewWidth = selectedTexture != null ? position.width - previewWidth : position.width;
-            float boxWidth = (scrollViewWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
+            DrawBackground(_dimension);
+            float previewWidth = 320f;
+            float imageListWidth = selectedTexture != null ? _dimension.width - previewWidth : _dimension.width;
+            float boxWidth = (imageListWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
             float boxHeight = boxWidth;
 
             int numRows = Mathf.CeilToInt((float)Images._imageDataList.Count / itemsPerRow);
 
             float scrollViewHeight = (boxHeight + padding) * numRows;
-            var scrollViewRect = new Rect(0, 25, scrollViewWidth, position.height - 70);
-            var viewRect = new Rect(0, 0, scrollViewWidth - 20, scrollViewHeight);
+            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height - 70);
+            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight);
 
             scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
             {
@@ -179,25 +179,25 @@ namespace Scenario.Editor
 
             if (isModalOpen)
             {
-                DrawZoomedImage(new Rect(0, 0, position.width, position.height));
+                DrawZoomedImage(new Rect(0, 0, _dimension.width, _dimension.height));
             }
 
-            DrawSelectedTextureSection(position, previewWidth, scrollViewWidth);
+            DrawSelectedTextureSection(_dimension, previewWidth, imageListWidth);
         }
 
         /// <summary>
         /// Draws the section displaying the title, the close button, the selected texture along with its details.
         /// This function calculates and renders the selected image, its dimensions, and associated UI elements.
         /// </summary>
-        /// <param name="position">The position and dimensions of the UI element.</param>
-        /// <param name="previewWidth">The width of the preview section.</param>
-        /// <param name="scrollViewWidth">The width of the scrollable area.</param>
-        private void DrawSelectedTextureSection(Rect position, float previewWidth, float scrollViewWidth)
+        /// <param name="_parentDimension">The position and dimensions of the parent container.</param>
+        /// <param name="_sectionWidth">The width of the preview section.</param>
+        /// <param name="_leftPosition">The position, on X axe, where the selected texture section should begin to draw.</param>
+        private void DrawSelectedTextureSection(Rect _parentDimension, float _sectionWidth, float _leftPosition)
         {
             if (selectedTexture == null || textures.Count <= 0)
                 return;
 
-            GUILayout.BeginArea(new Rect(scrollViewWidth, 20, previewWidth, position.height - 20));
+            GUILayout.BeginArea(new Rect(_leftPosition, 20, _sectionWidth, _parentDimension.height - 20));
             {
                 CustomStyle.Space(5);
                 GUILayout.BeginHorizontal();
@@ -212,7 +212,7 @@ namespace Scenario.Editor
                 GUILayout.EndHorizontal();
 
                 if (selectedTexture != null) //if you click on close, the selected texture can be null
-                    DrawScrollableArea(previewWidth, position.height);
+                    DrawScrollableArea(_sectionWidth, _parentDimension.height - 70);
             }
             GUILayout.EndArea();
         }
@@ -220,16 +220,13 @@ namespace Scenario.Editor
         /// <summary>
         /// Draws the scrollable area containing the selected image, the action buttons, and the image data.
         /// </summary>
-        /// <param name="previewWidth">The width of the scrollable area.</param>
-        /// <param name="previewHeight">The height of the scrollable area.</param>
-        private void DrawScrollableArea(float previewWidth, float previewHeight)
+        /// <param name="_sectionWidth">The width of the scrollable area.</param>
+        /// <param name="_textureSectionHeight">The height of the scrollable area.</param>
+        private void DrawScrollableArea(float _sectionWidth, float _textureSectionHeight)
         {
-            var scrollViewRect = new Rect(0, 30, previewWidth + 20, previewHeight);
-            var viewRect = new Rect(0, 0, previewWidth, previewHeight + 150);
-
-            selectedTextureSectionScrollPosition = GUI.BeginScrollView(scrollViewRect, selectedTextureSectionScrollPosition, viewRect);
+            selectedTextureSectionScrollPosition = GUILayout.BeginScrollView(selectedTextureSectionScrollPosition, GUILayout.Width(_sectionWidth), GUILayout.Height(_textureSectionHeight));
             {
-                DrawSelectedImage(previewWidth);
+                DrawSelectedImage(_sectionWidth);
                 CustomStyle.Space(10);
                 GUILayout.BeginVertical();
                 {
@@ -264,7 +261,7 @@ namespace Scenario.Editor
             GUILayout.BeginHorizontal();
             {
                 CustomStyle.Space(padding);
-                GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth),
+                GUILayout.Label(selectedTexture, GUILayout.Width(paddedPreviewWidth - 40),
                 GUILayout.Height(paddedPreviewHeight));
                 CustomStyle.Space(padding);
             }

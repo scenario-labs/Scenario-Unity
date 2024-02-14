@@ -86,7 +86,7 @@ namespace Scenario.Editor
         
         public void ReserveSpaceForImageDatas(int numImages, string inferenceId, string promptinputText,
             float samplesliderValue, float widthSliderValue, float heightSliderValue, float guidancesliderValue,
-            string schedulerText, string seedinputText)
+            string schedulerText, string seedinputText, string modelIdInput)
         {
             for (int i = 0; i < numImages; i++)
             {
@@ -100,6 +100,7 @@ namespace Scenario.Editor
                     Guidance = guidancesliderValue,
                     Scheduler = schedulerText,
                     Seed = seedinputText,
+                    modelId = modelIdInput
                 });
             }
         }
@@ -123,9 +124,9 @@ namespace Scenario.Editor
             return index;
         }
 
-        public void RemoveImageDataAtIndex(int index)
+        public void RemoveImageDataById(string _id)
         {
-            imageDataList.RemoveAt(index);
+            imageDataList.RemoveAt(imageDataList.FindIndex(x => x.Id == _id));
         }
 
         public void RemoveInferenceData(string inferenceId)

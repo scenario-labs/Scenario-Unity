@@ -121,11 +121,19 @@ namespace Scenario.Editor
         /// <param name="_id">The id of the image you want to delete</param>
         public void DeleteImage(string _id)
         {
-            ImageDataStorage.ImageData imageData = GetImageDataById(_id);
+            var imageData = Images.GetImageDataById(_id); //try to get image from Images
+            if (imageData == null)
+                imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
+            if (imageData == null)
+                return;
 
             string url = $"models/{imageData.modelId}/inferences/{imageData.InferenceId}/images/{imageData.Id}";
             ApiClient.RestDelete(url,null);
             imageDataList.Remove(imageData);
+
+            if(DataCache.instance.DoesImageIdExist(_id)) //also delete from Datacache if it's there
+                DataCache.instance.RemoveImageDataById(_id);
+
             Repaint();
         }
 

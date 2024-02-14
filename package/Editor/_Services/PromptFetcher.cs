@@ -35,7 +35,8 @@ namespace Scenario.Editor
                     heightSliderValue,
                     guidancesliderValue,
                     "Default",
-                    seedinputText);
+                    seedinputText,
+                    modelId);
 
                 GetInferenceStatus(inferenceId, modelId);
                 Images.ShowWindow();

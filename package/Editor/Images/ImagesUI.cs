@@ -478,8 +478,12 @@ namespace Scenario.Editor
 
         public void CloseSelectedTextureSection()
         {
-            //ClearData();
             selectedTexture = null;
+        }
+
+        public void OnClose()
+        {
+            isLoading = false;
         }
 
         #endregion

@@ -41,6 +41,7 @@ namespace Scenario.Editor
     
         private void OnDestroy()
         {
+            ImagesUI.OnClose();
             ImagesUI.CloseSelectedTextureSection();
             DataCache.instance.ClearAllImageData();
         }
@@ -100,6 +101,7 @@ namespace Scenario.Editor
                 {
                     FetchTextureFor(imageData);
                 }
+                callback_OnDataGet?.Invoke();
             });
         }
 

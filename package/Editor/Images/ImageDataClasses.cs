@@ -13,7 +13,7 @@ namespace Scenario.Editor
             [SerializeField] public string Url;
             [SerializeField] public string InferenceId;
             [SerializeField] public string Prompt;
-            [SerializeField] public float Steps;
+            [SerializeField] public int Steps;
             [SerializeField] public Vector2 Size;
             [SerializeField] public float Guidance;
             [SerializeField] public string Scheduler;

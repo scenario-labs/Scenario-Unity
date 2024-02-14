@@ -57,11 +57,10 @@ namespace Scenario.Editor
             }
             EditorGUILayout.EndHorizontal();
 
-            int samplesliderIntValue = Mathf.RoundToInt(samplesliderValue);
             EditorGUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Sampling steps: " + samplesliderIntValue, GUILayout.Width(labelWidth));
-                samplesliderValue = GUILayout.HorizontalSlider(samplesliderValue, 10, 150, GUILayout.Width(sliderWidth));
+                GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
+                samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 10, 150, GUILayout.Width(sliderWidth));
             }
             EditorGUILayout.EndHorizontal();
 

@@ -13,7 +13,7 @@ namespace Scenario.Editor
         public static List<string> cancelledInferences = new();
         
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
-            string promptinputText, float samplesliderValue, float widthSliderValue, float heightSliderValue,
+            string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
             float guidancesliderValue, string seedinputText)
         {
             Debug.Log("Requesting image generation please wait..");

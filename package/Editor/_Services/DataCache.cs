@@ -86,7 +86,7 @@ namespace Scenario.Editor
         }
         
         public void ReserveSpaceForImageDatas(int numImages, string inferenceId, string promptinputText,
-            float samplesliderValue, float widthSliderValue, float heightSliderValue, float guidancesliderValue,
+            int samplesliderValue, float widthSliderValue, float heightSliderValue, float guidancesliderValue,
             string schedulerText, string seedinputText, string modelIdInput)
         {
             for (int i = 0; i < numImages; i++)

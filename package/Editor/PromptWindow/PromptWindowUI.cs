@@ -53,7 +53,7 @@ namespace Scenario.Editor
         internal int heightSliderValue = 512;
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
-        internal float samplesliderValue = 30;
+        internal int samplesliderValue = 30;
         internal int influenceSliderValue = 25;
         internal float guidancesliderValue = 7;
         internal string postedModelName = "Choose Model";

@@ -1,27 +1,27 @@
 using System;
 using System.Collections.Generic;
-using System.Numerics;
 using UnityEngine;
 
 namespace Scenario.Editor
 {
     public static class ImageDataStorage
     {
-        [System.Serializable]
+        [Serializable]
         public class ImageData
         {
             [SerializeField] public string Id;
             [SerializeField] public string Url;
             [SerializeField] public string InferenceId;
             [SerializeField] public string Prompt;
-            [SerializeField] public float Steps;
-            [SerializeField] public UnityEngine.Vector2 Size;
+            [SerializeField] public int Steps;
+            [SerializeField] public Vector2 Size;
             [SerializeField] public float Guidance;
             [SerializeField] public string Scheduler;
             [SerializeField] public string Seed;
             [SerializeField] public DateTime CreatedAt;
             [SerializeField] public Texture2D texture;
             [SerializeField] public bool isProcessedByPromptImages;
+            [SerializeField] public string modelId; 
         }
     }
 
@@ -70,7 +70,7 @@ namespace Scenario.Editor
         public string status { get; set; }
         public List<Image> images { get; set; }
         public int imagesNumber { get; set; }
-        public int progress { get; set; }
+        public float progress { get; set; }
         public string displayPrompt { get; set; }
     }
 

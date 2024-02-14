@@ -7,6 +7,9 @@ using UnityEngine;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// Store the cache of images that has been newly generated
+    /// </summary>
     public class DataCache : ScriptableSingleton<DataCache>
     {
         #region ImageDataList
@@ -16,6 +19,11 @@ namespace Scenario.Editor
         public ImageDataStorage.ImageData GetImageDataAtIndex(int index)
         {
             return imageDataList[index];
+        }
+
+        public List<ImageDataStorage.ImageData> GetImageDataList()
+        {
+            return imageDataList;
         }
 
         public void AddImageDataInFront(ImageDataStorage.ImageData imageData)
@@ -55,7 +63,7 @@ namespace Scenario.Editor
             return imageDataList.GetRange(firstIndex, count);
         }
 
-        public void FillReservedSpaceForImageData(string inferenceId, string id, string url, DateTime createdAt)
+        public void FillReservedSpaceForImageData(string inferenceId, string id, string url, DateTime createdAt, string _seed)
         {
             var itm = imageDataList.FirstOrDefault(x =>
             {
@@ -70,11 +78,16 @@ namespace Scenario.Editor
             itm.Id = id;
             itm.Url = url;
             itm.CreatedAt = createdAt;
+            itm.Seed = _seed;
+            CommonUtils.FetchTextureFromURL(itm.Url, texture =>
+            {
+                itm.texture = texture;
+            });
         }
         
         public void ReserveSpaceForImageDatas(int numImages, string inferenceId, string promptinputText,
-            float samplesliderValue, float widthSliderValue, float heightSliderValue, float guidancesliderValue,
-            string schedulerText, string seedinputText)
+            int samplesliderValue, float widthSliderValue, float heightSliderValue, float guidancesliderValue,
+            string schedulerText, string seedinputText, string modelIdInput)
         {
             for (int i = 0; i < numImages; i++)
             {
@@ -88,6 +101,7 @@ namespace Scenario.Editor
                     Guidance = guidancesliderValue,
                     Scheduler = schedulerText,
                     Seed = seedinputText,
+                    modelId = modelIdInput
                 });
             }
         }
@@ -96,10 +110,14 @@ namespace Scenario.Editor
 
         public ImageDataStorage.ImageData GetImageDataByUrl(string url)
         {
-            var data = imageDataList.FirstOrDefault(x => x.Url == url);
-            return data;
+            return imageDataList.FirstOrDefault(x => x.Url == url);
         }
-        
+
+        public ImageDataStorage.ImageData GetImageDataById(string _id)
+        {
+            return imageDataList.FirstOrDefault(x => x.Id == _id);
+        }
+
         public int GetImageDataIndexByUrl(string url)
         {
             var data = imageDataList.FirstOrDefault(x => x.Url == url);
@@ -107,9 +125,9 @@ namespace Scenario.Editor
             return index;
         }
 
-        public void RemoveImageDataAtIndex(int index)
+        public void RemoveImageDataById(string _id)
         {
-            imageDataList.RemoveAt(index);
+            imageDataList.RemoveAt(imageDataList.FindIndex(x => x.Id == _id));
         }
 
         public void RemoveInferenceData(string inferenceId)

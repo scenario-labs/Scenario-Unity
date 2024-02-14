@@ -14,14 +14,14 @@ namespace Scenario.Editor
         private GridPalette gridPalette;
         private CellLayout layout;
 
-        private int selectedTextureIndex;
+        private string selectedTextureId;
 
         private bool isProcessing = false;
 
 
-        public TileCreator(int _selectedTextureIndex)
+        public TileCreator(string _selectedTextureIndex)
         {
-            selectedTextureIndex = _selectedTextureIndex;
+            selectedTextureId = _selectedTextureIndex;
         }
 
         public void OnGUI()
@@ -54,7 +54,7 @@ namespace Scenario.Editor
                 {
                     isProcessing = true;
 
-                    BackgroundRemoval.RemoveBackground(Images.imageDataList[selectedTextureIndex].texture, imageBytes =>
+                    BackgroundRemoval.RemoveBackground(Images.GetImageDataById(selectedTextureId).texture, imageBytes =>
                     {
                         CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
                         {

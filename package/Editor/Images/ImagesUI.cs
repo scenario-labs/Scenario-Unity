@@ -318,7 +318,9 @@ namespace Scenario.Editor
         /// </summary>
         private void DrawImageData()
         {
-            var currentImageData = Images.GetImageDataById(selectedImageId);
+            var currentImageData = Images.GetImageDataById(selectedImageId); //try to get image from Images
+            if (currentImageData == null)
+                currentImageData = DataCache.instance.GetImageDataById(selectedImageId); //try to get from Datacache (if it has just been prompted)
             if (currentImageData == null)
                 return;
 
@@ -379,7 +381,7 @@ namespace Scenario.Editor
             List<ImageDataStorage.ImageData> imagesToDisplay = new List<ImageDataStorage.ImageData>();
 
             //Add all the current image that are in the DataCache (the ones that the user generated this session)
-            imagesToDisplay.AddRange(DataCache.instance.GetImageData());
+            imagesToDisplay.AddRange(DataCache.instance.GetImageDataList());
 
             //add everything from the cloud that is not already in the DataCache
             foreach(ImageDataStorage.ImageData imageData in Images.imageDataList)

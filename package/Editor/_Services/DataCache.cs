@@ -21,7 +21,7 @@ namespace Scenario.Editor
             return imageDataList[index];
         }
 
-        public List<ImageDataStorage.ImageData> GetImageData()
+        public List<ImageDataStorage.ImageData> GetImageDataList()
         {
             return imageDataList;
         }
@@ -108,10 +108,14 @@ namespace Scenario.Editor
 
         public ImageDataStorage.ImageData GetImageDataByUrl(string url)
         {
-            var data = imageDataList.FirstOrDefault(x => x.Url == url);
-            return data;
+            return imageDataList.FirstOrDefault(x => x.Url == url);
         }
-        
+
+        public ImageDataStorage.ImageData GetImageDataById(string _id)
+        {
+            return imageDataList.FirstOrDefault(x => x.Id == _id);
+        }
+
         public int GetImageDataIndexByUrl(string url)
         {
             var data = imageDataList.FirstOrDefault(x => x.Url == url);

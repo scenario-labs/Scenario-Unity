@@ -63,7 +63,7 @@ namespace Scenario.Editor
             return imageDataList.GetRange(firstIndex, count);
         }
 
-        public void FillReservedSpaceForImageData(string inferenceId, string id, string url, DateTime createdAt)
+        public void FillReservedSpaceForImageData(string inferenceId, string id, string url, DateTime createdAt, string _seed)
         {
             var itm = imageDataList.FirstOrDefault(x =>
             {
@@ -78,6 +78,7 @@ namespace Scenario.Editor
             itm.Id = id;
             itm.Url = url;
             itm.CreatedAt = createdAt;
+            itm.Seed = _seed;
             CommonUtils.FetchTextureFromURL(itm.Url, texture =>
             {
                 itm.texture = texture;

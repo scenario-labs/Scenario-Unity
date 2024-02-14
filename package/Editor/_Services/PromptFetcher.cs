@@ -68,7 +68,7 @@ namespace Scenario.Editor
                 if (inferenceStatusRoot.inference.status != "succeeded" && 
                     inferenceStatusRoot.inference.status != "failed" )
                 {
-                    Debug.Log("Commission in process, please wait..");
+                    Debug.Log($"Commission in process, please wait...");
                     GetInferenceStatus(inferenceId, modelId);
                 }
                 else
@@ -81,13 +81,14 @@ namespace Scenario.Editor
                     
                     foreach (var item in inferenceStatusRoot.inference.images)
                     {
-                        /*Debug.Log("Image URL: " + item);*/
+                        //Debug.Log("Image : " + item.ToString());
                         var img = JsonConvert.DeserializeObject<ImageDataAPI>(item.ToString());
                         DataCache.instance.FillReservedSpaceForImageData(
                             inferenceId, 
                             img.Id,
                             img.Url,
-                            inferenceStatusRoot.inference.createdAt);
+                            inferenceStatusRoot.inference.createdAt,
+                            img.Seed);
                     }
                 }
             });
@@ -97,6 +98,7 @@ namespace Scenario.Editor
         {
             public string Id { get; set; }
             public string Url { get; set; }
+            public string Seed { get; set; }
         }
         
         [Serializable]

@@ -81,7 +81,6 @@ namespace Scenario.Editor
             CommonUtils.FetchTextureFromURL(itm.Url, texture =>
             {
                 itm.texture = texture;
-                RemoveImageDataAtIndex(GetImageDataIndexByUrl(itm.Url));
             });
         }
         

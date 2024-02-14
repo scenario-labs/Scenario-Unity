@@ -190,7 +190,6 @@ namespace Scenario.Editor
                         Images.GetInferencesData( () =>
                         {
                             isLoading = false;
-                            images.Repaint();
                         });
                     }
                 }

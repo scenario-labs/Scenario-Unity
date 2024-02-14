@@ -18,13 +18,18 @@ namespace Scenario.Editor
         /// </summary>
         private static string lastPageToken = string.Empty;
 
+        private static bool isVisible = false;
+
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
+            if (isVisible)
+                return;
+
             lastPageToken = string.Empty;
             imageDataList.Clear();
             GetInferencesData();
-        
+
             var images = (Images)GetWindow(typeof(Images));
             ImagesUI.Init(images);
         }
@@ -37,8 +42,19 @@ namespace Scenario.Editor
         private void OnDestroy()
         {
             ImagesUI.CloseSelectedTextureSection();
+            DataCache.instance.ClearAllImageData();
         }
-    
+
+        private void OnBecameVisible()
+        {
+            isVisible = true;
+        }
+
+        private void OnBecameInvisible()
+        {
+            isVisible = false;
+        }
+
         public static void GetInferencesData(Action callback_OnDataGet = null) //why get inferences instead of getting the assets ??
         {
             string request = $"inferences";

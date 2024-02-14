@@ -36,10 +36,9 @@ namespace Scenario.Editor
                     guidancesliderValue,
                     "Default",
                     seedinputText);
-                
-                Images.ShowWindow();
 
                 GetInferenceStatus(inferenceId, modelId);
+                Images.ShowWindow();
             });
         }
         

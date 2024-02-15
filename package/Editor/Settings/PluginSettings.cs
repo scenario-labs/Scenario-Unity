@@ -21,7 +21,6 @@ namespace Scenario.Editor
 
         #region Private Properties
 
-        private static string assemblyDefinitionFileName = "com.scenarioinc.scenario.editor";
         private string apiKey;
         private string secretKey;
         private string saveFolder;
@@ -185,27 +184,8 @@ namespace Scenario.Editor
         /// <returns>The version of the plugin, as a string</returns>
         private static string GetVersionFromPackageJson()
         {
-            //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
-            string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
-
-            if (guids.Length > 1)
-            {
-                Debug.LogError($"it seems that you have multiple file '{assemblyDefinitionFileName}.asmdef'. Please delete one");
-                return "0";
-            }
-
-            if (guids.Length == 0)
-            {
-                Debug.LogError($"It seems that you don't have the file '{assemblyDefinitionFileName}.asmdef'. Please redownload the plugin from the asset store.");
-                return "0";
-            }
-
-            //find the folder of that file
-            string folderPath = AssetDatabase.GUIDToAssetPath(guids[0]);
-            folderPath = folderPath.Remove(folderPath.IndexOf($"Editor/{assemblyDefinitionFileName}.asmdef"));
-
             //find the package.json inside this folder
-            string packageJsonPath = $"{folderPath}/package.json";
+            string packageJsonPath = $"{CommonUtils.PluginFolderPath()}/package.json";
             string packageJsonContent = File.ReadAllText(packageJsonPath);
             return JsonUtility.FromJson<PackageInfo>(packageJsonContent).version;
         }

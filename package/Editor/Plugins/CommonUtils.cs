@@ -16,6 +16,35 @@ namespace Scenario.Editor
     [ExecuteInEditMode]
     public static class CommonUtils
     {
+
+        private static string assemblyDefinitionFileName = "com.scenarioinc.scenario.editor";
+
+        /// <summary>
+        /// Return the path to the root of the folder of the plugin
+        /// </summary>
+        /// <returns></returns>
+        public static string PluginFolderPath()
+        {
+
+            //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
+            string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
+
+            if (guids.Length > 1)
+            {
+                Debug.LogError($"it seems that you have multiple file '{assemblyDefinitionFileName}.asmdef'. Please delete one");
+                return "0";
+            }
+
+            if (guids.Length == 0)
+            {
+                Debug.LogError($"It seems that you don't have the file '{assemblyDefinitionFileName}.asmdef'. Please redownload the plugin from the asset store.");
+                return "0";
+            }
+
+            //find the folder of that file
+            string folderPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return folderPath.Remove(folderPath.IndexOf($"Editor/{assemblyDefinitionFileName}.asmdef"));
+        }
         public static Texture2D CreateColorTexture(Color color)
         {
             Texture2D texture = new Texture2D(1, 1);

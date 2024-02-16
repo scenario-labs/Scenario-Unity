@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System;
 
 namespace Scenario.Editor
 {
@@ -30,6 +31,7 @@ namespace Scenario.Editor
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
         }
 
+        #region Draw UI
 
         /// <summary>
         /// This function is responsible for rendering the interface for the first step
@@ -89,7 +91,7 @@ namespace Scenario.Editor
                 CustomStyle.Space(-25);
                 GUILayout.BeginVertical();
                 {
-                    GUILayout.Box(isometricWorkflow.squareBaseTexture, GUILayout.Width(100), GUILayout.Height(100));
+                    GUILayout.Box(IsometricWorkflow.settings.squareBaseTexture, GUILayout.Width(100), GUILayout.Height(100));
                     CustomStyle.Label("Square", alignment: TextAnchor.MiddleCenter);
                 }
                 GUILayout.EndVertical();
@@ -139,7 +141,7 @@ namespace Scenario.Editor
             GUILayout.FlexibleSpace();
             CustomStyle.ButtonPrimary("Next", 30, () =>
             {
-
+                isometricWorkflow.currentStep = IsometricWorkflow.Step.Style;
             });
             CustomStyle.Space();
 
@@ -152,7 +154,58 @@ namespace Scenario.Editor
         /// <param name="_dimension">The dimensions of the UI element.</param>
         public void DrawStyleGUI(Rect _dimension)
         {
+
             DrawBackground(_dimension);
+            CustomStyle.Space();
+            CustomStyle.Label("Step 2. Choose a Style", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Space(50);
+            //isometricWorkflow.selectedModel = (IsometricWorkflow.ModelStyle)GUILayout.SelectionGrid((int)isometricWorkflow.selectedBase, Enum.GetNames(typeof(IsometricWorkflow.ModelStyle)), 2, GUI.skin.GetStyle("toggle"));
+
+            GUILayout.BeginVertical(); // Begin vertical grouping
+            {
+                var modelStyles = Enum.GetValues(typeof(IsometricWorkflow.ModelStyle));
+                int selected = (int)isometricWorkflow.selectedModel;
+
+                GUILayout.BeginHorizontal(); // Organize in rows
+                {
+                    foreach (IsometricWorkflow.ModelStyle modelStyle in modelStyles)
+                    {
+                        GUILayout.BeginVertical(GUI.skin.box, GUILayout.Width(100), GUILayout.Height(120)); // Container for each item
+
+                        // Toggle button - adjust for your actual selected logic
+                        bool isSelected = GUILayout.Toggle(selected == (int)modelStyle, ""); // Placeholder toggle, adjust as necessary
+                        if (isSelected && selected != (int)modelStyle)
+                        {
+                            isometricWorkflow.selectedModel = modelStyle; // Update the selected model
+                            selected = (int)modelStyle;
+                        }
+
+                        // Thumbnail
+                        if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle))
+                        {
+                            GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle).thumbnail, GUILayout.Width(90), GUILayout.Height(90)); // Adjust size as needed
+                        }
+
+                        // Name
+                        GUILayout.Label(modelStyle.ToString(), GUILayout.Width(90)); // Centered text under the thumbnail
+
+                        GUILayout.EndVertical();
+
+                        if ((int)modelStyle % 2 == 1) // Assuming you want 2 items per row
+                        {
+                            GUILayout.EndHorizontal();
+                            GUILayout.BeginHorizontal(); // Start a new row after every 2 items
+                        }
+                    }
+
+                    if (modelStyles.Length % 2 != 0)
+                    {
+                        GUILayout.EndHorizontal(); // End the row if an odd number of items
+                    }
+                }
+                GUILayout.EndHorizontal ();
+            }
+            GUILayout.EndVertical();
         }
 
         /// <summary>
@@ -181,5 +234,12 @@ namespace Scenario.Editor
         {
             DrawBackground(_dimension);
         }
+
+        #endregion
+
+        #region Utils
+
+
+        #endregion
     }
 }

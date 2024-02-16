@@ -1,8 +1,13 @@
+using Newtonsoft.Json;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using static Scenario.Editor.Models;
 
 namespace Scenario.Editor
 {
@@ -21,17 +26,21 @@ namespace Scenario.Editor
         /// <summary>
         /// The isometric workflow is made of multiples steps. This field contains the current step
         /// </summary>
-        private Step currentStep;
+        internal Step currentStep;
 
         /// <summary>
         /// The first step of the workflow is to select a base. This field contains the base that the user has choosen
         /// </summary>
         internal Base selectedBase = Base.None;
 
+
         /// <summary>
-        /// This field contains the reference image of the square base
+        /// The second step of the workflow is to select a Style. This field contains the model that match the style that the user has choosen
         /// </summary>
-        internal Texture2D squareBaseTexture;
+        internal ModelStyle selectedModel = ModelStyle.lora1;
+
+        internal static IsometricWorkflowSettings settings;
+
 
         [MenuItem("Window/Scenario/Workflows/1. Isometric Workflow")]
         public static void ShowWindow()
@@ -40,21 +49,17 @@ namespace Scenario.Editor
                 return;
 
             GetWindow(typeof(IsometricWorkflow));
+
+            settings = IsometricWorkflowSettings.GetSerializedSettings();
         }
 
         private void CreateGUI()
         {
             var isometricWorkflow = (IsometricWorkflow)GetWindow(typeof(IsometricWorkflow));
-            InitializeTextures();
             isometricWorkflowUI.Init(isometricWorkflow);
         }
 
 
-        private void InitializeTextures()
-        {
-            squareBaseTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(Path.Combine(CommonUtils.PluginFolderPath(), "Assets", "Reference Images", "IsometricBase_Square.png"));
-
-        }
 
         private void OnGUI()
         {
@@ -95,8 +100,18 @@ namespace Scenario.Editor
             isVisible = false;
         }
 
+        public enum ModelStyle
+        {
+            lora1,
+            lora2,
+            lora3,
+            lora4,
+            lora5,
+            lora6,
+        }
 
-        private enum Step
+
+        public enum Step
         {
             Base = 0,
             Style = 1,

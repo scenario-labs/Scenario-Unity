@@ -144,7 +144,6 @@ namespace Scenario.Editor
                 isometricWorkflow.currentStep = IsometricWorkflow.Step.Style;
             });
             CustomStyle.Space();
-
         }
 
 
@@ -168,33 +167,51 @@ namespace Scenario.Editor
 
                 GUILayout.BeginHorizontal(); // Organize in rows
                 {
+                    GUILayout.FlexibleSpace();
                     foreach (IsometricWorkflow.ModelStyle modelStyle in modelStyles)
                     {
-                        GUILayout.BeginVertical(GUI.skin.box, GUILayout.Width(100), GUILayout.Height(120)); // Container for each item
-
-                        // Toggle button - adjust for your actual selected logic
-                        bool isSelected = GUILayout.Toggle(selected == (int)modelStyle, ""); // Placeholder toggle, adjust as necessary
-                        if (isSelected && selected != (int)modelStyle)
+                        CustomStyle.Space(25); // Space between each containers
+                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(150), GUILayout.Height(175)); // Container for each item
                         {
-                            isometricWorkflow.selectedModel = modelStyle; // Update the selected model
-                            selected = (int)modelStyle;
+                            GUILayout.BeginVertical();
+                            {
+                                GUILayout.FlexibleSpace();
+                                // Toggle button - adjust for your actual selected logic
+                                bool isSelected = GUILayout.Toggle(selected == (int)modelStyle, ""); // Placeholder toggle, adjust as necessary
+                                if (isSelected && selected != (int)modelStyle)
+                                {
+                                    isometricWorkflow.selectedModel = modelStyle; // Update the selected model
+                                    selected = (int)modelStyle;
+                                }
+                                GUILayout.FlexibleSpace();
+                            }
+                            GUILayout.EndVertical();
+
+                            GUILayout.BeginVertical();
+                            {
+                                // Thumbnail
+                                if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle))
+                                {
+                                    GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
+                                }
+
+                                // Name
+                                CustomStyle.Label(modelStyle.ToString(), width:150, alignment:TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                            }
+                            GUILayout.EndVertical();
+
                         }
-
-                        // Thumbnail
-                        if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle))
-                        {
-                            GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle).thumbnail, GUILayout.Width(90), GUILayout.Height(90)); // Adjust size as needed
-                        }
-
-                        // Name
-                        GUILayout.Label(modelStyle.ToString(), GUILayout.Width(90)); // Centered text under the thumbnail
-
-                        GUILayout.EndVertical();
+                        GUILayout.EndHorizontal();
 
                         if ((int)modelStyle % 2 == 1) // Assuming you want 2 items per row
                         {
+                            GUILayout.FlexibleSpace(); //flexible space at the right side
                             GUILayout.EndHorizontal();
+
+                            CustomStyle.Space(25); // Space between each containers
+
                             GUILayout.BeginHorizontal(); // Start a new row after every 2 items
+                            GUILayout.FlexibleSpace(); //flexible space at the left side
                         }
                     }
 
@@ -202,10 +219,19 @@ namespace Scenario.Editor
                     {
                         GUILayout.EndHorizontal(); // End the row if an odd number of items
                     }
+
                 }
                 GUILayout.EndHorizontal ();
             }
             GUILayout.EndVertical();
+
+            //Bottom
+            GUILayout.FlexibleSpace();
+            CustomStyle.ButtonPrimary("Next", 30, () =>
+            {
+                isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
+            });
+            CustomStyle.Space();
         }
 
         /// <summary>

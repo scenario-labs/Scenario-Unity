@@ -16,7 +16,7 @@ namespace Scenario.Editor
         /// <summary>
         /// This field contains the reference image of the square base
         /// </summary>
-        public Texture2D squareBaseTexture;
+        internal Texture2D squareBaseTexture;
 
         /// <summary>
         /// This List contains the 6 models we have curated as the best models for making isometric tiles. They are listed by ModelStyle
@@ -114,9 +114,10 @@ namespace Scenario.Editor
                 || settings.isometricModels == null
                 || settings.isometricModelThumbnails.Count != settings.modelsIdByStyle.Count
                 || settings.isometricModels.Count != settings.modelsIdByStyle.Count
-                || settings.modelsIdByStyle.Count == 0)
+                || settings.modelsIdByStyle.Count == 0
+                || settings.squareBaseTexture == null)
             {
-                Debug.Log("Isometric Workflow Settings is empty. Creating a new Isometric Workflow Settings.");
+                Debug.Log("Isometric Workflow Settings is empty or corrupted. Creating a new Isometric Workflow Settings.");
                 return true;
 
             }

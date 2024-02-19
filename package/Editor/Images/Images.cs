@@ -141,12 +141,20 @@ namespace Scenario.Editor
 
         public static ImageDataStorage.ImageData GetImageDataById(string _id)
         {
-            return imageDataList.Find(x => x.Id == _id);
+            var imageData = imageDataList.Find(x => x.Id == _id);
+            if (imageData == null)
+                imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
+
+            return imageData;
         }
 
         public static Texture2D GetTextureByImageId(string _id)
         {
-            return imageDataList.Find(x => x.Id == _id).texture;
+            var imageData = Images.GetImageDataById(_id); //try to get image from Images
+            if (imageData == null)
+                imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
+
+            return imageData.texture;
         }
 
     }

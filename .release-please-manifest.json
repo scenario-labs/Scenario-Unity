@@ -3,7 +3,7 @@
   "extra-files": [
     {
       "type": "json",
-      "path": "Scenario/package.json",
+      "path": "package/package.json",
       "jsonpath": "$.version"
     }
   ]

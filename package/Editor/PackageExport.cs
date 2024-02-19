@@ -7,7 +7,7 @@ using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using PackageInfo = UnityEditor.PackageManager.PackageInfo;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     /// <summary>
     /// Displays a Unity Editor window where you can select the package to export.

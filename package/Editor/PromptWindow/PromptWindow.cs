@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class PromptWindow : EditorWindow
     {
@@ -157,10 +157,10 @@ namespace Scenario
         {
             bool hideResults = false;
             string type = operationType;
-            string image = $"\"{dataUrl}\"";
             string mask = $"\"{maskDataUrl}\"";
             string prompt = promptWindowUI.promptinputText;
             string seedField = "";
+            string image = $"\"{dataUrl}\"";
             
             if (promptWindowUI.seedinputText != "-1")
             {
@@ -169,7 +169,7 @@ namespace Scenario
             }
             
             string negativePrompt = promptWindowUI.negativepromptinputText;
-            float strength = (float)Math.Round(promptWindowUI.influncesliderValue, 2);
+            float strength = Mathf.Clamp((float)Math.Round((100 - promptWindowUI.influenceSliderValue) * 0.01f, 2), 0.01f, 1f); //strength is 100-influence (and between 0.01 & 1)
             float guidance = promptWindowUI.guidancesliderValue;
             int width = (int)promptWindowUI.widthSliderValue;
             int height = (int)promptWindowUI.heightSliderValue;
@@ -277,6 +277,14 @@ namespace Scenario
         public void SetSeed(string seed)
         {
             // Set the seed value here
+        }
+
+        /// <summary>
+        /// Force the Image Control Tab to opens at a spcifi tab
+        /// </summary>
+        public static void SetImageControlTab(int tabIndex)
+        {
+            promptWindowUI.imageControlTab = tabIndex;
         }
 
         #region API_DTO

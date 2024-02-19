@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using static Scenario.Models;
+using static Scenario.Editor.Models;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class ModelsUI
     {

@@ -2,7 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public partial class PromptWindowUI
     {
@@ -57,11 +57,10 @@ namespace Scenario
             }
             EditorGUILayout.EndHorizontal();
 
-            int samplesliderIntValue = Mathf.RoundToInt(samplesliderValue);
             EditorGUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Sampling steps: " + samplesliderIntValue, GUILayout.Width(labelWidth));
-                samplesliderValue = GUILayout.HorizontalSlider(samplesliderValue, 10, 150, GUILayout.Width(sliderWidth));
+                GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
+                samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 10, 150, GUILayout.Width(sliderWidth));
             }
             EditorGUILayout.EndHorizontal();
 
@@ -78,9 +77,8 @@ namespace Scenario
             {
                 EditorGUILayout.BeginHorizontal();
                 {
-                    GUILayout.Label("Influence: " + influncesliderValue.ToString("0.00"), GUILayout.Width(labelWidth));
-                    influncesliderValue =
-                        GUILayout.HorizontalSlider(influncesliderValue, 0f, 1f, GUILayout.Width(sliderWidth));
+                    GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
+                    influenceSliderValue = (int)GUILayout.HorizontalSlider(influenceSliderValue, 0, 99, GUILayout.Width(sliderWidth));
                 }
                 EditorGUILayout.EndHorizontal();
             }

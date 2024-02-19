@@ -4,7 +4,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public partial class PromptWindowUI
     {
@@ -53,13 +53,14 @@ namespace Scenario
         internal int heightSliderValue = 512;
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
-        internal float samplesliderValue = 30;
-        internal float influncesliderValue = 0.25f;
+        internal int samplesliderValue = 30;
+        internal int influenceSliderValue = 25;
         internal float guidancesliderValue = 7;
         internal string postedModelName = "Choose Model";
         internal string seedinputText = "";
         internal bool isTextToImage = true;
         internal int schedulerIndex = 0; // Store the current selection index
+        internal int imageControlTab = 0;
 
         private int dragFromIndex = -1;
         private int negativeDragFromIndex = -1;
@@ -84,6 +85,7 @@ namespace Scenario
         private PromptWindow promptWindow;
         private bool shouldAutoGenerateSeed;
         private bool shouldAutoGenerateSeedPrev;
+
 
         public string selectedModelName { get; set; } = "Choose Model";
 
@@ -153,11 +155,10 @@ namespace Scenario
 
             CustomStyle.Space();
 
-            int selectedTab = isTextToImage ? 0 : (isImageToImage ? 1 : 2);
             string[] tabLabels = { "Text to Image", "Image to Image", "Inpainting" };
-            selectedTab = GUILayout.Toolbar(selectedTab, tabLabels, CustomStyle.GetTertiaryButtonStyle());
+            imageControlTab = GUILayout.Toolbar(imageControlTab, tabLabels, CustomStyle.GetTertiaryButtonStyle());
 
-            switch (selectedTab)
+            switch (imageControlTab)
             {
                 case 0:
                     isTextToImage = true;

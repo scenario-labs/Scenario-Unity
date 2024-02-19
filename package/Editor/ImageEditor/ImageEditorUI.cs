@@ -5,7 +5,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public class ImageEditorUI
     {
@@ -793,7 +793,7 @@ namespace Scenario
             string saveImagePath = EditorUtility.SaveFilePanel("Save image", "", "", "png,jpeg,jpg");
             if (!string.IsNullOrEmpty(saveImagePath))
             {
-                CommonUtils.SaveTextureAsPNGAtPath(canvasImage, saveImagePath);
+                CommonUtils.SaveTextureAsPNG(canvasImage, saveImagePath);
             }
         }
 

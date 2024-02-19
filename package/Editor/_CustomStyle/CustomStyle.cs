@@ -2,7 +2,7 @@ using System;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario
+namespace Scenario.Editor
 {
     public static class CustomStyle
     {
@@ -69,7 +69,7 @@ namespace Scenario
             bool bold = false,
             params GUILayoutOption[] layoutOptions)
         {
-            var style = new GUIStyle((bold)?EditorStyles.boldLabel:EditorStyles.label)
+            var style = new GUIStyle((bold) ? EditorStyles.boldLabel : EditorStyles.label)
             {
                 normal =
                 {
@@ -79,6 +79,7 @@ namespace Scenario
                 alignment = alignment,
                 fixedWidth = width,
                 fixedHeight = height,
+                wordWrap = true
             };
         
             GUILayout.Label(text, style, layoutOptions);

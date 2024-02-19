@@ -144,8 +144,6 @@ namespace Scenario.Editor
             var imageData = imageDataList.Find(x => x.Id == _id);
             if (imageData == null)
                 imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
-            if (imageData == null)
-                return null;
 
             return imageData;
         }
@@ -155,8 +153,6 @@ namespace Scenario.Editor
             var imageData = Images.GetImageDataById(_id); //try to get image from Images
             if (imageData == null)
                 imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
-            if (imageData == null)
-                return null;
 
             return imageData.texture;
         }

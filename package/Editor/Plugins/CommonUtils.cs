@@ -25,7 +25,6 @@ namespace Scenario.Editor
         /// <returns></returns>
         public static string PluginFolderPath()
         {
-
             //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
             string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
 
@@ -194,6 +193,7 @@ namespace Scenario.Editor
         {
             return UnityEngine.Random.Range(ulong.MinValue, ulong.MaxValue).ToString("n", CultureInfo.InvariantCulture).Replace(",", "").Substring(0, 19);
         }
+
 
         /// <summary>
         /// Use this function to apply a specific Importer Preset to an image. (for example: apply the sprite settings if the user wants to make a sprite out of a generated image)

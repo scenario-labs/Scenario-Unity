@@ -11,7 +11,7 @@ namespace Scenario.Editor
     class IsometricWorkflowSettings : ScriptableObject
     {
         public const string settingsFolderPath = "Assets/Editor/Scenario/Settings";
-        public const string settingsFilePath = settingsFolderPath+"/IsometricWorkflowSettings.asset";
+        public const string settingsFilePath = settingsFolderPath + "/IsometricWorkflowSettings.asset";
 
         /// <summary>
         /// This field contains the reference image of the square base
@@ -80,7 +80,7 @@ namespace Scenario.Editor
                 settings.InitializeTextures();
                 settings.InitializeModels();
 
-                if(!Directory.Exists(settingsFolderPath))
+                if (!Directory.Exists(settingsFolderPath))
                     Directory.CreateDirectory(settingsFolderPath);
 
                 AssetDatabase.CreateAsset(settings, settingsFilePath);
@@ -88,7 +88,7 @@ namespace Scenario.Editor
             }
             else
             {
-                if(settings.IsCorrupted(settings))
+                if (settings.IsCorrupted(settings))
                 {
                     AssetDatabase.DeleteAsset(settingsFilePath);
                     return GetOrCreateSettings();
@@ -109,7 +109,7 @@ namespace Scenario.Editor
         /// <returns>FALSE if the file is safe. TRUE if the file is corrupted</returns>
         private bool IsCorrupted(IsometricWorkflowSettings settings)
         {
-            if(settings.isometricModelThumbnails == null
+            if (settings.isometricModelThumbnails == null
                 || settings.modelsIdByStyle == null
                 || settings.isometricModels == null
                 || settings.isometricModelThumbnails.Count != settings.modelsIdByStyle.Count

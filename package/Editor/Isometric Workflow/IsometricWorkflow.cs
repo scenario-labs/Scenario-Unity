@@ -39,6 +39,18 @@ namespace Scenario.Editor
         /// </summary>
         internal ModelStyle selectedModel = ModelStyle.lora1;
 
+
+        /// <summary>
+        /// The third step of the workflow is to select a theme. This field contains the theme that match the theme that the user has choosen
+        /// </summary>
+        internal Theme selectedTheme = Theme.None;
+
+
+        /// <summary>
+        /// The fourth step of the workflow is to create a list of asset name. 
+        /// </summary>
+        internal List<string> assetList = new List<string>();
+
         internal static IsometricWorkflowSettings settings;
 
 
@@ -51,6 +63,26 @@ namespace Scenario.Editor
             GetWindow(typeof(IsometricWorkflow));
 
             settings = IsometricWorkflowSettings.GetSerializedSettings();
+        }
+
+        /// <summary>
+        /// Auto add some asset name as an example
+        /// </summary>
+        /// <returns></returns>
+        public void FillAssetSamples()
+        {
+            List<string> samples = new List<string>();
+            samples.Add("Tavern");
+            samples.Add("Hospital");
+            samples.Add("Police Station");
+            samples.Add("Rocket Launcher");
+            samples.Add("Factory");
+            samples.Add("Treehouse");
+            samples.Add("Arena");
+            samples.Add("Temple");
+            samples.Add("Church");
+            samples.Add("Building Block");
+            assetList.AddRange(samples);
         }
 
         private void CreateGUI()
@@ -108,6 +140,18 @@ namespace Scenario.Editor
             lora4,
             lora5,
             lora6,
+        }
+
+
+        public enum Theme
+        {
+            None,
+            Medieval,
+            Futuristic,
+            Comtemporary,
+            Ancient,
+            MagicalForest,
+            WorldWar,
         }
 
 

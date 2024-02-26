@@ -1,6 +1,4 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
+﻿using UnityEditor;
 using UnityEngine;
 using System;
 
@@ -13,7 +11,21 @@ namespace Scenario.Editor
         private bool baseSquare = false;
         private bool baseCustom = false;
 
+        /// <summary>
+        /// if the user choose a custom texture as reference at Step 1
+        /// </summary>
         internal Texture2D customTexture;
+
+        /// <summary>
+        /// The scrollview at step 4
+        /// </summary>
+        private Vector2 assetScrollView = Vector2.zero;
+
+        /// <summary>
+        /// The current value of the input field when the user wants to add an asset to the list
+        /// </summary>
+        private string inputAssetName = string.Empty;
+
 
         public void Init(IsometricWorkflow _isometricWorkflow)
         {
@@ -105,7 +117,7 @@ namespace Scenario.Editor
                     CustomStyle.Space(45);
                     baseCustom = GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
                     CustomStyle.Space(45);
-                    if(customTexture == null)
+                    if (customTexture == null)
                     {
                         baseCustom = false;
                     }
@@ -131,7 +143,7 @@ namespace Scenario.Editor
             }
             GUILayout.EndHorizontal();
 
-            if(!baseNone && !baseSquare && !baseCustom)
+            if (!baseNone && !baseSquare && !baseCustom)
             {
                 baseNone = true;
             }
@@ -139,7 +151,7 @@ namespace Scenario.Editor
 
             //Bottom
             GUILayout.FlexibleSpace();
-            CustomStyle.ButtonPrimary("Next", 30, () =>
+            CustomStyle.ButtonPrimary("Next", 30, 0, () =>
             {
                 isometricWorkflow.currentStep = IsometricWorkflow.Step.Style;
             });
@@ -176,8 +188,8 @@ namespace Scenario.Editor
                             GUILayout.BeginVertical();
                             {
                                 GUILayout.FlexibleSpace();
-                                // Toggle button - adjust for your actual selected logic
-                                bool isSelected = GUILayout.Toggle(selected == (int)modelStyle, ""); // Placeholder toggle, adjust as necessary
+                                // Toggle button
+                                bool isSelected = GUILayout.Toggle(selected == (int)modelStyle, "");
                                 if (isSelected && selected != (int)modelStyle)
                                 {
                                     isometricWorkflow.selectedModel = modelStyle; // Update the selected model
@@ -196,7 +208,7 @@ namespace Scenario.Editor
                                 }
 
                                 // Name
-                                CustomStyle.Label(modelStyle.ToString(), width:150, alignment:TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                                CustomStyle.Label(modelStyle.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
                             }
                             GUILayout.EndVertical();
 
@@ -221,13 +233,13 @@ namespace Scenario.Editor
                     }
 
                 }
-                GUILayout.EndHorizontal ();
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
 
             //Bottom
             GUILayout.FlexibleSpace();
-            CustomStyle.ButtonPrimary("Next", 30, () =>
+            CustomStyle.ButtonPrimary("Next", 30, 0, () =>
             {
                 isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
             });
@@ -241,6 +253,42 @@ namespace Scenario.Editor
         public void DrawThemeGUI(Rect _dimension)
         {
             DrawBackground(_dimension);
+            CustomStyle.Space();
+            CustomStyle.Label("Step 3. Choose a Theme", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Space(25);
+
+            GUILayout.BeginHorizontal();
+            {
+                CustomStyle.Space(25);
+                GUILayout.BeginVertical(); // Begin vertical grouping
+                {
+                    var themes = Enum.GetValues(typeof(IsometricWorkflow.Theme));
+                    int selected = (int)isometricWorkflow.selectedTheme;
+
+                    foreach (IsometricWorkflow.Theme theme in themes)
+                    {
+                        CustomStyle.Space(10); // Space between each toggles
+                        bool isSelected = GUILayout.Toggle(selected == (int)theme, theme.ToString());
+                        if (isSelected && selected != (int)theme)
+                        {
+                            isometricWorkflow.selectedTheme = theme; // Update the selected theme
+                            selected = (int)theme;
+                        }
+                    }
+
+                }
+                GUILayout.EndVertical();
+                GUILayout.FlexibleSpace();
+            }
+            GUILayout.EndHorizontal();
+
+            //Bottom
+            GUILayout.FlexibleSpace();
+            CustomStyle.ButtonPrimary("Next", 30, 0, () =>
+            {
+                isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
+            });
+            CustomStyle.Space();
         }
 
         /// <summary>
@@ -250,6 +298,69 @@ namespace Scenario.Editor
         public void DrawAssetsGUI(Rect _dimension)
         {
             DrawBackground(_dimension);
+            CustomStyle.Space();
+            CustomStyle.Label("Step 4. Choose assets", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Space(25);
+
+            GUILayout.BeginHorizontal();
+            {
+                CustomStyle.Space();
+                GUILayout.BeginVertical(GUI.skin.box); // Begin vertical grouping
+                {
+                    assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(true));
+                    {
+                        foreach (string assetName in isometricWorkflow.assetList)
+                        {
+                            CustomStyle.Space();
+                            GUILayout.BeginHorizontal();
+                            {
+                                CustomStyle.Label(assetName, alignment: TextAnchor.MiddleLeft, height: 30, fontSize: 16, bold: true);
+                                GUILayout.FlexibleSpace();
+                                if (GUILayout.Button(CommonIcons.GetIcon(CommonIcons.Icon.wastebasket), GUILayout.Width(30), GUILayout.Height(30)))
+                                {
+                                    isometricWorkflow.assetList.Remove(assetName);
+                                }
+                            }
+                            GUILayout.EndHorizontal();
+                            CustomStyle.Space();
+                        }
+                    }
+                    GUILayout.EndScrollView();//end scroll view
+
+                    GUILayout.BeginHorizontal(); //horizontal group of button + asset name for adding in list 
+                    {
+                        CustomStyle.ButtonPrimary("+", 30, 30, () =>
+                        {
+                            if (!string.IsNullOrEmpty(inputAssetName))
+                                isometricWorkflow.assetList.Add(inputAssetName);
+                        });
+                        inputAssetName = GUILayout.TextField(inputAssetName, GUILayout.Height(30));
+                    }
+                    GUILayout.EndHorizontal();
+                }
+                GUILayout.EndVertical(); //end of vertical group
+                CustomStyle.Space();
+            }
+            GUILayout.EndHorizontal();
+            CustomStyle.Space();
+
+            //Bottom
+            GUILayout.BeginHorizontal();
+            {
+                CustomStyle.Space();
+                CustomStyle.ButtonPrimary("Add Samples", 30, 100, () =>
+                {
+                    isometricWorkflow.FillAssetSamples();
+                });
+                GUILayout.FlexibleSpace();
+                CustomStyle.ButtonPrimary("Next", 30, 100, () =>
+                {
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
+                });
+                CustomStyle.Space();
+            }
+            GUILayout.EndHorizontal();
+            CustomStyle.Space();
         }
 
         /// <summary>

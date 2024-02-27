@@ -365,6 +365,7 @@ namespace Scenario.Editor
                 GUILayout.FlexibleSpace();
                 CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                 {
+                    isometricWorkflow.GenerateImages();
                     isometricWorkflow.currentStep = IsometricWorkflow.Step.Validation;
                 });
                 CustomStyle.Space();
@@ -448,7 +449,7 @@ namespace Scenario.Editor
             List<ImageDataStorage.ImageData> imagesToDisplay = new List<ImageDataStorage.ImageData>();
 
             //Add the 4 images of this inference
-            //imagesToDisplay.AddRange(DataCache.instance.GetImageDataList());
+            imagesToDisplay.AddRange(DataCache.instance.GetImageDataList());
 
             for (int i = 0; i < imagesToDisplay.Count; i++)
             {

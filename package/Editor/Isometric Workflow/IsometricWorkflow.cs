@@ -51,6 +51,12 @@ namespace Scenario.Editor
         /// </summary>
         internal List<string> assetList = new List<string>();
 
+        /// <summary>
+        /// Foreach asset, 4 images are generated. the use will be able to select one texture per asset. This is the Dictionary that contains, foreach asset, the current selected texture
+        /// First value is the assetName, second value is the id of the selected image
+        /// </summary>
+        internal Dictionary<string, string> selectedImages = new Dictionary<string, string>();
+
         internal static IsometricWorkflowSettings settings;
 
 
@@ -89,6 +95,10 @@ namespace Scenario.Editor
         {
             var isometricWorkflow = (IsometricWorkflow)GetWindow(typeof(IsometricWorkflow));
             isometricWorkflowUI.Init(isometricWorkflow);
+        }
+
+        public void GenerateImage()
+        {
         }
 
 

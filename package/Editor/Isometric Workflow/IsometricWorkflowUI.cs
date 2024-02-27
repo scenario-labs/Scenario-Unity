@@ -1,6 +1,7 @@
 ﻿using UnityEditor;
 using UnityEngine;
 using System;
+using System.Collections.Generic;
 
 namespace Scenario.Editor
 {
@@ -20,6 +21,12 @@ namespace Scenario.Editor
         /// The scrollview at step 4
         /// </summary>
         private Vector2 assetScrollView = Vector2.zero;
+
+
+        /// <summary>
+        /// The scrollview at step 5
+        /// </summary>
+        private Vector2 validationScrollView = Vector2.zero;
 
         /// <summary>
         /// The current value of the input field when the user wants to add an asset to the list
@@ -332,7 +339,10 @@ namespace Scenario.Editor
                         CustomStyle.ButtonPrimary("+", 30, 30, () =>
                         {
                             if (!string.IsNullOrEmpty(inputAssetName))
+                            {
                                 isometricWorkflow.assetList.Add(inputAssetName);
+                                inputAssetName = string.Empty;
+                            }
                         });
                         inputAssetName = GUILayout.TextField(inputAssetName, GUILayout.Height(30));
                     }
@@ -355,7 +365,7 @@ namespace Scenario.Editor
                 GUILayout.FlexibleSpace();
                 CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                 {
-                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Validation;
                 });
                 CustomStyle.Space();
             }
@@ -370,11 +380,139 @@ namespace Scenario.Editor
         public void DrawValidationGUI(Rect _dimension)
         {
             DrawBackground(_dimension);
+            CustomStyle.Space();
+            CustomStyle.Label("Step 5. Validation", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label("Choose the final images:", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Space(25);
+
+            GUILayout.BeginVertical(GUI.skin.box); // Begin vertical grouping of the scrollview
+            {
+                validationScrollView = GUILayout.BeginScrollView(validationScrollView, GUILayout.ExpandWidth(true));
+                {
+                    foreach (string assetName in isometricWorkflow.assetList)
+                    {
+                        CustomStyle.Space();
+                        GUILayout.BeginHorizontal(); //begin horizontal group of one asset
+                        {
+                            float totalHeight = 0; 
+                            DrawTextureBoxes(128, 128, assetName, out totalHeight); // draw the 4 boxes (textures) for one asset
+
+                            GUILayout.BeginVertical(); //begin right side (with name & buttons) for one asset
+                            {
+                                CustomStyle.Label(assetName, fontSize: 18, alignment: TextAnchor.UpperLeft);
+                                CustomStyle.ButtonPrimary("Convert to Sprite");
+                                CustomStyle.ButtonPrimary("Convert to Tile");
+                                CustomStyle.ButtonPrimary("Regenerate");
+                                CustomStyle.ButtonPrimary("Customize (webapp)");
+                            }
+                            GUILayout.EndVertical();
+                        }
+                        GUILayout.EndHorizontal();
+                        CustomStyle.Space();
+                    }
+                }
+                GUILayout.EndScrollView();//end scroll view
+            }
+            CustomStyle.Space();
+            GUILayout.EndVertical(); //end of vertical group
+
+
+            //Bottom
+            GUILayout.FlexibleSpace();
+            CustomStyle.ButtonPrimary("Restart", 30, 0, () =>
+            {
+
+            });
+            CustomStyle.Space();
         }
+
+
 
         #endregion
 
         #region Utils
+
+
+        /// <summary>
+        /// Draws a grid of texture boxes, each containing an image or loading indicator, and handles interactions.
+        /// This function renders a grid of image boxes and handles interactions .
+        /// </summary>
+        /// <param name="_boxWidth">The width of each texture box.</param>
+        /// <param name="_assetName">Each boxes will contain an image that represent this asset.</param>
+        /// <param name="_boxHeight">The height of each texture box.</param>
+        private void DrawTextureBoxes(float _boxWidth, float _boxHeight, string _assetName, out float totalHeight)
+        {
+            totalHeight = 0;
+
+            //Create a list of Image Data
+            List<ImageDataStorage.ImageData> imagesToDisplay = new List<ImageDataStorage.ImageData>();
+
+            //Add the 4 images of this inference
+            //imagesToDisplay.AddRange(DataCache.instance.GetImageDataList());
+
+            for (int i = 0; i < imagesToDisplay.Count; i++)
+            {
+                Rect boxRect = new Rect(i, 0, _boxWidth, _boxHeight);
+                Texture2D texture = imagesToDisplay[i].texture;
+
+                totalHeight = boxRect.y + boxRect.height;
+
+                if (texture != null)
+                {
+                    HandleImageClickEvents(boxRect, _assetName, imagesToDisplay[i].Id);
+                    RenderTextureBox(boxRect, texture);
+                }
+                else
+                {
+                    RenderLoadingBox(boxRect);
+                }
+            }
+        }
+
+
+        #endregion
+
+
+        #region Utility Methods
+
+        /// <summary>
+        /// Manages interactions with texture boxes, including selecting images when clicked.
+        /// </summary>
+        /// <param name="boxRect">The Rect representing the boundaries of the texture box.</param>
+        /// <param name="_assetName">The name of the asset this image is representing.</param>
+        /// <param name="_id">The id of the ImageData for which the texture is linked.</param>
+        private void HandleImageClickEvents(Rect boxRect, string _assetName, string _id)
+        {
+            if (GUI.Button(boxRect, ""))
+            {
+                isometricWorkflow.selectedImages[_assetName] = _id;
+            }
+        }
+
+        /// <summary>
+        /// Renders a texture box by drawing the associated image within the specified box's boundaries, scaling it to fit.
+        /// </summary>
+        /// <param name="boxRect">The Rect representing the boundaries of the texture box.</param>
+        /// <param name="texture">The Texture2D to render within the texture box.</param>
+        private void RenderTextureBox(Rect boxRect, Texture2D texture)
+        {
+            GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
+        }
+
+        /// <summary>
+        /// Renders a loading indicator within a texture box, providing visual feedback to users while images are being fetched or loaded asynchronously.
+        /// </summary>
+        /// <param name="boxRect">The Rect representing the boundaries of the texture box.</param>
+        private void RenderLoadingBox(Rect boxRect)
+        {
+            GUIStyle style = new GUIStyle(GUI.skin.label)
+            {
+                alignment = TextAnchor.MiddleCenter
+            };
+            GUI.color = Color.white;
+            GUI.Label(boxRect, $"Loading...", style);
+        }
+
 
 
         #endregion

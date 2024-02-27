@@ -1,3 +1,4 @@
+using Codice.CM.Common;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -21,6 +22,50 @@ namespace Scenario.Editor
             GetWindow<PromptWindow>("Prompt Window");
         }
 
+        #region Static Methods
+        /// <summary>
+        /// If you want to generate an image through script, call this
+        /// </summary>
+        /// <param name="_modelName"></param>
+        /// <param name="_isImageToImage"></param>
+        /// <param name="_isControlNet"></param>
+        /// <param name="_texture"></param>
+        /// <param name="_numberOfImages"></param>
+        /// <param name="_promptText"></param>
+        /// <param name="_samples"></param>
+        /// <param name="_width"></param>
+        /// <param name="_height"></param>
+        /// <param name="_guidance"></param>
+        /// <param name="_seed"></param>
+        /// <param name="_useCanny"></param>
+        /// <param name="_cannyStrength"></param>
+        public static void GenerateImage(string _modelName, bool _isImageToImage = false, bool _isControlNet = false, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f)
+        {
+            promptWindowUI.selectedModelName = _modelName;
+            promptWindowUI.isImageToImage = _isImageToImage;
+            promptWindowUI.isControlNet = _isControlNet;
+            PromptWindowUI.imageUpload = _texture;
+            promptWindowUI.imagesliderIntValue = _numberOfImages;
+            promptWindowUI.promptinputText = _promptText;
+            promptWindowUI.samplesliderValue = _samples;
+            promptWindowUI.widthSliderValue = _width;
+            promptWindowUI.heightSliderValue = _height;
+            promptWindowUI.guidancesliderValue = _guidance;
+            promptWindowUI.seedinputText = _seed;
+            if(_useCanny)
+            {
+                promptWindowUI.isAdvancedSettings = _useCanny;
+                promptWindowUI.selectedOption1Index = 2;
+                promptWindowUI.sliderValue1 = _cannyStrength;
+            }
+
+            GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed);
+        }
+
+        #endregion
+
+        #region Unity Methods
+
         private void OnEnable()
         {
             promptWindowUI = new PromptWindowUI(this);
@@ -43,25 +88,14 @@ namespace Scenario.Editor
             PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
         }
 
-        private void UpdateSelectedModel()
-        {
-            string selectedModelId = DataCache.instance.SelectedModelId;
-            string selectedModelName = EditorPrefs.GetString("SelectedModelName");
-
-            if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
-            {
-                promptWindowUI.selectedModelName = selectedModelName;
-            }
-            else
-            {
-                promptWindowUI.selectedModelName = "Choose Model";
-            }
-        }
-
         private void OnGUI()
         {
             promptWindowUI.Render(this.position);
         }
+
+        #endregion
+
+        #region Public Methods
 
         public void GenerateImage(string seed)
         {
@@ -76,6 +110,37 @@ namespace Scenario.Editor
                     promptWindowUI.heightSliderValue,
                     promptWindowUI.guidancesliderValue,
                     promptWindowUI.seedinputText);
+            }
+        }
+        public void SetSeed(string seed)
+        {
+            // Set the seed value here
+        }
+
+        /// <summary>
+        /// Force the Image Control Tab to opens at a spcifi tab
+        /// </summary>
+        public static void SetImageControlTab(int tabIndex)
+        {
+            promptWindowUI.imageControlTab = tabIndex;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        private void UpdateSelectedModel()
+        {
+            string selectedModelId = DataCache.instance.SelectedModelId;
+            string selectedModelName = EditorPrefs.GetString("SelectedModelName");
+
+            if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
+            {
+                promptWindowUI.selectedModelName = selectedModelName;
+            }
+            else
+            {
+                promptWindowUI.selectedModelName = "Choose Model";
             }
         }
 
@@ -274,18 +339,7 @@ namespace Scenario.Editor
             return CommonUtils.Texture2DToDataURL(processedMask);
         }
 
-        public void SetSeed(string seed)
-        {
-            // Set the seed value here
-        }
-
-        /// <summary>
-        /// Force the Image Control Tab to opens at a spcifi tab
-        /// </summary>
-        public static void SetImageControlTab(int tabIndex)
-        {
-            promptWindowUI.imageControlTab = tabIndex;
-        }
+        #endregion
 
         #region API_DTO
 

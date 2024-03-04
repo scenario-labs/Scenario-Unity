@@ -234,6 +234,11 @@ namespace Scenario.Editor
             modelsUI.OnGUI(this.position);
         }
 
+        private void OnEnable()
+        {
+            ShowWindow();
+        }
+
         public static string CurrentPrivacy
         {
             get => EditorPrefs.GetString("privacy", privacyPrivate);

@@ -43,6 +43,11 @@ namespace Scenario.Editor
             ImagesUI.OnGUI(this.position);
         }
 
+        private void OnEnable()
+        {
+            ShowWindow();
+        }
+
         private void OnDestroy()
         {
             ImagesUI.OnClose();

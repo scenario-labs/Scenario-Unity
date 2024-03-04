@@ -23,19 +23,15 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
-            if (isVisible)
-            {
-                GetInferencesData();
-            }
-            else
+            if (!isVisible)
             {
                 lastPageToken = string.Empty;
                 imageDataList.Clear();
-                GetInferencesData();
-
-                var images = (Images)GetWindow(typeof(Images));
-                ImagesUI.Init(images);
             }
+            GetInferencesData();
+
+            var images = (Images)GetWindow(typeof(Images));
+            ImagesUI.Init(images);
         }
 
         private void OnGUI()

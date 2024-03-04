@@ -31,6 +31,8 @@ namespace Scenario.Editor
 
         private void SetFirstPage()
         {
+            pageModels.Clear();
+
             selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
 
             showPreviousButton = false;
@@ -52,7 +54,6 @@ namespace Scenario.Editor
         
             if (firstImageIndex + maxModelsPerPage > models.Count)
             {
-                //firstImageIndex = models.Count - maxModelsPerPage;
                 showNextButton = false;
             }
 
@@ -96,13 +97,8 @@ namespace Scenario.Editor
                 pageModels.Add(models[i]);
             }
             numberPages = models.Count / maxModelsPerPage;
-            Debug.LogWarning("firstIndexImage: " + firstImageIndex + " " + models.Count + " " + maxModelsPerPage + " Count / maxModels = " + models.Count/maxModelsPerPage + " pageModels " + pageModels.Count);
-            if (models.Count > maxModelsPerPage && firstImageIndex != models.Count - maxModelsPerPage)
-            {
-                showNextButton = true;
-            }
 
-            if (pageModels.Count > maxModelsPerPage)
+            if (currentPage < numberPages)
             {
                 showNextButton = true;
             }

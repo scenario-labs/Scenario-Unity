@@ -24,21 +24,25 @@ namespace Scenario.Editor
         public static void ShowWindow()
         {
             if (isVisible)
-                return;
+            {
+                GetInferencesData();
+            }
+            else
+            {
+                lastPageToken = string.Empty;
+                imageDataList.Clear();
+                GetInferencesData();
 
-            lastPageToken = string.Empty;
-            imageDataList.Clear();
-            GetInferencesData();
-
-            var images = (Images)GetWindow(typeof(Images));
-            ImagesUI.Init(images);
+                var images = (Images)GetWindow(typeof(Images));
+                ImagesUI.Init(images);
+            }
         }
 
         private void OnGUI()
         {
             ImagesUI.OnGUI(this.position);
         }
-    
+
         private void OnDestroy()
         {
             ImagesUI.OnClose();

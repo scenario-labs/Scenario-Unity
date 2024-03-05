@@ -27,7 +27,7 @@ namespace Scenario.Editor
         /// <summary>
         /// Kept the current page active
         /// </summary>
-        private int currentPage = 0;
+        private int currentPage = 1;
 
         private void SetFirstPage()
         {
@@ -39,7 +39,7 @@ namespace Scenario.Editor
             showNextButton = false;
 
             firstImageIndex = 0;
-            currentPage = 0;
+            currentPage = 1;
 
             UpdatePage();
         }
@@ -96,7 +96,7 @@ namespace Scenario.Editor
             
                 pageModels.Add(models[i]);
             }
-            numberPages = models.Count / maxModelsPerPage;
+            numberPages = (models.Count / maxModelsPerPage) +1;
 
             if (currentPage < numberPages)
             {
@@ -123,12 +123,26 @@ namespace Scenario.Editor
 
             if (showPreviousButton)
             {
-                EditorStyle.Button($"Previous Page ({currentPage}/{numberPages})", () => { RedrawPage(-1); });
+                if (currentPage == numberPages)
+                {
+                    EditorStyle.Button($"Previous Page ({currentPage}/{numberPages})", () => { RedrawPage(-1); });
+                }
+                else
+                {
+                    EditorStyle.Button($"Previous Page ({currentPage - 1}/{numberPages})", () => { RedrawPage(-1); });
+                }
             }
 
             if (showNextButton)
             {
-                EditorStyle.Button($"Next Page ({currentPage}/{numberPages})" , () => { RedrawPage(1); });
+                if (currentPage == 1)
+                {
+                    EditorStyle.Button($"Next Page ({currentPage}/{numberPages})", () => { RedrawPage(1); });
+                }
+                else
+                { 
+                    EditorStyle.Button($"Next Page ({currentPage+1}/{numberPages})" , () => { RedrawPage(1); });
+                }
             }
 
             GUILayout.EndHorizontal();
@@ -212,12 +226,10 @@ namespace Scenario.Editor
                         bubbleText = "Unknown";
                     }
 
-                    Rect bubbleRect = new Rect(boxRect.x + boxWidth - 40f, boxRect.y, 40f, 20f);
-                    float cornerRadius = 25f;
+                    Rect bubbleRect = new Rect(boxRect.x + boxWidth - 50f, boxRect.y + 10, 40f, 20f);
 
                     GUIStyle bubbleStyle = new GUIStyle(GUI.skin.box);
-                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.black);
-                    bubbleStyle.border = new RectOffset((int)cornerRadius, (int)cornerRadius, (int)cornerRadius, (int)cornerRadius);
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, new Color(0.2f,0.2f,0.2f,0.65f));
 
                     GUI.Box(bubbleRect, bubbleText, bubbleStyle);
 
@@ -225,7 +237,7 @@ namespace Scenario.Editor
                 }
                 else
                 {
-                    GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading..", style);
+                    GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading ...", style);
                 }
             }
         }

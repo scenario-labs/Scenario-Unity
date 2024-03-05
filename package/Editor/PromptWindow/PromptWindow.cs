@@ -207,7 +207,9 @@ namespace Scenario.Editor
             {
                 string option1Name = promptWindowUI.dropdownOptions[promptWindowUI.selectedOption1Index - 1];
                 if (!modalitySettings.ContainsKey(option1Name))
+                { 
                     modalitySettings.Add(option1Name, $"{promptWindowUI.sliderValue:0.00}");
+                }
             }
 
             modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));

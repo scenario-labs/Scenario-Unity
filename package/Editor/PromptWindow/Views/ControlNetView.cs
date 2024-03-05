@@ -44,7 +44,7 @@ namespace Scenario.Editor
                     sliderValue = sliderDisplayedValue / 100.0f;
                     if (sliderValue == 0)
                     {
-                        sliderValue = 0.1f;
+                        sliderValue = 0.01f;
                     }
                 }
                 GUILayout.EndHorizontal();

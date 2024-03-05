@@ -90,6 +90,8 @@ namespace Scenario.Editor
                             inferenceStatusRoot.inference.createdAt,
                             img.Seed);
                     }
+
+                    Images.ShowWindow();
                 }
             });
         }

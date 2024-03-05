@@ -213,10 +213,10 @@ namespace Scenario.Editor
         {
             if (!isProcessing)
             {
-                isProcessing = true;
 
                 while (true)
                 {
+                    isProcessing = true;
                     string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPrivate}";
 
                     if (!string.IsNullOrEmpty(PagniationTokenPrivate))

@@ -222,8 +222,11 @@ namespace Scenario.Editor
                     Rect bubbleRect = new Rect(boxRect.x + boxWidth - 50f, boxRect.y + 10, 40f, 20f);
 
                     GUIStyle bubbleStyle = new GUIStyle(GUI.skin.box);
-                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, new Color(0.2f,0.2f,0.2f));
-
+#if UNITY_EDITOR_WIN
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.black);
+#elif UNITY_EDITOR_OSX
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.white);
+#endif
                     GUI.Box(bubbleRect, bubbleText, bubbleStyle);
 
                     GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);

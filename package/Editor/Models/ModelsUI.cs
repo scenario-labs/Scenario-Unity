@@ -185,7 +185,7 @@ namespace Scenario.Editor
 
                 GUIStyle style = new GUIStyle(GUI.skin.label)
                 {
-                    alignment = TextAnchor.MiddleCenter
+                    alignment = TextAnchor.MiddleCenter,
                 };
 
                 if (texture != null)
@@ -221,12 +221,11 @@ namespace Scenario.Editor
 
                     Rect bubbleRect = new Rect(boxRect.x + boxWidth - 50f, boxRect.y + 10, 40f, 20f);
 
-                    GUIStyle bubbleStyle = new GUIStyle(GUI.skin.box);
-#if UNITY_EDITOR_WIN
+                    GUIStyle bubbleStyle = new GUIStyle();
+                    bubbleStyle.alignment = TextAnchor.MiddleCenter;
+                    bubbleStyle.normal.textColor = Color.white;
                     bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.black);
-#elif UNITY_EDITOR_OSX
-                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.white);
-#endif
+
                     GUI.Box(bubbleRect, bubbleText, bubbleStyle);
 
                     GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), name, style);

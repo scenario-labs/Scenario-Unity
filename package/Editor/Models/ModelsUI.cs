@@ -168,6 +168,8 @@ namespace Scenario.Editor
                         if (globalIndex >= 0 && globalIndex < models.Count)
                         {
                             DataCache.instance.SelectedModelId = models[globalIndex].id;
+                            DataCache.instance.SelectedModelType = models[globalIndex].type;
+                            
                             EditorPrefs.SetString("SelectedModelName", name);
                         }
 

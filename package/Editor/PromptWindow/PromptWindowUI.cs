@@ -15,15 +15,23 @@ namespace Scenario.Editor
         public readonly string[] dropdownOptions =
         {
             "",
-            "canny",
-            "pose",
-            "depth",
-            "lines",
-            "seg",
-            "scribble",
-            "lineart",
-            "normal-map",
-            "shuffle"
+            "Character",
+            "Landscape",
+            "Structure",
+            "Pose",
+            "Depth",
+            "Segmentation",
+            "Illusion"
+        };
+
+        public readonly string[] dropdownOptionsSD15 =
+        {
+            "City",
+            "Interior",
+            "Edges",
+            "Scribble",
+            "Normal Map",
+            "Line Art"
         };
 
         internal readonly string[] schedulerOptions = new string[] // Scheduler options extracted from your HTML

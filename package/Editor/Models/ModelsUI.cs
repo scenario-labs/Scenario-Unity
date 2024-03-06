@@ -222,7 +222,7 @@ namespace Scenario.Editor
                     Rect bubbleRect = new Rect(boxRect.x + boxWidth - 50f, boxRect.y + 10, 40f, 20f);
 
                     GUIStyle bubbleStyle = new GUIStyle(GUI.skin.box);
-                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, new Color(0.2f,0.2f,0.2f,0.85f));
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, new Color(0.2f,0.2f,0.2f));
 
                     GUI.Box(bubbleRect, bubbleText, bubbleStyle);
 

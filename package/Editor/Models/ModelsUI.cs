@@ -224,7 +224,7 @@ namespace Scenario.Editor
                     GUIStyle bubbleStyle = new GUIStyle();
                     bubbleStyle.alignment = TextAnchor.MiddleCenter;
                     bubbleStyle.normal.textColor = Color.white;
-                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.black);
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, new Color(0.15f, 0.15f, 0.15f, 0.9f));
 
                     GUI.Box(bubbleRect, bubbleText, bubbleStyle);
 

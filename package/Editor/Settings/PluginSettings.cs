@@ -163,7 +163,7 @@ namespace Scenario.Editor
         /// <returns></returns>
         private static Preset GetPreset(string _GUID)
         {
-            if (_GUID != null && !string.IsNullOrEmpty(_GUID))
+            if (!string.IsNullOrEmpty(_GUID))
             {
                 return AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(_GUID));
             }

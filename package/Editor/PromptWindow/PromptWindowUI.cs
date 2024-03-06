@@ -38,7 +38,7 @@ namespace Scenario.Editor
         public int selectedOption1Index = 0;
 
         /// <summary>
-        /// 
+        /// Variable to display in interface on slider element.
         /// </summary>
         public int sliderDisplayedValue = 100;
 

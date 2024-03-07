@@ -12,6 +12,9 @@ namespace Scenario.Editor
     
         internal static Texture2D imageUpload;
 
+        /// <summary>
+        /// First dropdown options according to SDXL models
+        /// </summary>
         public readonly string[] dropdownOptions =
         {
             "",
@@ -24,6 +27,9 @@ namespace Scenario.Editor
             "Illusion"
         };
 
+        /// <summary>
+        /// Seconds dropdown options according to SD 1.5 models
+        /// </summary>
         public readonly string[] dropdownOptionsSD15 =
         {
             "City",
@@ -32,6 +38,27 @@ namespace Scenario.Editor
             "Scribble",
             "Normal Map",
             "Line Art"
+        };
+
+        /// <summary>
+        /// Translation to api calling modalities options, treat previous values in the exact same order.
+        /// </summary>
+        public readonly string[] correspondingOptionsValue =
+        {
+            "",
+            "character",
+            "landscape",
+            "canny",
+            "pose",
+            "depth",
+            "seg",
+            "illusion",
+            "city",
+            "interior",
+            "lines",
+            "scribble",
+            "normal-map",
+            "lineart"
         };
 
         internal readonly string[] schedulerOptions = new string[] // Scheduler options extracted from your HTML

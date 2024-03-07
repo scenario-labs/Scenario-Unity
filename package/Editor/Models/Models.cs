@@ -213,7 +213,6 @@ namespace Scenario.Editor
         {
             if (!isProcessing)
             {
-
                 while (true)
                 {
                     isProcessing = true;

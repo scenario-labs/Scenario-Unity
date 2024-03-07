@@ -93,10 +93,10 @@ namespace Scenario.Editor
                 {
                     continue;
                 }
-            
-                pageModels.Add(models[i]);
+
+                pageModels.Add(models[i]); 
             }
-            numberPages = (models.Count / maxModelsPerPage) +1;
+            numberPages = (models.Count / maxModelsPerPage) + 1;
 
             if (currentPage < numberPages)
             {

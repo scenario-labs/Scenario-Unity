@@ -35,7 +35,11 @@ namespace Scenario.Editor
         };
 
         public string selectedPreset = "";
-        public int selectedOption1Index = 0;
+
+        /// <summary>
+        /// Correspond of the index value selected from the modalities dropdown value
+        /// </summary>
+        public int selectedOptionIndex = 0;
 
         /// <summary>
         /// Variable to display in interface on slider element.
@@ -307,7 +311,7 @@ namespace Scenario.Editor
                     widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
                     heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
 
-                    selectedOption1Index = NearestValueIndex(widthSliderValue, allowedWidthValues);
+                    selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
                 });
             
                 toolsMenu.DropDown(dropdownButtonRect);

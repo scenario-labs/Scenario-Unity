@@ -203,12 +203,12 @@ namespace Scenario.Editor
         {
             operationType = "controlnet";
 
-            if (promptWindowUI.selectedOption1Index > 0)
+            if (promptWindowUI.selectedOptionIndex > 0)
             {
-                string option1Name = promptWindowUI.dropdownOptions[promptWindowUI.selectedOption1Index - 1];
-                if (!modalitySettings.ContainsKey(option1Name))
+                string optionName = promptWindowUI.dropdownOptions[promptWindowUI.selectedOptionIndex - 1];
+                if (!modalitySettings.ContainsKey(optionName))
                 { 
-                    modalitySettings.Add(option1Name, $"{promptWindowUI.sliderValue:0.00}");
+                    modalitySettings.Add(optionName, $"{promptWindowUI.sliderValue:0.00}");
                 }
             }
 

@@ -35,9 +35,9 @@ namespace Scenario.Editor
 
                 List<string> availableOptions1 = new List<string> { "None" };
                 availableOptions1.AddRange(dropdownOptions);
-                selectedOption1Index = EditorGUILayout.Popup(selectedOption1Index, availableOptions1.ToArray());
+                selectedOptionIndex = EditorGUILayout.Popup(selectedOptionIndex, availableOptions1.ToArray());
 
-                if (selectedOption1Index > 0)
+                if (selectedOptionIndex > 0)
                 { 
                     GUILayout.Label("Influence :", EditorStyles.label);
                     sliderDisplayedValue = (int)EditorGUILayout.Slider(Mathf.Clamp(sliderDisplayedValue, 0, 100), 0, 100);

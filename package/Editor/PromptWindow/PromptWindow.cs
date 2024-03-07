@@ -11,7 +11,7 @@ namespace Scenario.Editor
     public class PromptWindow : EditorWindow
     {
         public static PromptWindowUI promptWindowUI;
-        
+
         private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
         private string fileName;
@@ -52,7 +52,7 @@ namespace Scenario.Editor
             promptWindowUI.heightSliderValue = _height;
             promptWindowUI.guidancesliderValue = _guidance;
             promptWindowUI.seedinputText = _seed;
-            if(_useCanny)
+            if (_useCanny)
             {
                 promptWindowUI.isAdvancedSettings = _useCanny;
                 promptWindowUI.selectedOption1Index = 2;
@@ -69,21 +69,21 @@ namespace Scenario.Editor
         private void OnEnable()
         {
             promptWindowUI = new PromptWindowUI(this);
-            UpdateSelectedModel();
+            UpdateSelectedModel(promptWindowUI.selectedModelName);
         }
-    
+
         private void OnFocus()
         {
             if (promptWindowUI != null)
             {
-                UpdateSelectedModel();
+                UpdateSelectedModel(promptWindowUI.selectedModelName);
             }
         }
-        
+
         private void Update()
         {
             if (!processReceivedUploadImage) return;
-        
+
             processReceivedUploadImage = false;
             PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
         }
@@ -125,24 +125,31 @@ namespace Scenario.Editor
             promptWindowUI.imageControlTab = tabIndex;
         }
 
-        #endregion
-
-        #region Private Methods
-
-        private void UpdateSelectedModel()
+        /// <summary>
+        /// Update the selectedModel in the Prompt Window then save it in the editorprefs. You can specify the model. If nothing is specified it will try to find a value in the editorprefs
+        /// </summary>
+        /// <param name="_selectedModelName">The name of the model you want to update in the prompt window. Can be null</param>
+        public static void UpdateSelectedModel(string _selectedModelName = null)
         {
-            string selectedModelId = DataCache.instance.SelectedModelId;
-            string selectedModelName = EditorPrefs.GetString("SelectedModelName");
+            string selectedModelName = null;
 
-            if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
+            if (string.IsNullOrEmpty(_selectedModelName))
+                selectedModelName = EditorPrefs.GetString("scenario/selectedModelName");
+
+            if (string.IsNullOrEmpty(selectedModelName))
             {
-                promptWindowUI.selectedModelName = selectedModelName;
+                promptWindowUI.selectedModelName = "Choose Model";
+                EditorPrefs.SetString("scenario/selectedModelName", null);
             }
             else
             {
-                promptWindowUI.selectedModelName = "Choose Model";
+                promptWindowUI.selectedModelName = selectedModelName;
+                EditorPrefs.SetString("scenario/selectedModelName", selectedModelName);
             }
         }
+        #endregion
+
+        #region Private Methods
 
         private bool IsPromptDataValid(out string inputData)
         {
@@ -150,7 +157,7 @@ namespace Scenario.Editor
             string operationType = "txt2img";
             string dataUrl = "\"\"";
             string maskDataUrl = "\"\"";
-            
+
             inputData = "";
 
             if (promptWindowUI.isImageToImage)
@@ -226,13 +233,13 @@ namespace Scenario.Editor
             string prompt = promptWindowUI.promptinputText;
             string seedField = "";
             string image = $"\"{dataUrl}\"";
-            
+
             if (promptWindowUI.seedinputText != "-1")
             {
                 ulong seed = ulong.Parse(promptWindowUI.seedinputText);
                 seedField = $@"""seed"": {seed},";
             }
-            
+
             string negativePrompt = promptWindowUI.negativepromptinputText;
             float strength = Mathf.Clamp((float)Math.Round((100 - promptWindowUI.influenceSliderValue) * 0.01f, 2), 0.01f, 1f); //strength is 100-influence (and between 0.01 & 1)
             float guidance = promptWindowUI.guidancesliderValue;
@@ -291,7 +298,7 @@ namespace Scenario.Editor
 
             modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
         }
-        
+
         private string PrepareModality(Dictionary<string, string> modalitySettings)
         {
             string modality;
@@ -318,7 +325,7 @@ namespace Scenario.Editor
 
             return modalitySettings;
         }
-        
+
         private static string ProcessMask()
         {
             Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);

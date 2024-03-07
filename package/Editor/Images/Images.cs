@@ -93,7 +93,7 @@ namespace Scenario.Editor
                             Steps = inference.parameters.numInferenceSteps,
                             Size = new Vector2(inference.parameters.width,inference.parameters.height),
                             Guidance = inference.parameters.guidance,
-                            Scheduler = "Default", //TODO : change this to reflect the scheduler used for creating this image
+                            Scheduler = inference.parameters.scheduler,
                             Seed = image.seed,
                             CreatedAt = inference.createdAt,
                             modelId = inference.modelId

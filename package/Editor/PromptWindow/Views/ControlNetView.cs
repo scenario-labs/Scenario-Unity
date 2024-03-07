@@ -39,7 +39,7 @@ namespace Scenario.Editor
 
                 if (selectedOption1Index > 0)
                 { 
-                    GUILayout.Label("Guidance :", EditorStyles.label);
+                    GUILayout.Label("Influence :", EditorStyles.label);
                     sliderDisplayedValue = (int)EditorGUILayout.Slider(Mathf.Clamp(sliderDisplayedValue, 0, 100), 0, 100);
                     sliderValue = sliderDisplayedValue / 100.0f;
                     if (sliderValue == 0)

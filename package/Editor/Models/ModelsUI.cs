@@ -22,7 +22,7 @@ namespace Scenario.Editor
         private void SetFirstPage()
         {
             selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
-        
+
             firstImageIndex = 0;
             maxModelsPerPage = 15;
 
@@ -37,7 +37,7 @@ namespace Scenario.Editor
             firstImageIndex += maxModelsPerPage;
 
             var models = Models.GetModels();
-        
+
             if (firstImageIndex > models.Count - maxModelsPerPage)
             {
                 firstImageIndex = models.Count - maxModelsPerPage;
@@ -52,14 +52,14 @@ namespace Scenario.Editor
         {
             firstImageIndex -= maxModelsPerPage;
             showPreviousButton = firstImageIndex > maxModelsPerPage;
-        
+
             UpdatePage();
         }
 
         private void UpdatePage()
         {
             pageModels.Clear();
-        
+
             var models = Models.GetModels();
 
             for (int i = firstImageIndex; i < firstImageIndex + maxModelsPerPage; i++)
@@ -68,7 +68,7 @@ namespace Scenario.Editor
                 {
                     continue;
                 }
-            
+
                 pageModels.Add(models[i]);
             }
 
@@ -84,7 +84,7 @@ namespace Scenario.Editor
 
             drawTabs = true;
         }
-    
+
         public void OnGUI(Rect position)
         {
             DrawBackground(position);
@@ -92,7 +92,7 @@ namespace Scenario.Editor
             if (drawTabs)
             {
                 string[] tabs = { "Private Models", "Public Models" };
-                HandleTabSelection(tabs);    
+                HandleTabSelection(tabs);
             }
 
             DrawModelsGrid(position);
@@ -168,7 +168,7 @@ namespace Scenario.Editor
                         if (globalIndex >= 0 && globalIndex < models.Count)
                         {
                             DataCache.instance.SelectedModelId = models[globalIndex].id;
-                            EditorPrefs.SetString("SelectedModelName", name);
+                            PromptWindow.UpdateSelectedModel(name);
                         }
 
                         EditorWindow window = EditorWindow.GetWindow(typeof(Models));

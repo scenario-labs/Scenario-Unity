@@ -14,7 +14,7 @@ namespace Scenario.Editor
         
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
-            float guidancesliderValue, string seedinputText)
+            float guidancesliderValue, string seedinputText, Action<string> _onInferenceRequested = null)
         {
             Debug.Log("Requesting image generation please wait..");
             
@@ -40,6 +40,7 @@ namespace Scenario.Editor
 
                 GetInferenceStatus(inferenceId, modelId);
                 Images.ShowWindow();
+                _onInferenceRequested?.Invoke(inferenceId);
             });
         }
         

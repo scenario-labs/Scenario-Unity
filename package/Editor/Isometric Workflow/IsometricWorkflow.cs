@@ -52,6 +52,11 @@ namespace Scenario.Editor
         internal List<string> assetList = new List<string>();
 
         /// <summary>
+        /// Each asset is linked to an inference (a request of image generation) id
+        /// </summary>
+        internal Dictionary<string, string> inferenceIdByAssetList = new Dictionary<string, string>();
+
+        /// <summary>
         /// Foreach asset, 4 images are generated. the use will be able to select one texture per asset. This is the Dictionary that contains, foreach asset, the current selected texture
         /// First value is the assetName, second value is the id of the selected image
         /// </summary>
@@ -99,7 +104,11 @@ namespace Scenario.Editor
             isometricWorkflowUI.Init(isometricWorkflow);
         }
 
-        public void GenerateImages()
+        /// <summary>
+        /// Call the prompt window to generate one image per asset in the assetlist
+        /// </summary>
+        /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
+        public void GenerateImages(Action _onRequestSent)
         {
             Texture2D baseTexture = null;
             switch (selectedBase)
@@ -117,14 +126,27 @@ namespace Scenario.Editor
                     break;
             }
 
+            int totalRequests = assetList.Count;
+            int completedRequests = 0;
+
             foreach (string assetName in assetList)
             {
+                string tempName = assetName;
                 bool useBaseTexture = baseTexture != null;
                 string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
-                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {assetName}", 30, 1024, 1024, 6, "-1", true, 0.8f);
+                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {assetName}", 30, 1024, 1024, 6, "-1", true, 0.8f,
+                (inferenceId) =>
+                {
+                    inferenceIdByAssetList.Add(tempName, inferenceId);
+
+                    completedRequests++;
+                    if (completedRequests == totalRequests)
+                    {
+                        _onRequestSent?.Invoke();
+                    }
+                });
             }
         }
-
 
 
         private void OnGUI()

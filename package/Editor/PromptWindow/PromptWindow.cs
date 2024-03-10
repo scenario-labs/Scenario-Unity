@@ -39,7 +39,7 @@ namespace Scenario.Editor
         /// <param name="_seed"></param>
         /// <param name="_useCanny"></param>
         /// <param name="_cannyStrength"></param>
-        public static void GenerateImage(string _modelName, bool _isImageToImage = false, bool _isControlNet = false, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f)
+        public static void GenerateImage(string _modelName, bool _isImageToImage = false, bool _isControlNet = false, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
         {
             promptWindowUI.selectedModelName = _modelName;
             promptWindowUI.isImageToImage = _isImageToImage;
@@ -59,7 +59,7 @@ namespace Scenario.Editor
                 promptWindowUI.sliderValue1 = _cannyStrength;
             }
 
-            GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed);
+            GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed, _onInferenceRequested);
         }
 
         #endregion
@@ -97,7 +97,12 @@ namespace Scenario.Editor
 
         #region Public Methods
 
-        public void GenerateImage(string seed)
+        /// <summary>
+        /// Send a inference request to the API
+        /// </summary>
+        /// <param name="seed"></param>
+        /// <param name="_onInferenceRequested">return a callback when the inference has been posted to the API with the inferenceID</param>
+        public void GenerateImage(string seed, Action<string> _onInferenceRequested = null)
         {
             Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.selectedModelName + ", Seed: " + seed);
             if (IsPromptDataValid(out string inputData))
@@ -109,7 +114,8 @@ namespace Scenario.Editor
                     promptWindowUI.widthSliderValue,
                     promptWindowUI.heightSliderValue,
                     promptWindowUI.guidancesliderValue,
-                    promptWindowUI.seedinputText);
+                    promptWindowUI.seedinputText,
+                    _onInferenceRequested);
             }
         }
         public void SetSeed(string seed)

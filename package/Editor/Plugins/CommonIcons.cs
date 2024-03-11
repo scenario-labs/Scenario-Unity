@@ -19,7 +19,21 @@ namespace Scenario.Editor
 
         public static Texture2D GetIcon(Icon _iconName)
         {
-            return iconTextures[_iconName];
+            if (iconTextures.ContainsKey(_iconName))
+            {
+                if (iconTextures[_iconName] != null)
+                {
+                    return iconTextures[_iconName];
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            else
+            { 
+                return null;
+            }
         }
 
         static void LoadIcons()

@@ -71,6 +71,8 @@ namespace Scenario.Editor
             if (isVisible)
                 return;
 
+            PromptFetcher.IsWorkflow = true;
+
             GetWindow<IsometricWorkflow>();
 
             settings = IsometricWorkflowSettings.GetSerializedSettings();
@@ -95,7 +97,7 @@ namespace Scenario.Editor
                 "Church",
                 "Building Block"
             };
-            assetList.AddRange(samples);
+            assetList.AddRange(samples);//
         }
 
         private void CreateGUI()
@@ -175,7 +177,7 @@ namespace Scenario.Editor
 
         private void OnDestroy()
         {
-
+            PromptFetcher.IsWorkflow = false;
         }
 
         private void OnBecameVisible()

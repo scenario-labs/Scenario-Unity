@@ -41,25 +41,33 @@ namespace Scenario.Editor
         /// <param name="_cannyStrength"></param>
         public static void GenerateImage(string _modelName, bool _isImageToImage = false, bool _isControlNet = false, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
         {
-            promptWindowUI.selectedModelName = _modelName;
-            promptWindowUI.isImageToImage = _isImageToImage;
-            promptWindowUI.isControlNet = _isControlNet;
-            PromptWindowUI.imageUpload = _texture;
-            promptWindowUI.imagesliderIntValue = _numberOfImages;
-            promptWindowUI.promptinputText = _promptText;
-            promptWindowUI.samplesliderValue = _samples;
-            promptWindowUI.widthSliderValue = _width;
-            promptWindowUI.heightSliderValue = _height;
-            promptWindowUI.guidancesliderValue = _guidance;
-            promptWindowUI.seedinputText = _seed;
-            if (_useCanny)
+            if (promptWindowUI != null)
             {
-                promptWindowUI.isAdvancedSettings = _useCanny;
-                promptWindowUI.selectedOption1Index = 2;
-                promptWindowUI.sliderValue1 = _cannyStrength;
-            }
+                promptWindowUI.selectedModelName = _modelName;
+                promptWindowUI.isImageToImage = _isImageToImage;
+                promptWindowUI.isControlNet = _isControlNet;
+                PromptWindowUI.imageUpload = _texture;
+                promptWindowUI.imagesliderIntValue = _numberOfImages;
+                promptWindowUI.promptinputText = _promptText;
+                promptWindowUI.samplesliderValue = _samples;
+                promptWindowUI.widthSliderValue = _width;
+                promptWindowUI.heightSliderValue = _height;
+                promptWindowUI.guidancesliderValue = _guidance;
+                promptWindowUI.seedinputText = _seed;
+                if (_useCanny)
+                {
+                    promptWindowUI.isAdvancedSettings = _useCanny;
+                    promptWindowUI.selectedOption1Index = 2;
+                    promptWindowUI.sliderValue1 = _cannyStrength;
+                }
 
-            GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed, _onInferenceRequested);
+                GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed, _onInferenceRequested);
+            }
+            else
+            {
+                ShowWindow();
+                GenerateImage(_modelName, _isImageToImage, _isControlNet, _texture, _numberOfImages, _promptText, _samples, _width, _height, _guidance, _seed, _useCanny, _cannyStrength, _onInferenceRequested);
+            }
         }
 
         #endregion

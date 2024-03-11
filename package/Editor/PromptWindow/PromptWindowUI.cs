@@ -135,6 +135,8 @@ namespace Scenario.Editor
 
                 EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
 
+                PromptFetcher.IsWorkflow = false;
+
                 if (shouldAutoGenerateSeed)
                 {
                     promptWindow.GenerateImage(null);

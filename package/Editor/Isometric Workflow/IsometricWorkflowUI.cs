@@ -326,20 +326,26 @@ namespace Scenario.Editor
                 {
                     assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(true));
                     {
-                        foreach (string assetName in isometricWorkflow.assetList)
-                        {
-                            CustomStyle.Space();
-                            GUILayout.BeginHorizontal();
+                        if (isometricWorkflow.assetList != null && isometricWorkflow.assetList.Count > 0)
+                        { 
+                            foreach (string assetName in isometricWorkflow.assetList)
                             {
-                                CustomStyle.Label(assetName, alignment: TextAnchor.MiddleLeft, height: 30, fontSize: 16, bold: true);
-                                GUILayout.FlexibleSpace();
-                                if (GUILayout.Button(CommonIcons.GetIcon(CommonIcons.Icon.wastebasket), GUILayout.Width(30), GUILayout.Height(30)))
+                                CustomStyle.Space();
+                                GUILayout.BeginHorizontal();
                                 {
-                                    isometricWorkflow.assetList.Remove(assetName);
+                                    CustomStyle.Label(assetName, alignment: TextAnchor.MiddleLeft, height: 30, fontSize: 16, bold: true);
+                                    GUILayout.FlexibleSpace();
+                                    if (CommonIcons.GetIcon(CommonIcons.Icon.wastebasket) != null)
+                                    { 
+                                        if (GUILayout.Button(CommonIcons.GetIcon(CommonIcons.Icon.wastebasket), GUILayout.Width(30), GUILayout.Height(30)))
+                                        {
+                                            isometricWorkflow.assetList.Remove(assetName);
+                                        }
+                                    }
                                 }
+                                GUILayout.EndHorizontal();
+                                CustomStyle.Space();
                             }
-                            GUILayout.EndHorizontal();
-                            CustomStyle.Space();
                         }
                     }
                     GUILayout.EndScrollView();//end scroll view
@@ -435,7 +441,13 @@ namespace Scenario.Editor
                             {
                                 CustomStyle.Label(assetName, fontSize: 18, alignment: TextAnchor.UpperLeft);
                                 CustomStyle.ButtonPrimary("Convert to Sprite");
-                                CustomStyle.ButtonPrimary("Convert to Tile");
+                                CustomStyle.ButtonPrimary("Convert to Tile", 30, 0, () => 
+                                {
+                                    Debug.Log("Validate button");
+                                    /// Contains the side window when the user want to download an image as a tile
+                                    TileCreator tileCreator = new(isometricWorkflow.selectedImages[assetName]);
+                                    tileCreator.OnGUI();
+                                });
                                 CustomStyle.ButtonPrimary("Regenerate");
                                 CustomStyle.ButtonPrimary("Customize (webapp)");
                             }
@@ -455,17 +467,14 @@ namespace Scenario.Editor
             GUILayout.FlexibleSpace();
             CustomStyle.ButtonPrimary("Restart", 30, 0, () =>
             {
-
+                isometricWorkflow.currentStep = IsometricWorkflow.Step.Base;
             });
             CustomStyle.Space();
         }
 
-
-
         #endregion
 
         #region Utils
-
 
         /// <summary>
         /// Draws a grid of texture boxes, each containing an image or loading indicator, and handles interactions.
@@ -484,13 +493,19 @@ namespace Scenario.Editor
             {
                 Texture2D texture = imagesToDisplay[i].texture;
 
-
                 if (texture != null)
                 {
-                    if (isometricWorkflow.selectedImages[_assetName] != null && isometricWorkflow.selectedImages[_assetName] == imagesToDisplay[i].Id)
-                        GUI.backgroundColor = Color.cyan;
-                    else
-                        GUI.backgroundColor = defaultBackgroundColor;
+                    if (isometricWorkflow.selectedImages.ContainsKey(_assetName))
+                    {
+                        if (isometricWorkflow.selectedImages[_assetName] != null && isometricWorkflow.selectedImages[_assetName] == imagesToDisplay[i].Id)
+                        { 
+                            GUI.backgroundColor = Color.cyan;
+                        }
+                        else
+                        {
+                            GUI.backgroundColor = defaultBackgroundColor;
+                        }
+                    }
 
                     if (GUILayout.Button(texture, GUILayout.MaxWidth(256), GUILayout.MaxHeight(256)))
                     {
@@ -510,7 +525,6 @@ namespace Scenario.Editor
                 }
             }
         }
-
 
         #endregion
 

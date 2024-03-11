@@ -11,7 +11,12 @@ namespace Scenario.Editor
     public class PromptFetcher
     {
         public static List<string> cancelledInferences = new();
-        
+
+        /// <summary>
+        /// Active this boolean when user use a specific workflow
+        /// </summary>
+        public static bool IsWorkflow = false;
+
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
             float guidancesliderValue, string seedinputText, Action<string> _onInferenceRequested = null)
@@ -39,7 +44,10 @@ namespace Scenario.Editor
                     modelId);
 
                 GetInferenceStatus(inferenceId, modelId);
-                Images.ShowWindow();
+                if (!IsWorkflow)
+                { 
+                    Images.ShowWindow();
+                }
                 _onInferenceRequested?.Invoke(inferenceId);
             });
         }

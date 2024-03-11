@@ -20,7 +20,9 @@ namespace Scenario.Editor
         /// </summary>
         private string selectedImageId = string.Empty;
 
-        // Dictionary containing button labels and associated actions
+        /// <summary>
+        /// Dictionary containing button labels and associated actions
+        /// </summary>
         private Dictionary<string, Action> buttonActions = new Dictionary<string, Action>();
 
         /// <summary>
@@ -68,65 +70,35 @@ namespace Scenario.Editor
             buttonActions = new Dictionary<string, Action>()
             {
                 {
-                    "Set Image as Reference", () =>
-                    {
-                        PromptWindowUI.imageUpload = selectedTexture;
-                        PromptWindow.ShowWindow();
-                        PromptWindow.SetImageControlTab(1);
+                    "Set Image as Reference", () => Images.SetImageAsReference(selectedTexture, () => {
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been set in the Image to Image parameter in the Prompt Window.", EditorStyles.wordWrappedLabel);
                         };
-
-                    }
+                    })
                 },
                 {
-                    "Download as Texture",  () =>
-                    {
-                        CommonUtils.SaveTextureAsPNG(selectedTexture, importPreset:PluginSettings.TexturePreset);
+                    "Download as Texture",  () => Images.DlAsTexture(selectedTexture, () => { 
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
                         };
-                    }
+                    })
+
                 },
                 {
-                    "Download as Sprite", () =>
-                    {
-                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
-                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
-
-                        //What to do when file is downloaded
-                        Action<string> successAction = (filePath) =>
-                        {
-                            buttonDetailPanelDrawFunction = () =>
-                            {
+                    "Download as Sprite", () => Images.DlAsSprite(selectedTexture, selectedImageId, () => {
+                            buttonDetailPanelDrawFunction = () => {
+                                string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
                                 GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
                             };
-
-                            if (PluginSettings.UsePixelsUnitsEqualToImage)
-                            {
-                                CommonUtils.ApplyPixelsPerUnit(filePath);
-                            }
+                        },
+                        () => {
+                        buttonDetailPanelDrawFunction = () => {
+                            string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                            GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
                         };
-
-                        if (PluginSettings.AlwaysRemoveBackgroundForSprites)
-                        {
-                            BackgroundRemoval.RemoveBackground(Images.GetTextureByImageId(selectedImageId), imageBytes =>
-                            {
-                                CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
-                            });
-
-                            buttonDetailPanelDrawFunction = () =>
-                            {
-                                GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
-                            };
-                        }
-                        else
-                        {
-                            CommonUtils.SaveTextureAsPNG(selectedTexture, null, PluginSettings.SpritePreset, successAction);
-                        }
-                    }
+                    })
                 },
                 {
                     "Download as a Tile", () =>

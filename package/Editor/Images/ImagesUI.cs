@@ -104,8 +104,15 @@ namespace Scenario.Editor
                     "Download as a Tile", () =>
                     {
                         /// Contains the side window when the user want to download an image as a tile
-                        TileCreator tileCreator = new(selectedImageId);
-                        buttonDetailPanelDrawFunction = tileCreator.OnGUI;
+                        if(ScenarioAddOn.tileCreator == null)
+                        {
+                            ScenarioAddOn.tileCreator = new(selectedImageId);
+                        }
+                        else
+                        {
+                            ScenarioAddOn.tileCreator.SetSelectedImageId(selectedImageId);
+                        }
+                        buttonDetailPanelDrawFunction = ScenarioAddOn.tileCreator.OnGUI;
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images.GetImageDataById(selectedImageId))},

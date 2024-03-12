@@ -147,7 +147,14 @@ namespace Scenario.Editor
 
         public static Texture2D GetTextureByImageId(string _id)
         {
-            return imageDataList.Find(x => x.Id == _id).texture;
+            if (imageDataList.Find(x => x.Id == _id) != null)
+            {
+                return imageDataList.Find(x => x.Id == _id).texture;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -183,7 +190,6 @@ namespace Scenario.Editor
         /// <param name="_onAction"></param>
         public static void DlAsSprite(Texture2D _texture, string _selectedImageId, Action _onSuccessAction, Action _onDownloadingAction)
         {
-            
             //What to do when file is downloaded
             Action<string> successAction = (filePath) =>
             {
@@ -197,10 +203,20 @@ namespace Scenario.Editor
 
             if (PluginSettings.AlwaysRemoveBackgroundForSprites)
             {
-                BackgroundRemoval.RemoveBackground(GetTextureByImageId(_selectedImageId), imageBytes =>
+                if (GetTextureByImageId(_selectedImageId) != null)
                 {
-                    CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
-                });
+                    BackgroundRemoval.RemoveBackground(GetTextureByImageId(_selectedImageId), imageBytes =>
+                    {
+                        CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                    });
+                }
+                else if(_texture != null)
+                {
+                    BackgroundRemoval.RemoveBackground(_texture, imageBytes =>
+                    {
+                        CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                    });
+                }
 
                 _onDownloadingAction?.Invoke();
             }

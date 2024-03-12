@@ -54,7 +54,6 @@ namespace Scenario.Editor
         {
             GetVersionFromPackageJson();
             LoadSettings();
-
         }
 
 

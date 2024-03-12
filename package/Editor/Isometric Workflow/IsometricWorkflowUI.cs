@@ -2,7 +2,6 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace Scenario.Editor
 {
@@ -39,8 +38,15 @@ namespace Scenario.Editor
         /// </summary>
         private RequestsStatus requestStatus = RequestsStatus.NotRequested;
 
+        /// <summary>
+        /// Default background color.
+        /// </summary>
         private Color defaultBackgroundColor;
 
+        /// <summary>
+        /// Dictionary to contain each behaviour of each line item.
+        /// </summary>
+        private Dictionary<string, Action> drawActionPanels = new Dictionary<string, Action>();
 
         public void Init(IsometricWorkflow _isometricWorkflow)
         {
@@ -120,7 +126,10 @@ namespace Scenario.Editor
                 CustomStyle.Space(-25);
                 GUILayout.BeginVertical();
                 {
-                    GUILayout.Box(IsometricWorkflow.settings.squareBaseTexture, GUILayout.Width(100), GUILayout.Height(100));
+                    if (IsometricWorkflow.settings != null && IsometricWorkflow.settings.squareBaseTexture != null)
+                    { 
+                        GUILayout.Box(IsometricWorkflow.settings.squareBaseTexture, GUILayout.Width(100), GUILayout.Height(100));
+                    }
                     CustomStyle.Label("Square", alignment: TextAnchor.MiddleCenter);
                 }
                 GUILayout.EndVertical();
@@ -182,7 +191,6 @@ namespace Scenario.Editor
         /// <param name="_dimension">The dimensions of the UI element.</param>
         public void DrawStyleGUI(Rect _dimension)
         {
-
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 2. Choose a Style", 18, TextAnchor.UpperLeft, bold: true);
@@ -316,7 +324,7 @@ namespace Scenario.Editor
         {
             DrawBackground(_dimension);
             CustomStyle.Space();
-            CustomStyle.Label("Step 4. Choose assets", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label("Step 4. Choose prompt assets", 18, TextAnchor.UpperLeft, bold: true);
             CustomStyle.Space(25);
 
             GUILayout.BeginHorizontal();
@@ -431,28 +439,36 @@ namespace Scenario.Editor
                     {
                         string assetName = keyValuePair.Key;
                         string inferenceId = keyValuePair.Value;
+                        if (!drawActionPanels.ContainsKey(assetName))
+                        { 
+                            drawActionPanels.Add(assetName, null);
+                        }
+
+                        if (!isometricWorkflow.selectedImages.ContainsKey(assetName))
+                        {
+                            isometricWorkflow.selectedImages.Add(assetName, null);
+                        }
+
                         CustomStyle.Space();
                         GUILayout.BeginHorizontal(); //begin horizontal group of one asset
                         {
-
                             DrawTextureBoxes(assetName, inferenceId); // draw the 4 boxes (textures) for one asset
-
-                            GUILayout.BeginVertical(); //begin right side (with name & buttons) for one asset
-                            {
-                                CustomStyle.Label(assetName, fontSize: 18, alignment: TextAnchor.UpperLeft);
-                                CustomStyle.ButtonPrimary("Convert to Sprite");
-                                CustomStyle.ButtonPrimary("Convert to Tile", 30, 0, () => 
-                                {
-                                    Debug.Log("Validate button");
-                                    /// Contains the side window when the user want to download an image as a tile
-                                    TileCreator tileCreator = new(isometricWorkflow.selectedImages[assetName]);
-                                    tileCreator.OnGUI();
-                                });
-                                CustomStyle.ButtonPrimary("Regenerate");
-                                CustomStyle.ButtonPrimary("Customize (webapp)");
-                            }
-                            GUILayout.EndVertical();
                         }
+
+                        GUILayout.BeginVertical(); //begin right side (with name & buttons) for one asset
+                        {
+                            CustomStyle.Label(assetName, fontSize: 18, alignment: TextAnchor.UpperLeft);
+
+                            if (drawActionPanels[assetName] != null)
+                            {
+                                DrawButtonDetailPanel(assetName);
+                            }
+                            else
+                            {
+                                DrawInferenceButton(assetName);
+                            }
+                        }
+                        GUILayout.EndVertical();
                         GUILayout.EndHorizontal();
                         CustomStyle.Space();
                     }
@@ -465,9 +481,12 @@ namespace Scenario.Editor
 
             //Bottom
             GUILayout.FlexibleSpace();
-            CustomStyle.ButtonPrimary("Restart", 30, 0, () =>
+            CustomStyle.ButtonPrimary("Restart", 30, 200, () =>
             {
-                isometricWorkflow.currentStep = IsometricWorkflow.Step.Base;
+                if (EditorUtility.DisplayDialog("Are you certain you want \r\nto restart the process ?", "You will loose the ability to convert the \r\ngenerated image to sprites. \r\nBut the generated image will\r\n still be available on the webapp", "Restart", "Stay on page"))
+                { 
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Base;
+                }
             });
             CustomStyle.Space();
         }
@@ -475,6 +494,88 @@ namespace Scenario.Editor
         #endregion
 
         #region Utils
+
+        /// <summary>
+        /// When using one of the action button, sometime they opens a panel with some informations and other steps
+        /// </summary>
+        private void DrawButtonDetailPanel(string _assetName)
+        {
+            drawActionPanels[_assetName]?.Invoke();
+
+            if (GUILayout.Button("< Back", EditorStyles.miniButtonLeft))
+            {
+                drawActionPanels[_assetName] = null;
+            }
+        }
+
+        /// <summary>
+        /// Draw buttons attached to inference
+        /// </summary>
+        /// <param name="_assetName"></param>
+        private void DrawInferenceButton(string _assetName)
+        {
+            if (isometricWorkflow.selectedImages[_assetName] != null)
+            {
+                GUI.backgroundColor = Color.cyan;
+
+                CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DlAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.imageDataSelected.Id, () =>
+                {
+                    drawActionPanels[_assetName] = () =>
+                    {
+                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+                        GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
+                    };
+                },
+                () =>
+                {
+                    drawActionPanels[_assetName] = () =>
+                    {
+                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                        GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
+                    };
+                }));
+
+                CustomStyle.ButtonPrimary("Convert to Tile", 30, 0, () =>
+                {
+                    if (isometricWorkflow.selectedImages[_assetName] != null)
+                    {
+                        /// Contains the side window when the user want to download an image as a tile
+                        if (ScenarioAddOn.tileCreator == null)
+                        {
+                            ScenarioAddOn.tileCreator = new(isometricWorkflow.selectedImages[_assetName].Id);
+                        }
+
+                        if (isometricWorkflow.selectedImages[_assetName] != null)
+                        {
+                            ScenarioAddOn.tileCreator.SetImageData(isometricWorkflow.selectedImages[_assetName]);
+                        }
+                        drawActionPanels[_assetName] = ScenarioAddOn.tileCreator.OnGUI;
+                    }
+                });
+
+                CustomStyle.ButtonPrimary("Customize (webapp)");
+            }
+            else 
+            {
+                GUI.backgroundColor = Color.grey;
+                CustomStyle.ButtonPrimary("Convert to Sprite");
+                CustomStyle.ButtonPrimary("Convert to Tile");
+
+                
+
+                CustomStyle.ButtonPrimary("Customize (webapp)");
+            }
+
+            GUI.backgroundColor = defaultBackgroundColor;
+            CustomStyle.ButtonPrimary("Regenerate", 30, 0, () =>
+            {
+                requestStatus = RequestsStatus.Requesting;
+                isometricWorkflow.RegenerateImages(_assetName, () =>
+                {
+                    requestStatus = RequestsStatus.Requested;
+                });
+            });
+        }
 
         /// <summary>
         /// Draws a grid of texture boxes, each containing an image or loading indicator, and handles interactions.
@@ -497,7 +598,7 @@ namespace Scenario.Editor
                 {
                     if (isometricWorkflow.selectedImages.ContainsKey(_assetName))
                     {
-                        if (isometricWorkflow.selectedImages[_assetName] != null && isometricWorkflow.selectedImages[_assetName] == imagesToDisplay[i].Id)
+                        if (isometricWorkflow.selectedImages[_assetName] != null && isometricWorkflow.selectedImages[_assetName].Id == imagesToDisplay[i].Id)
                         { 
                             GUI.backgroundColor = Color.cyan;
                         }
@@ -509,7 +610,13 @@ namespace Scenario.Editor
 
                     if (GUILayout.Button(texture, GUILayout.MaxWidth(256), GUILayout.MaxHeight(256)))
                     {
-                        isometricWorkflow.selectedImages[_assetName] = imagesToDisplay[i].Id;
+                        isometricWorkflow.selectedImages[_assetName] = imagesToDisplay[i];
+
+                        if (ScenarioAddOn.tileCreator != null)
+                        {
+                            ScenarioAddOn.tileCreator.SetImageData(imagesToDisplay[i]);
+                        }
+
                     }
                 }
                 else
@@ -524,6 +631,7 @@ namespace Scenario.Editor
                     GUILayout.Label($"Loading...", style);
                 }
             }
+            GUI.backgroundColor = defaultBackgroundColor;
         }
 
         #endregion

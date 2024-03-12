@@ -9,6 +9,11 @@ namespace Scenario.Editor
 {
     public class TileCreator
     {
+        #region Public Fields
+        #endregion
+
+        #region Private Fields
+
         private GameObject tilePalette;
         private Grid grid;
         private GridPalette gridPalette;
@@ -18,6 +23,11 @@ namespace Scenario.Editor
 
         private bool isProcessing = false;
 
+        private ImageDataStorage.ImageData imageDataSelected = null;
+
+        #endregion
+
+        #region Editor Callbacks
 
         public TileCreator(string _selectedTextureIndex)
         {
@@ -34,59 +44,113 @@ namespace Scenario.Editor
                 return;
             }
 
-
             grid = tilePalette.GetComponent<Grid>();
             gridPalette = CommonUtils.GetSubObjectsOfType<GridPalette>(tilePalette)[0];
             layout = grid.cellLayout;
 
             if (layout == CellLayout.Hexagon || layout == CellLayout.IsometricZAsY)
             {
-                GUILayout.Label($"Sorry, the Scenario Plugin only works with Rectangle & Isometric for the moment. Please modify the Cell Layout parameter of the Grid component of your Tile Palette Prefab.",  EditorStyles.wordWrappedLabel);
+                GUILayout.Label($"Sorry, the Scenario Plugin only works with Rectangle & Isometric for the moment. Please modify the Cell Layout parameter of the Grid component of your Tile Palette Prefab.", EditorStyles.wordWrappedLabel);
                 return;
             }
             GUILayout.Label($"Your Grid layout : {layout}", EditorStyles.wordWrappedLabel);
 
-            if(!isProcessing)
+            if (!isProcessing)
             {
                 GUILayout.Label($"Generated Tiles will be downloaded in the same folder as your Tile Palette Prefab.", EditorStyles.wordWrappedLabel);
 
-                if(GUILayout.Button(new GUIContent("Download as Tile", "The image will be processed to remove background then downloaded as a sprite in the Scenario Settings save folder. Then a Tile asset will be created (in the same folder as your Tile Palette) out of this Sprite and added to the Tile Palette your referenced.")))
+                if (GUILayout.Button(new GUIContent("Download as Tile", "The image will be processed to remove background then downloaded as a sprite in the Scenario Settings save folder. Then a Tile asset will be created (in the same folder as your Tile Palette) out of this Sprite and added to the Tile Palette your referenced.")))
                 {
                     isProcessing = true;
 
-                    BackgroundRemoval.RemoveBackground(Images.GetImageDataById(selectedTextureId).texture, imageBytes =>
+                    if (Images.GetImageDataById(selectedTextureId) != null)
                     {
-                        CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
+                        BackgroundRemoval.RemoveBackground(Images.GetImageDataById(selectedTextureId).texture, imageBytes =>
                         {
-                            if (PluginSettings.UsePixelsUnitsEqualToImage)
+                            CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
                             {
-                                CommonUtils.ApplyPixelsPerUnit(spritePath);
-                            }
+                                if (PluginSettings.UsePixelsUnitsEqualToImage)
+                                {
+                                    CommonUtils.ApplyPixelsPerUnit(spritePath);
+                                }
 
-                            Tile tile = CreateTile(Path.GetDirectoryName(AssetDatabase.GetAssetPath(tilePalette)), (Sprite)AssetDatabase.LoadAssetAtPath(spritePath, typeof(Sprite)));
-                            AddTileToTilePalette(tile);
-                            isProcessing = false;
+                                Tile tile = CreateTile(Path.GetDirectoryName(AssetDatabase.GetAssetPath(tilePalette)), (Sprite)AssetDatabase.LoadAssetAtPath(spritePath, typeof(Sprite)));
+                                AddTileToTilePalette(tile);
+                                isProcessing = false;
+                            });
                         });
-                    });
+                    }
+                    else
+                    {
+                        if (imageDataSelected != null)
+                        {
+                            if (imageDataSelected.texture != null)
+                            {
+                                BackgroundRemoval.RemoveBackground(imageDataSelected.texture, imageBytes =>
+                                {
+                                    CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
+                                    {
+                                        if (PluginSettings.UsePixelsUnitsEqualToImage)
+                                        {
+                                            CommonUtils.ApplyPixelsPerUnit(spritePath);
+                                        }
+
+                                        Tile tile = CreateTile(Path.GetDirectoryName(AssetDatabase.GetAssetPath(tilePalette)), (Sprite)AssetDatabase.LoadAssetAtPath(spritePath, typeof(Sprite)));
+                                        AddTileToTilePalette(tile);
+                                        isProcessing = false;
+                                    });
+                                });
+                            }
+                        }
+                    }
                 }
             }
             else
             {
                 GUILayout.Label($"Please wait... Image background is being removed. The resulting sprite will be saved in the Scenario Settings save folder. Then a Tile will be created and added in your Tile Palette.", EditorStyles.wordWrappedLabel);
             }
-
         }
 
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Setter to update Image Data selected
+        /// </summary>
+        /// <param name="_imageData"> Image Data selected. </param>
+        public void SetImageData(ImageDataStorage.ImageData _imageData)
+        {
+            imageDataSelected = _imageData;
+        }
+
+        /// <summary>
+        /// Update selected texture id inside the tile creator.
+        /// </summary>
+        /// <param name="_imageId"> New texture id </param>
+        public void SetSelectedImageId(string _imageId)
+        { 
+            selectedTextureId = _imageId;
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Update tile palette with a new tile added.
+        /// </summary>
+        /// <param name="_tile"> Added Tile </param>
         private void AddTileToTilePalette(Tile _tile)
         {
             Tilemap tilemap = tilePalette.GetComponentInChildren<Tilemap>();
             Vector3Int emptyTile = Vector3Int.zero;
-            while(tilemap.HasTile(emptyTile))
+            while (tilemap.HasTile(emptyTile))
             {
                 emptyTile.x += 1;
                 emptyTile.y -= 1;
             }
-            
+
             tilemap.SetTile(emptyTile, _tile);
         }
 
@@ -108,5 +172,6 @@ namespace Scenario.Editor
             return newTile;
         }
 
+        #endregion
     }
 }

@@ -132,7 +132,7 @@ namespace Scenario.Editor
 
         private async void InitializeModels()
         {
-            Debug.Log(modelsIdByStyle.Count);
+            //Debug.Log(modelsIdByStyle.Count);
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora1, "B7SV_qMLR12Sy0Sp07oyaw"));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora2, "Re3h9nZrQ5CDWAkk50bXlg"));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora3, "U054yotpQqyRnhvAhVMiTA"));

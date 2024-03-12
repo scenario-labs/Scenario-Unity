@@ -1,13 +1,7 @@
-using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Net;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using static Scenario.Editor.Models;
 
 namespace Scenario.Editor
 {
@@ -60,10 +54,14 @@ namespace Scenario.Editor
         /// Foreach asset, 4 images are generated. the use will be able to select one texture per asset. This is the Dictionary that contains, foreach asset, the current selected texture
         /// First value is the assetName, second value is the id of the selected image
         /// </summary>
-        internal Dictionary<string, string> selectedImages = new Dictionary<string, string>();
+        internal Dictionary<string, ImageDataStorage.ImageData> selectedImages = new Dictionary<string, ImageDataStorage.ImageData>();
+
+        /// <summary>
+        /// Stock Image generated to modify
+        /// </summary>
+        internal ImageDataStorage.ImageData imageDataSelected = null;
 
         internal static IsometricWorkflowSettings settings;
-
 
         [MenuItem("Window/Scenario/Workflows/1. Isometric Workflow")]
         public static void ShowWindow()
@@ -150,6 +148,49 @@ namespace Scenario.Editor
             }
         }
 
+        /// <summary>
+        /// Regenerate only on inference.
+        /// </summary>
+        /// <param name="_assetName"> Based on the previous asset name</param>
+        /// <param name="_onRequestSent"> Callback from generation </param>
+        public void RegenerateImages(string _assetName, Action _onRequestSent)
+        {
+            Texture2D baseTexture = null;
+            switch (selectedBase)
+            {
+                case Base.None:
+                    baseTexture = null;
+                    break;
+                case Base.Square:
+                    baseTexture = settings.squareBaseTexture;
+                    break;
+                case Base.Custom:
+                    baseTexture = isometricWorkflowUI.customTexture;
+                    break;
+                default:
+                    break;
+            }
+
+            int totalRequests = assetList.Count;
+            int completedRequests = 0;
+
+
+            string tempName = _assetName;
+            bool useBaseTexture = baseTexture != null;
+            string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
+            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {_assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
+            (inferenceId) =>
+            {
+                inferenceIdByAssetList[_assetName] = inferenceId;
+
+                completedRequests++;
+                if (completedRequests == totalRequests)
+                {
+                    _onRequestSent?.Invoke();
+                }
+            });
+
+        }
 
         private void OnGUI()
         {

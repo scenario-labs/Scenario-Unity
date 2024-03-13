@@ -161,6 +161,16 @@ namespace Scenario.Editor
                 GUILayout.BeginVertical();
                 {
                     customTexture = (Texture2D)EditorGUILayout.ObjectField(customTexture, typeof(Texture2D), false, GUILayout.Width(100), GUILayout.Height(100));
+                    if (customTexture != null && !customTexture.isReadable)
+                    { 
+                        TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(customTexture));
+                        importer.isReadable = true;
+                        importer.textureCompression = TextureImporterCompression.Uncompressed;
+                        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+                        { 
+                            importer.SaveAndReimport();
+                        }
+                    }
                     CustomStyle.Label("Custom", alignment: TextAnchor.MiddleCenter);
                 }
                 GUILayout.EndVertical();
@@ -392,14 +402,24 @@ namespace Scenario.Editor
                         {
                             isometricWorkflow.FillAssetSamples();
                         });
-                        CustomStyle.ButtonPrimary("Next", 30, 100, () =>
+                        if (isometricWorkflow.assetList.Count > 0)
                         {
-                            requestStatus = RequestsStatus.Requesting;
-                            isometricWorkflow.GenerateImages(() =>
+                            GUI.backgroundColor = Color.cyan;
+                            CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                             {
-                                requestStatus = RequestsStatus.Requested;
+                                requestStatus = RequestsStatus.Requesting;
+                                isometricWorkflow.GenerateImages(() =>
+                                {
+                                    requestStatus = RequestsStatus.Requested;
+                                });
                             });
-                        });
+                        }
+                        else
+                        {
+                            GUI.backgroundColor = Color.grey;
+                            CustomStyle.ButtonPrimary("Next");
+                        }
+                        GUI.backgroundColor = defaultBackgroundColor;
                         break;
                     //Please wait during the request
                     case RequestsStatus.Requesting:
@@ -483,7 +503,7 @@ namespace Scenario.Editor
             GUILayout.FlexibleSpace();
             CustomStyle.ButtonPrimary("Restart", 30, 200, () =>
             {
-                if (EditorUtility.DisplayDialog("Are you certain you want \r\nto restart the process ?", "You will loose the ability to convert the \r\ngenerated image to sprites. \r\nBut the generated image will\r\n still be available on the webapp", "Restart", "Stay on page"))
+                if (EditorUtility.DisplayDialog("Are you certain you want \r\nto restart the process ?", "You will loose the ability to convert the \r\ngenerated image to sprites. \r\nBut the generated image will\r\n still be available on the webapp and in the images window.", "Restart", "Stay on page"))
                 {
                     isometricWorkflow.Restart();
                 }
@@ -518,7 +538,7 @@ namespace Scenario.Editor
             {
                 GUI.backgroundColor = Color.cyan;
 
-                CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DlAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.imageDataSelected.Id, () =>
+                CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DlAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.selectedImages[_assetName].Id, () =>
                 {
                     drawActionPanels[_assetName] = () =>
                     {
@@ -545,10 +565,8 @@ namespace Scenario.Editor
                             ScenarioAddOn.tileCreator = new(isometricWorkflow.selectedImages[_assetName].Id);
                         }
 
-                        if (isometricWorkflow.selectedImages[_assetName] != null)
-                        {
-                            ScenarioAddOn.tileCreator.SetImageData(isometricWorkflow.selectedImages[_assetName]);
-                        }
+                        ScenarioAddOn.tileCreator.SetImageData(isometricWorkflow.selectedImages[_assetName]);
+
                         drawActionPanels[_assetName] = ScenarioAddOn.tileCreator.OnGUI;
                     }
                 });
@@ -557,27 +575,26 @@ namespace Scenario.Editor
                 {
                     Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
                 });
+
+                CustomStyle.ButtonPrimary("Regenerate", 30, 0, () =>
+                {
+                    requestStatus = RequestsStatus.Requesting;
+                    isometricWorkflow.RegenerateImages(_assetName, () =>
+                    {
+                        requestStatus = RequestsStatus.Requested;
+                    });
+                });
             }
             else 
             {
                 GUI.backgroundColor = Color.grey;
                 CustomStyle.ButtonPrimary("Convert to Sprite");
                 CustomStyle.ButtonPrimary("Convert to Tile");
-
-                
-
                 CustomStyle.ButtonPrimary("Customize (webapp)");
+                CustomStyle.ButtonPrimary("Regenerate");
             }
 
             GUI.backgroundColor = defaultBackgroundColor;
-            CustomStyle.ButtonPrimary("Regenerate", 30, 0, () =>
-            {
-                requestStatus = RequestsStatus.Requesting;
-                isometricWorkflow.RegenerateImages(_assetName, () =>
-                {
-                    requestStatus = RequestsStatus.Requested;
-                });
-            });
         }
 
         /// <summary>

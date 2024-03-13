@@ -16,7 +16,16 @@ namespace Scenario.Editor
         public static Preset TexturePreset { get { return GetPreset(EditorPrefs.GetString("scenario/texturePreset")); } }
         public static Preset SpritePreset { get { return GetPreset(EditorPrefs.GetString("scenario/spritePreset")); } }
         public static Preset TilePreset { get { return GetPreset(EditorPrefs.GetString("scenario/tilePreset")); } }
-        public static string TeamIdKey { get { return teamIdKey; } }
+        public static string TeamIdKey { get 
+            {
+                if (string.IsNullOrEmpty(teamIdKey))
+                {
+                    teamIdKey = EditorPrefs.GetString("TeamIdKey");
+                }
+                return teamIdKey;
+                
+            }
+        }
         public static bool AlwaysRemoveBackgroundForSprites { get { return alwaysRemoveBackgroundForSprites; } }
         public static bool UsePixelsUnitsEqualToImage { get { return usePixelUnitsEqualToImage; } }
         #endregion

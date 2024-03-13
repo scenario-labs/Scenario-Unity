@@ -138,6 +138,8 @@ namespace Scenario.Editor
                     break;
             }
 
+            inferenceIdByAssetList.Clear();
+
             int totalRequests = assetList.Count;
             int completedRequests = 0;
 
@@ -193,14 +195,20 @@ namespace Scenario.Editor
             int totalRequests = assetList.Count;
             int completedRequests = 0;
 
-
             string tempName = _assetName;
             bool useBaseTexture = baseTexture != null;
             string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
             PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {_assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
             (inferenceId) =>
             {
-                inferenceIdByAssetList[_assetName] = inferenceId;
+                if (inferenceIdByAssetList.ContainsKey(tempName))
+                {
+                    inferenceIdByAssetList[tempName] = inferenceId;
+                }
+                else
+                {
+                    inferenceIdByAssetList.Add(tempName, inferenceId);
+                }
 
                 completedRequests++;
                 if (completedRequests == totalRequests)

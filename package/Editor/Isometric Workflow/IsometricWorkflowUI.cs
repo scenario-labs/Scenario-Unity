@@ -484,8 +484,8 @@ namespace Scenario.Editor
             CustomStyle.ButtonPrimary("Restart", 30, 200, () =>
             {
                 if (EditorUtility.DisplayDialog("Are you certain you want \r\nto restart the process ?", "You will loose the ability to convert the \r\ngenerated image to sprites. \r\nBut the generated image will\r\n still be available on the webapp", "Restart", "Stay on page"))
-                { 
-                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Base;
+                {
+                    isometricWorkflow.Restart();
                 }
             });
             CustomStyle.Space();
@@ -553,7 +553,10 @@ namespace Scenario.Editor
                     }
                 });
 
-                CustomStyle.ButtonPrimary("Customize (webapp)");
+                CustomStyle.ButtonPrimary("Customize (webapp)", 30, 0, () =>
+                {
+                    Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
+                });
             }
             else 
             {

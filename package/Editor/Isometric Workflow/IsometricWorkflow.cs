@@ -76,6 +76,18 @@ namespace Scenario.Editor
             settings = IsometricWorkflowSettings.GetSerializedSettings();
         }
 
+        public void Restart()
+        {
+            PromptFetcher.IsWorkflow = true;
+
+            var isometricWorkflow = (IsometricWorkflow)GetWindow(typeof(IsometricWorkflow));
+            
+            isometricWorkflowUI.Init(isometricWorkflow);
+            isometricWorkflow.currentStep = Step.Base;
+
+            settings = IsometricWorkflowSettings.GetSerializedSettings();
+        }
+
         /// <summary>
         /// Auto add some asset name as an example
         /// </summary>
@@ -137,7 +149,14 @@ namespace Scenario.Editor
                 PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
                 (inferenceId) =>
                 {
-                    inferenceIdByAssetList.Add(tempName, inferenceId);
+                    if (inferenceIdByAssetList.ContainsKey(tempName))
+                    {
+                        inferenceIdByAssetList[tempName] = inferenceId;
+                    }
+                    else
+                    { 
+                        inferenceIdByAssetList.Add(tempName, inferenceId);
+                    }
 
                     completedRequests++;
                     if (completedRequests == totalRequests)

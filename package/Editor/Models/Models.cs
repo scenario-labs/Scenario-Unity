@@ -12,16 +12,49 @@ namespace Scenario.Editor
 
         #region Public Fields
 
+        /// <summary>
+        /// List containing models from quickstart action
+        /// </summary>
         public static List<ModelData> modelsQuickStart = new();
+
+        /// <summary>
+        /// List containing models from private action
+        /// </summary>
         public static List<ModelData> modelsPrivate = new();
+
+        /// <summary>
+        /// List containing models from public action
+        /// </summary>
         public static List<ModelData> modelsPublic = new();
 
+        /// <summary>
+        /// List containing textures from models from quickstart action
+        /// </summary>
         public static List<TexturePair> texturesQuickStart = new();
+
+        /// <summary>
+        /// List containing textures from models from private action
+        /// </summary>
         public static List<TexturePair> texturesPrivate = new();
+
+        /// <summary>
+        /// List containing textures from models from public action
+        /// </summary>
         public static List<TexturePair> texturesPublic = new();
 
+        /// <summary>
+        /// Setting string for privacy of quickstart action
+        /// </summary>
         public static string privacyQuickStart = "quickstart";
+
+        /// <summary>
+        /// Setting string for privacy of private action
+        /// </summary>
         public static string privacyPrivate = "private";
+
+        /// <summary>
+        /// Setting string for privacy of public action
+        /// </summary>
         public static string privacyPublic = "public";
 
         #endregion
@@ -49,7 +82,7 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
-            ShowWindow();
+            SetTab(CurrentPrivacy);
         }
 
         private void OnDestroy()

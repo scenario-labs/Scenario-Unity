@@ -32,14 +32,8 @@ namespace Scenario.Editor
         private void SetFirstPage()
         {
             pageModels.Clear();
-            if (IsQuickStartTab())
-            {
-                selectedTab = 0;
-            }
-            else
-            {
-                selectedTab = (IsPrivateTab()) ? 1 : 2;
-            }
+
+            selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
 
             showPreviousButton = false;
             showNextButton = false;
@@ -56,7 +50,7 @@ namespace Scenario.Editor
 
             currentPage++;
 
-            var models = GetModels();
+            var models = Models.GetModels();
         
             if (firstImageIndex + maxModelsPerPage > models.Count)
             {
@@ -91,7 +85,7 @@ namespace Scenario.Editor
         {
             pageModels.Clear();
         
-            var models = GetModels();
+            var models = Models.GetModels();
 
             for (int i = firstImageIndex; i < firstImageIndex + maxModelsPerPage; i++)
             {
@@ -118,7 +112,7 @@ namespace Scenario.Editor
 
             if (drawTabs)
             {
-                string[] tabs = { "Quickstart Models", "Private Models", "Public Models" };
+                string[] tabs = { "Private Models", "Public Models" };
                 HandleTabSelection(tabs);    
             }
 
@@ -159,7 +153,7 @@ namespace Scenario.Editor
             float boxWidth = (position.width - (padding * 2) * itemsPerRow) / itemsPerRow;
 
             float boxHeight = boxWidth;
-            var textures = GetTextures();
+            var textures = Models.GetTextures();
 
             int numRows = maxModelsPerPage / itemsPerRow;
             float rowPadding = 10f;
@@ -174,11 +168,10 @@ namespace Scenario.Editor
 
         private void DrawTextureBox(float boxWidth, float boxHeight, float rowPadding, List<TexturePair> textures)
         {
-            var models = GetModels();
+            var models = Models.GetModels();
 
             for (int i = 0; i < pageModels.Count; i++)
             {
-
                 int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
                 int colIndex = i % itemsPerRow;
 
@@ -266,22 +259,15 @@ namespace Scenario.Editor
 
             if (previousTab != selectedTab)
             {
-                switch (selectedTab)
-                { 
-                    case 0:
-                        SetTab(privacyQuickStart);
-                        drawTabs = false;
-                        break;
-
-                    case 1:
-                        SetTab(privacyPrivate);
-                        drawTabs = false;
-                        break;
-
-                    case 2:
-                        SetTab(privacyPublic);
-                        drawTabs = false;
-                        break;
+                if (selectedTab == 0)
+                {
+                    Models.SetTab(Models.privacyPrivate);
+                    drawTabs = false;
+                }
+                else if (selectedTab == 1)
+                {
+                    Models.SetTab(Models.privacyPublic);
+                    drawTabs = false;
                 }
             }
         }

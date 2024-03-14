@@ -82,7 +82,7 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
-            SetTab(CurrentPrivacy);
+            SetTab(privacyQuickStart);
         }
 
         private void OnDestroy()
@@ -389,6 +389,7 @@ namespace Scenario.Editor
                         PaginationTokenQuickStart = "";
                         Debug.Log("no next page to fetch.");
                         isProcessing = false;
+                        return;
                     }
                     else
                     {
@@ -432,6 +433,7 @@ namespace Scenario.Editor
                         PaginationTokenPrivate = "";
                         Debug.Log("no next page to fetch.");
                         isProcessing = false;
+                        return;
                     }
                     else
                     {
@@ -482,6 +484,7 @@ namespace Scenario.Editor
                         PaginationTokenPublic = "";
                         Debug.Log("no next page to fetch.");
                         isProcessing = false;
+                        return;
                     }
                     else
                     {

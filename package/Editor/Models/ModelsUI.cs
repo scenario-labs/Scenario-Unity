@@ -32,14 +32,7 @@ namespace Scenario.Editor
         private void SetFirstPage()
         {
             pageModels.Clear();
-            if (IsQuickStartTab())
-            {
-                selectedTab = 0;
-            }
-            else
-            {
-                selectedTab = (IsPrivateTab()) ? 1 : 2;
-            }
+            
 
             showPreviousButton = false;
             showNextButton = false;
@@ -286,8 +279,21 @@ namespace Scenario.Editor
             }
         }
 
+        /// <summary>
+        /// After fetching model redraw the window
+        /// </summary>
+        /// <param name="_updateType"></param>
         public void RedrawPage(int _updateType)
         {
+            if (IsQuickStartTab())
+            {
+                selectedTab = 0;
+            }
+            else
+            {
+                selectedTab = (IsPrivateTab()) ? 1 : 2;
+            }
+
             switch (_updateType)
             {
                 case 0:

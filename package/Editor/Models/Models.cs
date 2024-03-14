@@ -97,8 +97,6 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/Models")]
         public static void ShowWindow()
         {
-            SetTab(CurrentPrivacy);
-
             window = GetWindow<Models>("Models");
             window.minSize = new Vector2(MinimumWidth, window.minSize.y);
         }
@@ -360,9 +358,9 @@ namespace Scenario.Editor
         {
             if (!isProcessing)
             {
-                while (true)
+                isProcessing = true;
+                while (isProcessing)
                 {
-                    isProcessing = true;
                     string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPublic}";
 
                     if (!string.IsNullOrEmpty(PaginationTokenQuickStart))
@@ -390,18 +388,15 @@ namespace Scenario.Editor
                     {
                         PaginationTokenQuickStart = "";
                         Debug.Log("no next page to fetch.");
+                        isProcessing = false;
                     }
                     else
                     {
                         PaginationTokenQuickStart = modelsResponse.nextPaginationToken;
                         Debug.Log("fetching next page data...");
-                        continue;
                     }
 
-                    break;
                 }
-
-                isProcessing = false;
             }
         }
 
@@ -413,9 +408,9 @@ namespace Scenario.Editor
         {
             if (!isProcessing)
             {
-                while (true)
+                isProcessing = true;
+                while (isProcessing)
                 {
-                    isProcessing = true;
                     string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPrivate}";
 
                     if (!string.IsNullOrEmpty(PaginationTokenPrivate))
@@ -436,18 +431,14 @@ namespace Scenario.Editor
                     {
                         PaginationTokenPrivate = "";
                         Debug.Log("no next page to fetch.");
+                        isProcessing = false;
                     }
                     else
                     {
                         PaginationTokenPrivate = modelsResponse.nextPaginationToken;
                         Debug.Log("fetching next page data...");
-                        continue;
                     }
-
-                    break;
                 }
-
-                isProcessing = false;
             }
         }
 
@@ -459,9 +450,9 @@ namespace Scenario.Editor
         {
             if (!isProcessing)
             {
-                while (true)
+                isProcessing = true;
+                while (isProcessing)
                 {
-                    isProcessing = true;
                     string endpoint = $"models?pageSize=15&status=trained&privacy={privacyPublic}";
 
                     if (!string.IsNullOrEmpty(PaginationTokenPublic))
@@ -485,24 +476,19 @@ namespace Scenario.Editor
                         modelsPublic.Add(model);
                     }
 
-                    //* modelsPublic.AddRange(modelsResponse.models);
-
                     if (modelsResponse.nextPaginationToken is null ||
                         PaginationTokenPublic == modelsResponse.nextPaginationToken)
                     {
                         PaginationTokenPublic = "";
                         Debug.Log("no next page to fetch.");
+                        isProcessing = false;
                     }
                     else
                     {
                         PaginationTokenPublic = modelsResponse.nextPaginationToken;
                         Debug.Log("fetching next page data...");
-                        continue;
                     }
-
-                    break;
                 }
-                isProcessing = false;
             }
         }
 

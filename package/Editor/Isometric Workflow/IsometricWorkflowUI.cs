@@ -161,13 +161,14 @@ namespace Scenario.Editor
                 GUILayout.BeginVertical();
                 {
                     customTexture = (Texture2D)EditorGUILayout.ObjectField(customTexture, typeof(Texture2D), false, GUILayout.Width(100), GUILayout.Height(100));
-                    if (customTexture != null && !customTexture.isReadable)
-                    { 
+                    if (customTexture != null)
+                    {
                         TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(customTexture));
                         importer.isReadable = true;
                         importer.textureCompression = TextureImporterCompression.Uncompressed;
+                        EditorUtility.SetDirty(importer);
                         if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
-                        { 
+                        {
                             importer.SaveAndReimport();
                         }
                     }
@@ -334,7 +335,7 @@ namespace Scenario.Editor
         {
             DrawBackground(_dimension);
             CustomStyle.Space();
-            CustomStyle.Label("Step 4. Choose prompt assets", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label("Step 4. Choose as many assets as you want to create", 18, TextAnchor.UpperLeft, bold: true);
             CustomStyle.Space(25);
 
             GUILayout.BeginHorizontal();
@@ -346,6 +347,8 @@ namespace Scenario.Editor
                     {
                         if (isometricWorkflow.assetList != null && isometricWorkflow.assetList.Count > 0)
                         { 
+                            bool removing = false;
+                            string toRemove = string.Empty;
                             foreach (string assetName in isometricWorkflow.assetList)
                             {
                                 CustomStyle.Space();
@@ -357,12 +360,18 @@ namespace Scenario.Editor
                                     { 
                                         if (GUILayout.Button(CommonIcons.GetIcon(CommonIcons.Icon.wastebasket), GUILayout.Width(30), GUILayout.Height(30)))
                                         {
-                                            isometricWorkflow.assetList.Remove(assetName);
+                                            removing = true;
+                                            toRemove = assetName;
                                         }
                                     }
                                 }
                                 GUILayout.EndHorizontal();
                                 CustomStyle.Space();
+                            }
+                            if (removing)
+                            { 
+                                isometricWorkflow.assetList.Remove(toRemove);
+                                removing = false;
                             }
                         }
                     }

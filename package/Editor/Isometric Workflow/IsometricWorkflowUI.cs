@@ -515,6 +515,8 @@ namespace Scenario.Editor
             {
                 if (EditorUtility.DisplayDialog("Are you certain you want \r\nto restart the process ?", "You will loose the ability to convert the \r\ngenerated image to sprites. \r\nBut the generated image will\r\n still be available on the webapp and in the images window.", "Restart", "Stay on page"))
                 {
+                    isometricWorkflow.selectedImages.Clear();
+                    drawActionPanels.Clear();
                     isometricWorkflow.Restart();
                 }
             });
@@ -586,9 +588,10 @@ namespace Scenario.Editor
                     Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
                 });
 
-                CustomStyle.ButtonPrimary("Regenerate", 30, 0, () =>
+                CustomStyle.ButtonPrimary("Regenerate 4 images", 30, 0, () =>
                 {
                     requestStatus = RequestsStatus.Requesting;
+                    
                     isometricWorkflow.RegenerateImages(_assetName, () =>
                     {
                         requestStatus = RequestsStatus.Requested;
@@ -601,7 +604,7 @@ namespace Scenario.Editor
                 CustomStyle.ButtonPrimary("Convert to Sprite");
                 CustomStyle.ButtonPrimary("Convert to Tile");
                 CustomStyle.ButtonPrimary("Customize (webapp)");
-                CustomStyle.ButtonPrimary("Regenerate");
+                CustomStyle.ButtonPrimary("Regenerate 4 images");
             }
 
             GUI.backgroundColor = defaultBackgroundColor;

@@ -78,7 +78,7 @@ namespace Scenario.Editor
                     })
                 },
                 {
-                    "Download as Texture",  () => Images.DlAsTexture(selectedTexture, () => { 
+                    "Download as Texture",  () => Images.DownloadAsTexture(selectedTexture, () => { 
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
@@ -87,7 +87,7 @@ namespace Scenario.Editor
 
                 },
                 {
-                    "Download as Sprite", () => Images.DlAsSprite(selectedTexture, selectedImageId, () => {
+                    "Download as Sprite", () => Images.DownloadAsSprite(selectedTexture, selectedImageId, () => {
                             buttonDetailPanelDrawFunction = () => {
                                 string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
                                 GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
@@ -104,15 +104,15 @@ namespace Scenario.Editor
                     "Download as a Tile", () =>
                     {
                         /// Contains the side window when the user want to download an image as a tile
-                        if(TileCreator.instance == null)
+                        if(TileCreator.Instance == null)
                         {
-                            TileCreator.instance = new(selectedImageId);
+                            TileCreator.Instance = new(selectedImageId);
                         }
                         else
                         {
-                            TileCreator.instance.SetSelectedImageId(selectedImageId);
+                            TileCreator.Instance.SetSelectedImageId(selectedImageId);
                         }
-                        buttonDetailPanelDrawFunction = TileCreator.instance.OnGUI;
+                        buttonDetailPanelDrawFunction = TileCreator.Instance.OnGUI;
                     }
                 },
                 { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images.GetImageDataById(selectedImageId))},

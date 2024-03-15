@@ -164,10 +164,10 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Define an image to be used as Image to Image action
         /// </summary>
-        /// <param name="_texture"></param>
-        /// <param name="_onAction"></param>
+        /// <param name="_texture"> Selected Texture </param>
+        /// <param name="_onAction"> Callback </param>
         public static void SetImageAsReference(Texture2D _texture, Action _onAction)
         {
             PromptWindowUI.imageUpload = _texture;
@@ -178,23 +178,24 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Download selected Image as a texture in Unity Editor
         /// </summary>
-        /// <param name="_texture"></param>
-        /// <param name="_onAction"></param>
-        public static void DlAsTexture(Texture2D _texture, Action _onAction)
+        /// <param name="_texture"> Selected Texture</param>
+        /// <param name="_onAction"> Callback </param>
+        public static void DownloadAsTexture(Texture2D _texture, Action _onAction)
         {
             CommonUtils.SaveTextureAsPNG(_texture, importPreset: PluginSettings.TexturePreset);
             _onAction?.Invoke();
         }
 
         /// <summary>
-        /// 
+        /// Download a Image selected as a sprite inside Unity Editor
         /// </summary>
-        /// <param name="_texture"></param>
-        /// <param name="_selectedImageId"></param>
-        /// <param name="_onAction"></param>
-        public static void DlAsSprite(Texture2D _texture, string _selectedImageId, Action _onSuccessAction, Action _onDownloadingAction)
+        /// <param name="_texture"> Selected Texture </param>
+        /// <param name="_selectedImageId"> Specific selected image Id </param>
+        /// <param name="_onSuccessAction"> Callback on success </param>
+        /// <param name="_onDownloadingAction"> Callback on downloading </param>
+        public static void DownloadAsSprite(Texture2D _texture, string _selectedImageId, Action _onSuccessAction, Action _onDownloadingAction)
         {
             //What to do when file is downloaded
             Action<string> successAction = (filePath) =>

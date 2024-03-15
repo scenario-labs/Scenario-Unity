@@ -15,7 +15,7 @@ namespace Scenario.Editor
         /// <summary>
         /// Active this boolean when user use a specific workflow
         /// </summary>
-        public static bool IsWorkflow = false;
+        public static bool SilenceMode = false;
 
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
@@ -44,7 +44,7 @@ namespace Scenario.Editor
                     modelId);
 
                 GetInferenceStatus(inferenceId, modelId);
-                if (!IsWorkflow)
+                if (!SilenceMode)
                 { 
                     Images.ShowWindow();
                 }
@@ -100,7 +100,7 @@ namespace Scenario.Editor
                             img.Seed);
                     }
 
-                    if (!IsWorkflow)
+                    if (!SilenceMode)
                     { 
                         Images.ShowWindow();
                     }

@@ -20,7 +20,7 @@ namespace Scenario.Editor
             {
                 if (string.IsNullOrEmpty(teamIdKey))
                 {
-                    teamIdKey = EditorPrefs.GetString("TeamIdKey");
+                    teamIdKey = EditorPrefs.GetString("scenario/TeamIdKey");
                 }
                 return teamIdKey;
                 
@@ -208,7 +208,7 @@ namespace Scenario.Editor
             {
                 string apiKey = EditorPrefs.GetString("ApiKey");
                 string secretKey = EditorPrefs.GetString("SecretKey");
-                string teamId = EditorPrefs.GetString("TeamIdKey");
+                string teamId = EditorPrefs.GetString("scenario/TeamIdKey");
                 string authString = apiKey + ":" + secretKey;
                 byte[] authBytes = System.Text.Encoding.UTF8.GetBytes(authString);
                 string encodedAuth = Convert.ToBase64String(authBytes);
@@ -223,7 +223,7 @@ namespace Scenario.Editor
             EditorPrefs.SetString("scenario/tilePreset", tilePresetGUID);
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
-            EditorPrefs.SetString("TeamIdKey", teamIdKey);
+            EditorPrefs.SetString("scenario/TeamIdKey", teamIdKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
             PlayerPrefs.SetString("EncodedAuth", EncodedAuth);
         }
@@ -262,7 +262,7 @@ namespace Scenario.Editor
             //load values
             apiKey = EditorPrefs.GetString("ApiKey");
             secretKey = EditorPrefs.GetString("SecretKey");
-            teamIdKey = EditorPrefs.GetString("TeamIdKey");
+            teamIdKey = EditorPrefs.GetString("scenario/TeamIdKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
 
             texturePresetGUID = EditorPrefs.GetString("scenario/texturePreset");

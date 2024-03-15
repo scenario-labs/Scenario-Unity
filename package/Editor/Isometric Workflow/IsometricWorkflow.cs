@@ -69,7 +69,7 @@ namespace Scenario.Editor
             if (isVisible)
                 return;
 
-            PromptFetcher.IsWorkflow = true;
+            PromptFetcher.SilenceMode = true;
 
             GetWindow<IsometricWorkflow>();
 
@@ -78,7 +78,7 @@ namespace Scenario.Editor
 
         public void Restart()
         {
-            PromptFetcher.IsWorkflow = true;
+            PromptFetcher.SilenceMode = true;
 
             var isometricWorkflow = (IsometricWorkflow)GetWindow(typeof(IsometricWorkflow));
             
@@ -117,7 +117,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Call the prompt window to generate one image per asset in the assetlist
+        /// Call the prompt window to generate one inference (four images) per asset in the assetlist
         /// </summary>
         /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
         public void GenerateImages(Action _onRequestSent)
@@ -245,7 +245,7 @@ namespace Scenario.Editor
 
         private void OnDestroy()
         {
-            PromptFetcher.IsWorkflow = false;
+            PromptFetcher.SilenceMode = false;
         }
 
         private void OnBecameVisible()

@@ -417,7 +417,7 @@ namespace Scenario.Editor
                             CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                             {
                                 requestStatus = RequestsStatus.Requesting;
-                                PromptFetcher.IsWorkflow = true;
+                                PromptFetcher.SilenceMode = true;
                                 isometricWorkflow.GenerateImages(() =>
                                 {
                                     requestStatus = RequestsStatus.Requested;
@@ -550,7 +550,7 @@ namespace Scenario.Editor
             {
                 GUI.backgroundColor = Color.cyan;
 
-                CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DlAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.selectedImages[_assetName].Id, () =>
+                CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DownloadAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.selectedImages[_assetName].Id, () =>
                 {
                     drawActionPanels[_assetName] = () =>
                     {
@@ -572,14 +572,14 @@ namespace Scenario.Editor
                     if (isometricWorkflow.selectedImages[_assetName] != null)
                     {
                         /// Contains the side window when the user want to download an image as a tile
-                        if (TileCreator.instance == null)
+                        if (TileCreator.Instance == null)
                         {
-                            TileCreator.instance = new(isometricWorkflow.selectedImages[_assetName].Id);
+                            TileCreator.Instance = new(isometricWorkflow.selectedImages[_assetName].Id);
                         }
 
-                        TileCreator.instance.SetImageData(isometricWorkflow.selectedImages[_assetName]);
+                        TileCreator.Instance.SetImageData(isometricWorkflow.selectedImages[_assetName]);
 
-                        drawActionPanels[_assetName] = TileCreator.instance.OnGUI;
+                        drawActionPanels[_assetName] = TileCreator.Instance.OnGUI;
                     }
                 });
 
@@ -645,9 +645,9 @@ namespace Scenario.Editor
                     {
                         isometricWorkflow.selectedImages[_assetName] = imagesToDisplay[i];
 
-                        if (TileCreator.instance != null)
+                        if (TileCreator.Instance != null)
                         {
-                            TileCreator.instance.SetImageData(imagesToDisplay[i]);
+                            TileCreator.Instance.SetImageData(imagesToDisplay[i]);
                         }
                     }
                 }

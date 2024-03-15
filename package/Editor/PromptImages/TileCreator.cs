@@ -11,7 +11,7 @@ namespace Scenario.Editor
     {
         #region Public Fields
 
-        public static TileCreator instance = null;
+        public static TileCreator Instance = null;
 
         #endregion
 

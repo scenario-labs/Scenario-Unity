@@ -144,7 +144,7 @@ namespace Scenario.Editor
 
                 EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
 
-                PromptFetcher.IsWorkflow = false;
+                PromptFetcher.SilenceMode = false;
 
                 if (shouldAutoGenerateSeed)
                 {

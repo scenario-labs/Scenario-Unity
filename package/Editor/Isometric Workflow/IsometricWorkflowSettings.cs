@@ -69,7 +69,10 @@ namespace Scenario.Editor
             }
         }
 
-
+        /// <summary>
+        /// Load or create specific settings to the Isometric Workflow.
+        /// </summary>
+        /// <returns></returns>
         private static IsometricWorkflowSettings GetOrCreateSettings()
         {
             var settings = AssetDatabase.LoadAssetAtPath<IsometricWorkflowSettings>(settingsFilePath);
@@ -97,6 +100,10 @@ namespace Scenario.Editor
             return settings;
         }
 
+        /// <summary>
+        /// Call to load or create isometric settings.
+        /// </summary>
+        /// <returns></returns>
         public static IsometricWorkflowSettings GetSerializedSettings()
         {
             return GetOrCreateSettings();
@@ -124,12 +131,17 @@ namespace Scenario.Editor
             return false;
         }
 
-
+        /// <summary>
+        /// Initialize square base texture
+        /// </summary>
         private void InitializeTextures()
         {
             squareBaseTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(Path.Combine(CommonUtils.PluginFolderPath(), "Assets", "Reference Images", "IsometricBase_Square.png"));
         }
 
+        /// <summary>
+        /// Prepare Isometric with models and load it.
+        /// </summary>
         private async void InitializeModels()
         {
             //Debug.Log(modelsIdByStyle.Count);

@@ -57,8 +57,8 @@ namespace Scenario.Editor
                 if (_useCanny)
                 {
                     promptWindowUI.isAdvancedSettings = _useCanny;
-                    promptWindowUI.selectedOption1Index = 2;
-                    promptWindowUI.sliderValue1 = _cannyStrength;
+                    promptWindowUI.selectedOptionIndex = 2;
+                    promptWindowUI.sliderValue = _cannyStrength;
                 }
 
                 GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed, _onInferenceRequested);

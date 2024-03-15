@@ -333,31 +333,6 @@ namespace Scenario.Editor
             }
         }
 
-        public static string CurrentPrivacy
-        {
-            get => EditorPrefs.GetString("privacy", privacyPrivate);
-            set => EditorPrefs.SetString("privacy", value);
-        }
-    
-        public static string PagniationTokenPrivate
-        {
-            get => EditorPrefs.GetString("paginationTokenPrivate", "");
-            set => EditorPrefs.SetString("paginationTokenPrivate", value);
-        }
-    
-        public static string PagniationTokenPublic
-        {
-            get => EditorPrefs.GetString("paginationTokenPublic", "");
-            set => EditorPrefs.SetString("paginationTokenPublic", value);
-        }
-
-        [Serializable]
-        public class TexturePair
-        {
-            public Texture2D texture;
-            public string name;
-        }
-
         #endregion
     
         #region API_DTO

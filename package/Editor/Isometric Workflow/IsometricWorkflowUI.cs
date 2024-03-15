@@ -417,6 +417,7 @@ namespace Scenario.Editor
                             CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                             {
                                 requestStatus = RequestsStatus.Requesting;
+                                PromptFetcher.IsWorkflow = true;
                                 isometricWorkflow.GenerateImages(() =>
                                 {
                                     requestStatus = RequestsStatus.Requested;
@@ -569,14 +570,14 @@ namespace Scenario.Editor
                     if (isometricWorkflow.selectedImages[_assetName] != null)
                     {
                         /// Contains the side window when the user want to download an image as a tile
-                        if (ScenarioAddOn.tileCreator == null)
+                        if (TileCreator.instance == null)
                         {
-                            ScenarioAddOn.tileCreator = new(isometricWorkflow.selectedImages[_assetName].Id);
+                            TileCreator.instance = new(isometricWorkflow.selectedImages[_assetName].Id);
                         }
 
-                        ScenarioAddOn.tileCreator.SetImageData(isometricWorkflow.selectedImages[_assetName]);
+                        TileCreator.instance.SetImageData(isometricWorkflow.selectedImages[_assetName]);
 
-                        drawActionPanels[_assetName] = ScenarioAddOn.tileCreator.OnGUI;
+                        drawActionPanels[_assetName] = TileCreator.instance.OnGUI;
                     }
                 });
 
@@ -641,11 +642,10 @@ namespace Scenario.Editor
                     {
                         isometricWorkflow.selectedImages[_assetName] = imagesToDisplay[i];
 
-                        if (ScenarioAddOn.tileCreator != null)
+                        if (TileCreator.instance != null)
                         {
-                            ScenarioAddOn.tileCreator.SetImageData(imagesToDisplay[i]);
+                            TileCreator.instance.SetImageData(imagesToDisplay[i]);
                         }
-
                     }
                 }
                 else

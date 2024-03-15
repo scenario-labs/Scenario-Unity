@@ -10,6 +10,9 @@ namespace Scenario.Editor
     public class TileCreator
     {
         #region Public Fields
+
+        public static TileCreator instance = null;
+
         #endregion
 
         #region Private Fields
@@ -122,6 +125,7 @@ namespace Scenario.Editor
         public void SetImageData(ImageDataStorage.ImageData _imageData)
         {
             imageDataSelected = _imageData;
+            selectedTextureId = imageDataSelected.Id;
         }
 
         /// <summary>

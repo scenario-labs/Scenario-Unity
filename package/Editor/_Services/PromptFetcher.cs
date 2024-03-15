@@ -100,7 +100,10 @@ namespace Scenario.Editor
                             img.Seed);
                     }
 
-                    Images.ShowWindow();
+                    if (!IsWorkflow)
+                    { 
+                        Images.ShowWindow();
+                    }
                 }
             });
         }

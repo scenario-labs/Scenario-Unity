@@ -23,11 +23,12 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
-            if (!isVisible)
+            if (isVisible)
             {
-                lastPageToken = string.Empty;
-                imageDataList.Clear();
+                return;
             }
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
             GetInferencesData();
 
             var images = (Images)GetWindow(typeof(Images));
@@ -41,7 +42,10 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
-            ShowWindow();
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
+            GetInferencesData();
+            ImagesUI.Init();
         }
 
         private void OnDestroy()

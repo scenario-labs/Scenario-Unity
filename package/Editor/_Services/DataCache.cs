@@ -63,7 +63,16 @@ namespace Scenario.Editor
             return imageDataList.GetRange(firstIndex, count);
         }
 
-        public void FillReservedSpaceForImageData(string inferenceId, string id, string url, DateTime createdAt, string _seed)
+        /// <summary>
+        /// After inference ending, get image generated and fill the space reserved to it.
+        /// </summary>
+        /// <param name="inferenceId"> Id of the Inference </param>
+        /// <param name="id"> Image Id </param>
+        /// <param name="url"> URL Image </param>
+        /// <param name="createdAt"> Date of creation </param>
+        /// <param name="_scheduler"> Scheduler of the generation</param>
+        /// <param name="_seed"> Seed of the generation </param>
+        public void FillReservedSpaceForImageData(string inferenceId, string id, string url, DateTime createdAt, string _scheduler, string _seed)
         {
             var itm = imageDataList.FirstOrDefault(x =>
             {
@@ -78,6 +87,7 @@ namespace Scenario.Editor
             itm.Id = id;
             itm.Url = url;
             itm.CreatedAt = createdAt;
+            itm.Scheduler = _scheduler;
             itm.Seed = _seed;
             CommonUtils.FetchTextureFromURL(itm.Url, texture =>
             {

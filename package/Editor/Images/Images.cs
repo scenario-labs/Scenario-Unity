@@ -32,11 +32,11 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
-            if (isVisible)
-                return;
-
-            lastPageToken = string.Empty;
-            imageDataList.Clear();
+            if (!isVisible)
+            {
+                lastPageToken = string.Empty;
+                imageDataList.Clear();
+            }
             GetInferencesData();
 
             var images = (Images)GetWindow(typeof(Images));
@@ -48,11 +48,16 @@ namespace Scenario.Editor
             ImagesUI.OnGUI(this.position);
         }
 
+        private void OnEnable()
+        {
+            ShowWindow();
+        }
+
         private void OnDestroy()
         {
             ImagesUI.OnClose();
             ImagesUI.CloseSelectedTextureSection();
-            //DataCache.instance.ClearAllImageData();
+            DataCache.instance.ClearAllImageData();
         }
 
         private void OnBecameVisible()
@@ -142,19 +147,20 @@ namespace Scenario.Editor
 
         public static ImageDataStorage.ImageData GetImageDataById(string _id)
         {
-            return imageDataList.Find(x => x.Id == _id);
+            var imageData = imageDataList.Find(x => x.Id == _id);
+            if (imageData == null)
+                imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
+
+            return imageData;
         }
 
         public static Texture2D GetTextureByImageId(string _id)
         {
-            if (imageDataList.Find(x => x.Id == _id) != null)
-            {
-                return imageDataList.Find(x => x.Id == _id).texture;
-            }
-            else
-            {
-                return null;
-            }
+            var imageData = Images.GetImageDataById(_id); //try to get image from Images
+            if (imageData == null)
+                imageData = DataCache.instance.GetImageDataById(_id); //try to get from Datacache (if it has just been prompted)
+
+            return imageData.texture;
         }
 
         /// <summary>

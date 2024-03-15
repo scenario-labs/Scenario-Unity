@@ -11,23 +11,35 @@ namespace Scenario.Editor
         public List<ModelData> pageModels = new();
         private float padding = 10f;
         private int itemsPerRow = 5;
-        private int firstImageIndex;
-        private int maxModelsPerPage;
+        private int firstImageIndex = 0;
+        private int maxModelsPerPage = 15;
         private int selectedTab = 0;
         private bool showNextButton = false;
         private bool showPreviousButton = false;
         private bool drawTabs = false;
         private Vector2 scrollPosition = Vector2.zero;
 
+        /// <summary>
+        /// Number of pages inside models display.
+        /// </summary>
+        private int numberPages = 0;
+
+        /// <summary>
+        /// Kept the current page active
+        /// </summary>
+        private int currentPage = 1;
+
         private void SetFirstPage()
         {
-            selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
+            pageModels.Clear();
 
-            firstImageIndex = 0;
-            maxModelsPerPage = 15;
+            selectedTab = (Models.IsPrivateTab()) ? 0 : 1;
 
             showPreviousButton = false;
             showNextButton = false;
+
+            firstImageIndex = 0;
+            currentPage = 1;
 
             UpdatePage();
         }
@@ -36,13 +48,16 @@ namespace Scenario.Editor
         {
             firstImageIndex += maxModelsPerPage;
 
+            currentPage++;
+
             var models = Models.GetModels();
 
-            if (firstImageIndex > models.Count - maxModelsPerPage)
+        
+            if (firstImageIndex + maxModelsPerPage > models.Count)
             {
-                firstImageIndex = models.Count - maxModelsPerPage;
                 showNextButton = false;
             }
+
             showPreviousButton = true;
 
             UpdatePage();
@@ -51,7 +66,19 @@ namespace Scenario.Editor
         private void SetPreviousPage()
         {
             firstImageIndex -= maxModelsPerPage;
-            showPreviousButton = firstImageIndex > maxModelsPerPage;
+
+
+            if (firstImageIndex < maxModelsPerPage)
+            {
+                firstImageIndex = 0;
+                showPreviousButton = false;
+            }
+            else
+            {
+                showPreviousButton = true;
+            }
+
+            currentPage--;
 
             UpdatePage();
         }
@@ -71,13 +98,9 @@ namespace Scenario.Editor
 
                 pageModels.Add(models[i]);
             }
+            numberPages = (models.Count / maxModelsPerPage) +1;
 
-            if (models.Count > maxModelsPerPage && firstImageIndex != models.Count - maxModelsPerPage)
-            {
-                showNextButton = true;
-            }
-
-            if (pageModels.Count > maxModelsPerPage)
+            if (currentPage < numberPages)
             {
                 showNextButton = true;
             }
@@ -97,17 +120,24 @@ namespace Scenario.Editor
 
             DrawModelsGrid(position);
 
-            GUILayout.BeginArea(new Rect(0, position.height - 50, position.width, 50));
+            GUILayout.BeginArea(new Rect(0, position.height - 25, position.width, 50));
             GUILayout.BeginHorizontal();
 
             if (showPreviousButton)
             {
-                EditorStyle.Button("Previous Page", () => { RedrawPage(-1); });
+                EditorStyle.Button($"Previous Page ({currentPage - 1}/{numberPages})", () => { RedrawPage(-1); });
             }
 
             if (showNextButton)
             {
-                EditorStyle.Button("Next Page", () => { RedrawPage(1); });
+                if (currentPage == 1)
+                {
+                    EditorStyle.Button($"Next Page ({currentPage}/{numberPages})", () => { RedrawPage(1); });
+                }
+                else
+                { 
+                    EditorStyle.Button($"Next Page ({currentPage+1}/{numberPages})" , () => { RedrawPage(1); });
+                }
             }
 
             GUILayout.EndHorizontal();
@@ -122,16 +152,16 @@ namespace Scenario.Editor
 
         private void DrawModelsGrid(Rect position)
         {
-            float boxWidth = (position.width - padding * (itemsPerRow - 1)) / itemsPerRow;
-            float boxHeight = boxWidth;
+            float boxWidth = (position.width - (padding * 2) * itemsPerRow) / itemsPerRow;
 
+            float boxHeight = boxWidth;
             var textures = Models.GetTextures();
 
-            int numRows = Mathf.CeilToInt((float)maxModelsPerPage / itemsPerRow);
+            int numRows = maxModelsPerPage / itemsPerRow;
             float rowPadding = 10f;
-            float scrollViewHeight = (boxHeight + padding + rowPadding) * numRows - rowPadding;
+            float scrollViewHeight = (boxHeight + padding + rowPadding) * numRows + rowPadding;
 
-            scrollPosition = GUI.BeginScrollView(new Rect(0, 70, position.width, position.height - 20), scrollPosition, new Rect(0, 0, position.width - 20, scrollViewHeight));
+            scrollPosition = GUI.BeginScrollView(new Rect(0, 35, position.width, position.height - 65), scrollPosition, new Rect(-padding*2, 0, position.width - boxWidth/2, scrollViewHeight));
             {
                 DrawTextureBox(boxWidth, boxHeight, rowPadding, textures);
             }
@@ -157,7 +187,7 @@ namespace Scenario.Editor
 
                 GUIStyle style = new GUIStyle(GUI.skin.label)
                 {
-                    alignment = TextAnchor.MiddleCenter
+                    alignment = TextAnchor.MiddleCenter,
                 };
 
                 if (texture != null)
@@ -191,12 +221,12 @@ namespace Scenario.Editor
                         bubbleText = "Unknown";
                     }
 
-                    Rect bubbleRect = new Rect(boxRect.x + boxWidth - 40f, boxRect.y, 40f, 20f);
-                    float cornerRadius = 25f;
+                    Rect bubbleRect = new Rect(boxRect.x + boxWidth - 50f, boxRect.y + 10, 40f, 20f);
 
-                    GUIStyle bubbleStyle = new GUIStyle(GUI.skin.box);
-                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, Color.black);
-                    bubbleStyle.border = new RectOffset((int)cornerRadius, (int)cornerRadius, (int)cornerRadius, (int)cornerRadius);
+                    GUIStyle bubbleStyle = new GUIStyle();
+                    bubbleStyle.alignment = TextAnchor.MiddleCenter;
+                    bubbleStyle.normal.textColor = Color.white;
+                    bubbleStyle.normal.background = MakeTex((int)bubbleRect.width, (int)bubbleRect.height, new Color(0.15f, 0.15f, 0.15f, 0.9f));
 
                     GUI.Box(bubbleRect, bubbleText, bubbleStyle);
 
@@ -204,7 +234,7 @@ namespace Scenario.Editor
                 }
                 else
                 {
-                    GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading..", style);
+                    GUI.Label(new Rect(boxRect.x, boxRect.y + boxHeight, boxWidth, 20), "Loading ...", style);
                 }
             }
         }

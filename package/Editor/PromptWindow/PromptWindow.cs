@@ -289,25 +289,13 @@ namespace Scenario.Editor
         {
             operationType = "controlnet";
 
-            if (promptWindowUI.selectedOption1Index > 0)
+            if (promptWindowUI.selectedOptionIndex > 0)
             {
-                string option1Name = promptWindowUI.dropdownOptions[promptWindowUI.selectedOption1Index - 1];
-                if (!modalitySettings.ContainsKey(option1Name))
-                    modalitySettings.Add(option1Name, $"{promptWindowUI.sliderValue1:0.00}");
-            }
-
-            if (promptWindowUI.selectedOption2Index > 0)
-            {
-                string option2Name = promptWindowUI.dropdownOptions[promptWindowUI.selectedOption2Index - 1];
-                if (!modalitySettings.ContainsKey(option2Name))
-                    modalitySettings.Add(option2Name, $"{promptWindowUI.sliderValue2:0.00}");
-            }
-
-            if (promptWindowUI.selectedOption3Index > 0)
-            {
-                string option3Name = promptWindowUI.dropdownOptions[promptWindowUI.selectedOption3Index - 1];
-                if (!modalitySettings.ContainsKey(option3Name))
-                    modalitySettings.Add(option3Name, $"{promptWindowUI.sliderValue3:0.00}");
+                string optionName = promptWindowUI.dropdownOptions[promptWindowUI.selectedOptionIndex - 1];
+                if (!modalitySettings.ContainsKey(optionName))
+                { 
+                    modalitySettings.Add(optionName, $"{promptWindowUI.sliderValue:0.00}");
+                }
             }
 
             modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));

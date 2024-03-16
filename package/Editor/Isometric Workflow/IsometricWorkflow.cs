@@ -39,6 +39,10 @@ namespace Scenario.Editor
         /// </summary>
         internal Theme selectedTheme = Theme.None;
 
+        /// <summary>
+        /// Fix by default the prompt text.
+        /// </summary>
+        internal string basePromptText = $"isometric, solo, centered, solid color background";
 
         /// <summary>
         /// The fourth step of the workflow is to create a list of asset name. 
@@ -148,7 +152,7 @@ namespace Scenario.Editor
                 string tempName = assetName;
                 bool useBaseTexture = baseTexture != null;
                 string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
-                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
+                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"{basePromptText}, {selectedTheme}, {assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
                 (inferenceId) =>
                 {
                     if (inferenceIdByAssetList.ContainsKey(tempName))
@@ -194,20 +198,19 @@ namespace Scenario.Editor
 
             int totalRequests = assetList.Count;
             int completedRequests = 0;
-
-            string tempName = _assetName;
+;
             bool useBaseTexture = baseTexture != null;
             string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
-            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"isometric, solo, centered, solid color background, {selectedTheme}, {_assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
+            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"{basePromptText}, {selectedTheme}, {_assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
             (inferenceId) =>
             {
-                if (inferenceIdByAssetList.ContainsKey(tempName))
+                if (inferenceIdByAssetList.ContainsKey(_assetName))
                 {
-                    inferenceIdByAssetList[tempName] = inferenceId;
+                    inferenceIdByAssetList[_assetName] = inferenceId;
                 }
                 else
                 {
-                    inferenceIdByAssetList.Add(tempName, inferenceId);
+                    inferenceIdByAssetList.Add(_assetName, inferenceId);
                 }
 
                 completedRequests++;

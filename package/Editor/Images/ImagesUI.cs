@@ -48,6 +48,14 @@ namespace Scenario.Editor
             InitializeButtons();
         }
 
+        /// <summary>
+        /// Re initialize the Image UI when it's already existing.
+        /// </summary>
+        public void Init()
+        {
+            InitializeButtons();
+        }
+
         #endregion
 
 
@@ -318,7 +326,14 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 {
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
-                    CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                    if (string.IsNullOrEmpty(currentImageData.Scheduler))
+                    {
+                        CustomStyle.Label($"Scheduler: Default");
+                    }
+                    else
+                    { 
+                        CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                    }
                 }
                 GUILayout.EndHorizontal();
                 CustomStyle.Space(padding);

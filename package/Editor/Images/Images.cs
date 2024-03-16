@@ -32,11 +32,12 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
         {
-            if (!isVisible)
+            if (isVisible)
             {
-                lastPageToken = string.Empty;
-                imageDataList.Clear();
+                return;
             }
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
             GetInferencesData();
 
             var images = (Images)GetWindow(typeof(Images));
@@ -50,7 +51,10 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
-            ShowWindow();
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
+            GetInferencesData();
+            ImagesUI.Init();
         }
 
         private void OnDestroy()
@@ -106,7 +110,7 @@ namespace Scenario.Editor
                             Steps = inference.parameters.numInferenceSteps,
                             Size = new Vector2(inference.parameters.width, inference.parameters.height),
                             Guidance = inference.parameters.guidance,
-                            Scheduler = "Default", //TODO : change this to reflect the scheduler used for creating this image
+                            Scheduler = inference.parameters.scheduler,
                             Seed = image.seed,
                             CreatedAt = inference.createdAt,
                             modelId = inference.modelId

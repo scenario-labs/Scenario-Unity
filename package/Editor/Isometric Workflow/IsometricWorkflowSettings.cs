@@ -13,6 +13,8 @@ namespace Scenario.Editor
         public const string settingsFolderPath = "Assets/Editor/Scenario/Settings";
         public const string settingsFilePath = settingsFolderPath + "/IsometricWorkflowSettings.asset";
 
+        public static IsometricWorkflowSettings Instance = null;
+
         /// <summary>
         /// This field contains the reference image of the square base
         /// </summary>
@@ -61,12 +63,25 @@ namespace Scenario.Editor
         {
             public IsometricWorkflow.ModelStyle style;
             public string id;
+            public string Name = string.Empty;
+            public string DefaultPrompt = string.Empty;
 
             public ModelIdByStyle(IsometricWorkflow.ModelStyle style, string id)
             {
                 this.style = style;
                 this.id = id;
             }
+
+            public ModelIdByStyle(IsometricWorkflow.ModelStyle style, string id, string name, string defaultPrompt) : this(style, id)
+            {
+                Name = name;
+                DefaultPrompt = defaultPrompt;
+            }
+        }
+
+        public List<ModelIdByStyle> GetModelsIdByStyle()
+        { 
+            return Instance.modelsIdByStyle;
         }
 
         /// <summary>
@@ -97,6 +112,7 @@ namespace Scenario.Editor
                     return GetOrCreateSettings();
                 }
             }
+            Instance = settings;
             return settings;
         }
 
@@ -151,6 +167,8 @@ namespace Scenario.Editor
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora4, "JoHeBmGuQuijNq1HgFXbrQ"));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora5, "fQ48heIJSGCQQalFspW44g"));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora6, "I5jfHdm-QimzxUWAoAjiQQ"));
+            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Fairytale_Isometric_Buildings, "model_BadrJ8rQCJiHji9j83Xo1TMN", "Fairytale Isometric Buildings", "isometric"));
+            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Buildings, "model_z6kWsPZavazKpW1oDyZhbegt", "3D Isometric Buildings", "isometric"));
 
             foreach (var model in modelsIdByStyle)
             {

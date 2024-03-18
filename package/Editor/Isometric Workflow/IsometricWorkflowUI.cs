@@ -2,6 +2,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using static Scenario.Editor.IsometricWorkflowSettings;
 
 namespace Scenario.Editor
 {
@@ -210,13 +211,21 @@ namespace Scenario.Editor
 
             GUILayout.BeginVertical(); // Begin vertical grouping
             {
-                var modelStyles = Enum.GetValues(typeof(IsometricWorkflow.ModelStyle));
-                int selected = (int)isometricWorkflow.selectedModel;
+                var modelStyles = IsometricWorkflowSettings.Instance.GetModelsIdByStyle();
+                if (isometricWorkflow.selectedModel == null)
+                {
+                    if (modelStyles != null && modelStyles.Count > 0)
+                    { 
+                        isometricWorkflow.selectedModel = modelStyles[0];
+                    }
+                }
+
+                int selected = (int)isometricWorkflow.selectedModel.style;
 
                 GUILayout.BeginHorizontal(); // Organize in rows
                 {
                     GUILayout.FlexibleSpace();
-                    foreach (IsometricWorkflow.ModelStyle modelStyle in modelStyles)
+                    foreach (ModelIdByStyle modelStyle in modelStyles)
                     {
                         CustomStyle.Space(25); // Space between each containers
                         GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(150), GUILayout.Height(175)); // Container for each item
@@ -225,11 +234,11 @@ namespace Scenario.Editor
                             {
                                 GUILayout.FlexibleSpace();
                                 // Toggle button
-                                bool isSelected = GUILayout.Toggle(selected == (int)modelStyle, "");
-                                if (isSelected && selected != (int)modelStyle)
+                                bool isSelected = GUILayout.Toggle(selected == (int)modelStyle.style, "");
+                                if (isSelected && selected != (int)modelStyle.style)
                                 {
                                     isometricWorkflow.selectedModel = modelStyle; // Update the selected model
-                                    selected = (int)modelStyle;
+                                    selected = (int)modelStyle.style;
                                 }
                                 GUILayout.FlexibleSpace();
                             }
@@ -238,20 +247,27 @@ namespace Scenario.Editor
                             GUILayout.BeginVertical();
                             {
                                 // Thumbnail
-                                if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle))
+                                if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle.style))
                                 {
-                                    GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
+                                    GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle.style).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
                                 }
 
                                 // Name
-                                CustomStyle.Label(modelStyle.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                                if (string.IsNullOrEmpty(modelStyle.Name))
+                                {
+                                    CustomStyle.Label(modelStyle.style.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                                }
+                                else
+                                { 
+                                    CustomStyle.Label(modelStyle.Name.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                                }
                             }
                             GUILayout.EndVertical();
 
                         }
                         GUILayout.EndHorizontal();
 
-                        if ((int)modelStyle % 2 == 1) // Assuming you want 2 items per row
+                        if ((int)modelStyle.style % 2 == 1) // Assuming you want 2 items per row
                         {
                             GUILayout.FlexibleSpace(); //flexible space at the right side
                             GUILayout.EndHorizontal();
@@ -263,7 +279,7 @@ namespace Scenario.Editor
                         }
                     }
 
-                    if (modelStyles.Length % 2 != 0)
+                    if (modelStyles.Count % 2 != 0)
                     {
                         GUILayout.EndHorizontal(); // End the row if an odd number of items
                     }

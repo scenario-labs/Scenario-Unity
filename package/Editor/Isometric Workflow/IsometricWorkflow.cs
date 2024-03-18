@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using static Scenario.Editor.IsometricWorkflowSettings;
 
 namespace Scenario.Editor
 {
@@ -31,7 +32,7 @@ namespace Scenario.Editor
         /// <summary>
         /// The second step of the workflow is to select a Style. This field contains the model that match the style that the user has choosen
         /// </summary>
-        internal ModelStyle selectedModel = ModelStyle.lora1;
+        internal ModelIdByStyle selectedModel = null;
 
 
         /// <summary>
@@ -124,7 +125,7 @@ namespace Scenario.Editor
         /// Call the prompt window to generate one inference (four images) per asset in the assetlist
         /// </summary>
         /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
-        public void GenerateImages(Action _onRequestSent)
+        public void GenerateImages(Action _onRequestSent, string _prompt = null)
         {
             Texture2D baseTexture = null;
             switch (selectedBase)
@@ -151,8 +152,19 @@ namespace Scenario.Editor
             {
                 string tempName = assetName;
                 bool useBaseTexture = baseTexture != null;
-                string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
-                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"{basePromptText}, {selectedTheme}, {assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
+                string modelName = settings.isometricModels.Find(x => x.style == selectedModel.style).modelData.name;
+
+                string prompt = string.Empty;
+                if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
+                {
+                    prompt = $"{basePromptText}, {selectedTheme}, {assetName}";
+                }
+                else
+                {
+                    prompt = $"{selectedModel.DefaultPrompt}, {selectedTheme}, {assetName}";
+                }
+
+                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, 0.25f,
                 (inferenceId) =>
                 {
                     if (inferenceIdByAssetList.ContainsKey(tempName))
@@ -200,8 +212,18 @@ namespace Scenario.Editor
             int completedRequests = 0;
 ;
             bool useBaseTexture = baseTexture != null;
-            string modelName = settings.isometricModels.Find(x => x.style == selectedModel).modelData.name;
-            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, $"{basePromptText}, {selectedTheme}, {_assetName}", 30, 1024, 1024, 6, "-1", useBaseTexture, 0.8f,
+            string modelName = settings.isometricModels.Find(x => x.style == selectedModel.style).modelData.name;
+            string prompt = string.Empty;
+            if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
+            {
+                prompt = $"{basePromptText}, {selectedTheme}, {_assetName}";
+            }
+            else
+            {
+                prompt = $"{selectedModel.DefaultPrompt}, {selectedTheme}, {_assetName}";
+            }
+            
+            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, 0.25f,
             (inferenceId) =>
             {
                 if (inferenceIdByAssetList.ContainsKey(_assetName))
@@ -269,6 +291,8 @@ namespace Scenario.Editor
             lora4,
             lora5,
             lora6,
+            Fairytale_Isometric_Buildings,
+            Isometric_Buildings
         }
 
 

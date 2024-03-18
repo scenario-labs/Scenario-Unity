@@ -3,7 +3,7 @@
     "displayName": "Scenario",
     "description": "Craft unique and style-consistent game assets with custom-trained AI models.",
     "documentationUrl": "https://help.scenario.com/",
-    "changelogUrl": "https://github.com/scenario-labs/Scenario-Unity/",
+    "changelogUrl": "https://github.com/scenario-labs/Scenario-Unity/releases",
     "licensesUrl": "https://github.com/scenario-labs/Scenario-Unity/",
     "version": "0.6.0",
     "unity": "2022.3",

@@ -33,9 +33,38 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 GUILayout.Label("Modality :", EditorStyles.label);
 
-                List<string> availableOptions1 = new List<string> { "None" };
-                availableOptions1.AddRange(dropdownOptions);
-                selectedOptionIndex = EditorGUILayout.Popup(selectedOptionIndex, availableOptions1.ToArray());
+                List<string> availableOptions = new List<string> { "None" };
+
+                
+                if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType))
+                {
+                    switch (DataCache.instance.SelectedModelType)
+                    {
+                        case "sd-xl-composition":
+                            availableOptions.AddRange(dropdownOptions);
+                            break;
+
+                        case "sd-xl-lora":
+                            availableOptions.AddRange(dropdownOptions);
+                            break;
+
+                        case "sd-xl":
+                            availableOptions.AddRange(dropdownOptions);
+                            break;
+
+                        case "sd-1_5":
+                            availableOptions.AddRange(dropdownOptions);
+                            availableOptions.AddRange(dropdownOptionsSD15);
+                            break;
+
+                        default: 
+                            break;
+
+                    }
+                }
+
+                //availableOptions.AddRange(dropdownOptions);
+                selectedOptionIndex = EditorGUILayout.Popup(selectedOptionIndex, availableOptions.ToArray());
 
                 if (selectedOptionIndex > 0)
                 { 

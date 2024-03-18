@@ -12,6 +12,10 @@ namespace Scenario.Editor
     /// </summary>
     public class DataCache : ScriptableSingleton<DataCache>
     {
+
+        public Models.ModelData SelectedModelData { get { return selectedModelData; } set { selectedModelData = value; } }
+        private Models.ModelData selectedModelData = null;
+
         #region ImageDataList
 
         [SerializeField] private List<ImageDataStorage.ImageData> imageDataList = new();
@@ -149,6 +153,12 @@ namespace Scenario.Editor
         {
             get => EditorPrefs.GetString("SelectedModelId", "");
             set => EditorPrefs.SetString("SelectedModelId", value);
+        }
+
+        public string SelectedModelType
+        {
+            get => EditorPrefs.GetString("SelectedModelType", "");
+            set => EditorPrefs.SetString("SelectedModelType", value);
         }
 
         public int GetReservedSpaceCount()

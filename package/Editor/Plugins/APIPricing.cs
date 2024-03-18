@@ -23,7 +23,10 @@ namespace Scenario.Editor
             { "Generator training", "$5.00 per training" }
         };
 
-        [MenuItem("Window/Scenario/API Pricing")]
+        /// <summary>
+        /// Using true on MenuItem parameter, allow us to keep it now without seeing it
+        /// </summary>
+        [MenuItem("Window/Scenario/API Pricing", true, 101)]
         public static void ShowWindow()
         {
             GetWindow<APIPricingWindow>("API Pricing");

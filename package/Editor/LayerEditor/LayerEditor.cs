@@ -40,7 +40,7 @@ namespace Scenario.Editor
         private LayerEditorRightPanel rightPanel;
         private ContextMenuActions contextMenuActions;
 
-        [MenuItem("Window/Layer Editor")]
+        [MenuItem("Window/Scenario/Editor/Layer Editor", false, 3)]
         public static void ShowWindow()
         {
             GetWindow<LayerEditor>("Layer Editor");

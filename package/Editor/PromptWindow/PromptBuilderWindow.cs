@@ -25,7 +25,7 @@ namespace Scenario.Editor
         public static Action<string> onReturn;
         public static PromptBuilderWindow Instance;
 
-        [MenuItem("Window/Scenario/Prompt Builder")]
+        [MenuItem("Window/Scenario/Builder/Prompt Builder", false, 1)]
         public static void ShowWindow()
         {
             Instance = GetWindow<PromptBuilderWindow>("Prompt Builder");

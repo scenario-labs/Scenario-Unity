@@ -9,7 +9,7 @@ namespace Scenario.Editor
         private static InpaintingEditorUI inpaintingEditorUI;
         private static Texture2D inpaintingTexture;
 
-        [MenuItem("Window/Scenario/Inpainting Editor")]
+        [MenuItem("Window/Scenario/Editor/Inpainting Editor", false, 2)]
         public static void ShowWindow()
         {
             InpaintingEditor window = GetWindow<InpaintingEditor>("Inpainting Editor");

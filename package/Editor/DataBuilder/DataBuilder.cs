@@ -25,7 +25,7 @@ namespace Scenario.Editor
         private float cameraDistance = 2f;
         private float lightDistance = 2f;
 
-        [MenuItem("Window/Scenario/3d Data Builder")]
+        [MenuItem("Window/Scenario/Builder/3d Data Builder", false, 0)]
         public static void ShowWindow()
         {
             GetWindow<DataBuilder>("3d Data Builder");

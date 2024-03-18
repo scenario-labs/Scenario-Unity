@@ -12,18 +12,53 @@ namespace Scenario.Editor
     
         internal static Texture2D imageUpload;
 
+        /// <summary>
+        /// First dropdown options according to SDXL models
+        /// </summary>
         public readonly string[] dropdownOptions =
         {
             "",
+            "Character",
+            "Landscape",
+            "Structure",
+            "Pose",
+            "Depth",
+            "Segmentation",
+            "Illusion"
+        };
+
+        /// <summary>
+        /// Seconds dropdown options according to SD 1.5 models
+        /// </summary>
+        public readonly string[] dropdownOptionsSD15 =
+        {
+            "City",
+            "Interior",
+            "Edges",
+            "Scribble",
+            "Normal Map",
+            "Line Art"
+        };
+
+        /// <summary>
+        /// Translation to api calling modalities options, treat previous values in the exact same order.
+        /// </summary>
+        public readonly string[] correspondingOptionsValue =
+        {
+            "",
+            "character",
+            "landscape",
             "canny",
             "pose",
             "depth",
-            "lines",
             "seg",
+            "illusion",
+            "city",
+            "interior",
+            "lines",
             "scribble",
-            "lineart",
             "normal-map",
-            "shuffle"
+            "lineart"
         };
 
         internal readonly string[] schedulerOptions = new string[] // Scheduler options extracted from your HTML
@@ -35,12 +70,21 @@ namespace Scenario.Editor
         };
 
         public string selectedPreset = "";
-        public int selectedOption1Index = 0;
-        public int selectedOption2Index = 0;
-        public int selectedOption3Index = 0;
-        public float sliderValue1 = 0.1f;
-        public float sliderValue2 = 0.1f;
-        public float sliderValue3 = 0.1f;
+
+        /// <summary>
+        /// Correspond of the index value selected from the modalities dropdown value
+        /// </summary>
+        public int selectedOptionIndex = 0;
+
+        /// <summary>
+        /// Variable to display in interface on slider element.
+        /// </summary>
+        public int sliderDisplayedValue = 100;
+
+        /// <summary>
+        /// Value from the guidance slider in controlNet options, use to send to generation
+        /// </summary>
+        public float sliderValue = 0.0f;
     
         internal bool isImageToImage = false;
         internal bool isControlNet = false;
@@ -302,8 +346,7 @@ namespace Scenario.Editor
                     widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
                     heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
 
-                    selectedOption1Index = NearestValueIndex(widthSliderValue, allowedWidthValues);
-                    selectedOption2Index = NearestValueIndex(heightSliderValue, allowedHeightValues);
+                    selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
                 });
             
                 toolsMenu.DropDown(dropdownButtonRect);

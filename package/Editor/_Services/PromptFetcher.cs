@@ -88,8 +88,11 @@ namespace Scenario.Editor
                             img.Id,
                             img.Url,
                             inferenceStatusRoot.inference.createdAt,
+                            inferenceStatusRoot.inference.parameters.scheduler,
                             img.Seed);
                     }
+
+                    Images.ShowWindow();
                 }
             });
         }
@@ -135,6 +138,7 @@ namespace Scenario.Editor
             public int width { get; set; }
             public int height { get; set; }
             public string type { get; set; }
+            public string scheduler { get; set; }
             public string image { get; set; }
             public string prompt { get; set; }
             public string mask { get; set; }

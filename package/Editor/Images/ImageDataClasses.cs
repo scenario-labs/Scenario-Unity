@@ -53,6 +53,7 @@ namespace Scenario.Editor
         public int width { get; set; }
         public bool hideResults { get; set; }
         public string type { get; set; }
+        public string scheduler { get; set; }
         public string prompt { get; set; }
         public string negativePrompt { get; set; }
         public int height { get; set; }

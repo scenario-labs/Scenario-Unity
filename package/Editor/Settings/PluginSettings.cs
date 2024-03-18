@@ -55,7 +55,6 @@ namespace Scenario.Editor
         {
             GetVersionFromPackageJson();
             LoadSettings();
-
         }
 
 
@@ -164,7 +163,7 @@ namespace Scenario.Editor
         /// <returns></returns>
         private static Preset GetPreset(string _GUID)
         {
-            if (_GUID != null)
+            if (!string.IsNullOrEmpty(_GUID))
             {
                 return AssetDatabase.LoadAssetAtPath<Preset>(AssetDatabase.GUIDToAssetPath(_GUID));
             }
@@ -237,15 +236,30 @@ namespace Scenario.Editor
         private void LoadSettings()
         {
             /// Register default values
-            if (!EditorPrefs.HasKey("scenario/texturePreset"))
+
+            if (!EditorPrefs.HasKey("scenario/texturePreset") /*&& string.IsNullOrEmpty(EditorPrefs.GetString("scenario/texturePreset"))*/)
             {
                 EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
             }
+            else if(string.IsNullOrEmpty(EditorPrefs.GetString("scenario/texturePreset")))
+            {
+                EditorPrefs.SetString("scenario/texturePreset", "28269680c775243409a2d470907383f9"); //change this value in case the meta file change
+            }
+  
             if (!EditorPrefs.HasKey("scenario/spritePreset"))
             {
                 EditorPrefs.SetString("scenario/spritePreset", "d87ceacdb68f56745951dadf104120b1"); //change this value in case the meta file change
             }
+            else if (string.IsNullOrEmpty(EditorPrefs.GetString("scenario/spritePreset")))
+            {
+                EditorPrefs.SetString("scenario/spritePreset", "d87ceacdb68f56745951dadf104120b1"); //change this value in case the meta file change
+            }
+
             if (!EditorPrefs.HasKey("scenario/tilePreset"))
+            {
+                EditorPrefs.SetString("scenario/tilePreset", "6d537ab5bf7649b44973f061c34b6151"); //change this value in case the meta file change
+            }
+            else if (string.IsNullOrEmpty(EditorPrefs.GetString("scenario/tilePreset")))
             {
                 EditorPrefs.SetString("scenario/tilePreset", "6d537ab5bf7649b44973f061c34b6151"); //change this value in case the meta file change
             }

@@ -205,7 +205,7 @@ namespace Scenario.Editor
 
             if (promptWindowUI.selectedOptionIndex > 0)
             {
-                string optionName = promptWindowUI.dropdownOptions[promptWindowUI.selectedOptionIndex - 1];
+                string optionName = promptWindowUI.correspondingOptionsValue[promptWindowUI.selectedOptionIndex - 1];
                 if (!modalitySettings.ContainsKey(optionName))
                 { 
                     modalitySettings.Add(optionName, $"{promptWindowUI.sliderValue:0.00}");

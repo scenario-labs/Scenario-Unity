@@ -92,10 +92,10 @@ namespace Scenario.Editor
                 {
                     continue;
                 }
-            
-                pageModels.Add(models[i]);
+
+                pageModels.Add(models[i]); 
             }
-            numberPages = (models.Count / maxModelsPerPage) +1;
+            numberPages = (models.Count / maxModelsPerPage) + 1;
 
             if (currentPage < numberPages)
             {
@@ -196,6 +196,8 @@ namespace Scenario.Editor
                         if (globalIndex >= 0 && globalIndex < models.Count)
                         {
                             DataCache.instance.SelectedModelId = models[globalIndex].id;
+                            DataCache.instance.SelectedModelType = models[globalIndex].type;
+                            
                             EditorPrefs.SetString("SelectedModelName", name);
                         }
 

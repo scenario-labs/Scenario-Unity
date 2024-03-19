@@ -125,7 +125,7 @@ namespace Scenario.Editor
         /// Call the prompt window to generate one inference (four images) per asset in the assetlist
         /// </summary>
         /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
-        public void GenerateImages(Action _onRequestSent, string _prompt = null)
+        public void GenerateImages(Action _onRequestSent)
         {
             Texture2D baseTexture = null;
             switch (selectedBase)
@@ -164,7 +164,7 @@ namespace Scenario.Editor
                     prompt = $"{selectedModel.DefaultPrompt}, {selectedTheme}, {assetName}";
                 }
 
-                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, 0.25f,
+                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
                 (inferenceId) =>
                 {
                     if (inferenceIdByAssetList.ContainsKey(tempName))
@@ -223,7 +223,7 @@ namespace Scenario.Editor
                 prompt = $"{selectedModel.DefaultPrompt}, {selectedTheme}, {_assetName}";
             }
             
-            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, 0.25f,
+            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
             (inferenceId) =>
             {
                 if (inferenceIdByAssetList.ContainsKey(_assetName))

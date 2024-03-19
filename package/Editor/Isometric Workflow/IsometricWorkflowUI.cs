@@ -293,6 +293,8 @@ namespace Scenario.Editor
             GUILayout.FlexibleSpace();
             CustomStyle.ButtonPrimary("Next", 30, 0, () =>
             {
+                DataCache.instance.SelectedModelId = isometricWorkflow.selectedModel.id;
+                EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
                 isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
             });
             CustomStyle.Space();

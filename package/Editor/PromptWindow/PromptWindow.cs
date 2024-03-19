@@ -56,7 +56,7 @@ namespace Scenario.Editor
                 if (_useCanny)
                 {
                     promptWindowUI.isAdvancedSettings = _useCanny;
-                    promptWindowUI.selectedOptionIndex = 2;
+                    promptWindowUI.selectedOptionIndex = Array.IndexOf(promptWindowUI.correspondingOptionsValue, "canny") + 1;
                     promptWindowUI.sliderValue = _cannyStrength;
                 }
 

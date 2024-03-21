@@ -211,81 +211,85 @@ namespace Scenario.Editor
 
             GUILayout.BeginVertical(); // Begin vertical grouping
             {
-                var modelStyles = IsometricWorkflowSettings.Instance.GetModelsIdByStyle();
-                if (isometricWorkflow.selectedModel == null)
+                assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(true));
                 {
-                    if (modelStyles != null && modelStyles.Count > 0)
-                    { 
-                        isometricWorkflow.selectedModel = modelStyles[0];
-                    }
-                }
-
-                int selected = (int)isometricWorkflow.selectedModel.style;
-
-                GUILayout.BeginHorizontal(); // Organize in rows
-                {
-                    GUILayout.FlexibleSpace();
-                    foreach (ModelIdByStyle modelStyle in modelStyles)
+                    var modelStyles = IsometricWorkflowSettings.Instance.GetModelsIdByStyle();
+                    if (isometricWorkflow.selectedModel == null)
                     {
-                        CustomStyle.Space(25); // Space between each containers
-                        GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(150), GUILayout.Height(175)); // Container for each item
-                        {
-                            GUILayout.BeginVertical();
-                            {
-                                GUILayout.FlexibleSpace();
-                                // Toggle button
-                                bool isSelected = GUILayout.Toggle(selected == (int)modelStyle.style, "");
-                                if (isSelected && selected != (int)modelStyle.style)
-                                {
-                                    isometricWorkflow.selectedModel = modelStyle; // Update the selected model
-                                    selected = (int)modelStyle.style;
-                                }
-                                GUILayout.FlexibleSpace();
-                            }
-                            GUILayout.EndVertical();
-
-                            GUILayout.BeginVertical();
-                            {
-                                // Thumbnail
-                                if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle.style))
-                                {
-                                    GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle.style).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
-                                }
-
-                                // Name
-                                if (string.IsNullOrEmpty(modelStyle.Name))
-                                {
-                                    CustomStyle.Label(modelStyle.style.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
-                                }
-                                else
-                                { 
-                                    CustomStyle.Label(modelStyle.Name.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
-                                }
-                            }
-                            GUILayout.EndVertical();
-
+                        if (modelStyles != null && modelStyles.Count > 0)
+                        { 
+                            isometricWorkflow.selectedModel = modelStyles[0];
                         }
-                        GUILayout.EndHorizontal();
+                    }
 
-                        if ((int)modelStyle.style % 2 == 1) // Assuming you want 2 items per row
+                    int selected = (int)isometricWorkflow.selectedModel.style;
+
+                    GUILayout.BeginHorizontal(); // Organize in rows
+                    {
+                        GUILayout.FlexibleSpace();
+                        foreach (ModelIdByStyle modelStyle in modelStyles)
                         {
-                            GUILayout.FlexibleSpace(); //flexible space at the right side
+                            CustomStyle.Space(25); // Space between each containers
+                            GUILayout.BeginHorizontal(GUI.skin.box, GUILayout.Width(150), GUILayout.Height(175)); // Container for each item
+                            {
+                                GUILayout.BeginVertical();
+                                {
+                                    GUILayout.FlexibleSpace();
+                                    // Toggle button
+                                    bool isSelected = GUILayout.Toggle(selected == (int)modelStyle.style, "");
+                                    if (isSelected && selected != (int)modelStyle.style)
+                                    {
+                                        isometricWorkflow.selectedModel = modelStyle; // Update the selected model
+                                        selected = (int)modelStyle.style;
+                                    }
+                                    GUILayout.FlexibleSpace();
+                                }
+                                GUILayout.EndVertical();
+
+                                GUILayout.BeginVertical();
+                                {
+                                    // Thumbnail
+                                    if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle.style))
+                                    {
+                                        GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle.style).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
+                                    }
+
+                                    // Name
+                                    if (string.IsNullOrEmpty(modelStyle.Name))
+                                    {
+                                        CustomStyle.Label(modelStyle.style.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                                    }
+                                    else
+                                    { 
+                                        CustomStyle.Label(modelStyle.Name.ToString(), width: 150, alignment: TextAnchor.MiddleCenter); // Centered text under the thumbnail
+                                    }
+                                }
+                                GUILayout.EndVertical();
+
+                            }
                             GUILayout.EndHorizontal();
 
-                            CustomStyle.Space(25); // Space between each containers
+                            if ((int)modelStyle.style % 2 == 1) // Assuming you want 2 items per row
+                            {
+                                GUILayout.FlexibleSpace(); //flexible space at the right side
+                                GUILayout.EndHorizontal();
 
-                            GUILayout.BeginHorizontal(); // Start a new row after every 2 items
-                            GUILayout.FlexibleSpace(); //flexible space at the left side
+                                CustomStyle.Space(25); // Space between each containers
+
+                                GUILayout.BeginHorizontal(); // Start a new row after every 2 items
+                                GUILayout.FlexibleSpace(); //flexible space at the left side
+                            }
                         }
-                    }
 
-                    if (modelStyles.Count % 2 != 0)
-                    {
-                        GUILayout.EndHorizontal(); // End the row if an odd number of items
-                    }
+                        if (modelStyles.Count % 2 != 0)
+                        {
+                            GUILayout.EndHorizontal(); // End the row if an odd number of items
+                        }
 
+                    }
+                    GUILayout.EndHorizontal();
                 }
-                GUILayout.EndHorizontal();
+                GUILayout.EndScrollView();
             }
             GUILayout.EndVertical();
 

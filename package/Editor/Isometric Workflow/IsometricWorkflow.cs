@@ -292,7 +292,8 @@ namespace Scenario.Editor
             lora5,
             lora6,
             Fairytale_Isometric_Buildings,
-            Isometric_Buildings
+            Isometric_Buildings,
+            Isometric_Buildings_FairyTale
         }
 
 

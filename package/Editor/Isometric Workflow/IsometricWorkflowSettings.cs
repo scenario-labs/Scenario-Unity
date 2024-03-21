@@ -193,7 +193,7 @@ namespace Scenario.Editor
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora5, "fQ48heIJSGCQQalFspW44g"));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.lora6, "I5jfHdm-QimzxUWAoAjiQQ"));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Fairytale_Isometric_Buildings, "model_BadrJ8rQCJiHji9j83Xo1TMN", "Fairytale Isometric Buildings", "isometric, vivid colors", 0.25f));
-            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Buildings, "model_z6kWsPZavazKpW1oDyZhbegt", "3D Isometric Buildings", "isometric", 0.25f));
+            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Buildings, "model_z6kWsPZavazKpW1oDyZhbegt", "3D Isometric Buildings", "isometric, vivid colors", 0.25f));
 
             foreach (var model in modelsIdByStyle)
             {

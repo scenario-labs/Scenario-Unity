@@ -9,8 +9,13 @@ namespace Scenario.Editor
 {
     public class Images : EditorWindow
     {
+        #region Public Fields
+        #endregion
+
+        #region Private Fields
+
         private static readonly ImagesUI ImagesUI = new();
-    
+
         internal static List<ImageDataStorage.ImageData> imageDataList = new();
 
         /// <summary>
@@ -19,6 +24,10 @@ namespace Scenario.Editor
         private static string lastPageToken = string.Empty;
 
         private static bool isVisible = false;
+
+        #endregion
+
+        #region EditorBehaviour Callbacks
 
         [MenuItem("Window/Scenario/Images")]
         public static void ShowWindow()
@@ -65,6 +74,10 @@ namespace Scenario.Editor
             isVisible = false;
         }
 
+        #endregion
+
+        #region Public Methods
+
         public static void GetInferencesData(Action callback_OnDataGet = null) //why get inferences instead of getting the assets ??
         {
             string request = $"inferences";
@@ -83,7 +96,7 @@ namespace Scenario.Editor
                 }
 
                 List<ImageDataStorage.ImageData> imageDataDownloaded = new List<ImageDataStorage.ImageData>();
-                
+
                 foreach (var inference in inferencesResponse.inferences)
                 {
                     foreach (var image in inference.images)
@@ -95,7 +108,7 @@ namespace Scenario.Editor
                             InferenceId = inference.id,
                             Prompt = inference.parameters.prompt,
                             Steps = inference.parameters.numInferenceSteps,
-                            Size = new Vector2(inference.parameters.width,inference.parameters.height),
+                            Size = new Vector2(inference.parameters.width, inference.parameters.height),
                             Guidance = inference.parameters.guidance,
                             Scheduler = inference.parameters.scheduler,
                             Seed = image.seed,
@@ -115,18 +128,6 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Fetch a texture for a specific ImageData
-        /// </summary>
-        private static void FetchTextureFor(ImageDataStorage.ImageData _image, Action callback_OnTextureGet = null)
-        {
-            CommonUtils.FetchTextureFromURL(_image.Url, texture =>
-            {
-                _image.texture = texture;
-                callback_OnTextureGet?.Invoke();
-            });
-        }
-
-        /// <summary>
         /// 
         /// </summary>
         /// <param name="_id">The id of the image you want to delete</param>
@@ -139,10 +140,10 @@ namespace Scenario.Editor
                 return;
 
             string url = $"models/{imageData.modelId}/inferences/{imageData.InferenceId}/images/{imageData.Id}";
-            ApiClient.RestDelete(url,null);
+            ApiClient.RestDelete(url, null);
             imageDataList.Remove(imageData);
 
-            if(DataCache.instance.DoesImageIdExist(_id)) //also delete from Datacache if it's there
+            if (DataCache.instance.DoesImageIdExist(_id)) //also delete from Datacache if it's there
                 DataCache.instance.RemoveImageDataById(_id);
 
             Repaint();
@@ -166,5 +167,92 @@ namespace Scenario.Editor
             return imageData.texture;
         }
 
+        /// <summary>
+        /// Define an image to be used as Image to Image action
+        /// </summary>
+        /// <param name="_texture"> Selected Texture </param>
+        /// <param name="_onAction"> Callback </param>
+        public static void SetImageAsReference(Texture2D _texture, Action _onAction)
+        {
+            PromptWindowUI.imageUpload = _texture;
+            PromptWindow.ShowWindow();
+            PromptWindow.SetImageControlTab(1);
+
+            _onAction?.Invoke();
+        }
+
+        /// <summary>
+        /// Download selected Image as a texture in Unity Editor
+        /// </summary>
+        /// <param name="_texture"> Selected Texture</param>
+        /// <param name="_onAction"> Callback </param>
+        public static void DownloadAsTexture(Texture2D _texture, Action _onAction)
+        {
+            CommonUtils.SaveTextureAsPNG(_texture, importPreset: PluginSettings.TexturePreset);
+            _onAction?.Invoke();
+        }
+
+        /// <summary>
+        /// Download a Image selected as a sprite inside Unity Editor
+        /// </summary>
+        /// <param name="_texture"> Selected Texture </param>
+        /// <param name="_selectedImageId"> Specific selected image Id </param>
+        /// <param name="_onSuccessAction"> Callback on success </param>
+        /// <param name="_onDownloadingAction"> Callback on downloading </param>
+        public static void DownloadAsSprite(Texture2D _texture, string _selectedImageId, Action _onSuccessAction, Action _onDownloadingAction)
+        {
+            //What to do when file is downloaded
+            Action<string> successAction = (filePath) =>
+            {
+                _onSuccessAction?.Invoke();
+
+                if (PluginSettings.UsePixelsUnitsEqualToImage)
+                {
+                    CommonUtils.ApplyPixelsPerUnit(filePath);
+                }
+            };
+
+            if (PluginSettings.AlwaysRemoveBackgroundForSprites)
+            {
+                if (GetTextureByImageId(_selectedImageId) != null)
+                {
+                    BackgroundRemoval.RemoveBackground(GetTextureByImageId(_selectedImageId), imageBytes =>
+                    {
+                        CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                    });
+                }
+                else if(_texture != null)
+                {
+                    BackgroundRemoval.RemoveBackground(_texture, imageBytes =>
+                    {
+                        CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                    });
+                }
+
+                _onDownloadingAction?.Invoke();
+            }
+            else
+            {
+                CommonUtils.SaveTextureAsPNG(_texture, null, PluginSettings.SpritePreset, successAction);
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Fetch a texture for a specific ImageData
+        /// </summary>
+        private static void FetchTextureFor(ImageDataStorage.ImageData _image, Action callback_OnTextureGet = null)
+        {
+            CommonUtils.FetchTextureFromURL(_image.Url, texture =>
+            {
+                _image.texture = texture;
+                callback_OnTextureGet?.Invoke();
+            });
+        }
+
+        #endregion
     }
 }

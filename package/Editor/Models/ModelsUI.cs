@@ -65,6 +65,7 @@ namespace Scenario.Editor
         {
             firstImageIndex -= maxModelsPerPage;
 
+
             if (firstImageIndex < maxModelsPerPage)
             {
                 firstImageIndex = 0;
@@ -93,7 +94,7 @@ namespace Scenario.Editor
                     continue;
                 }
 
-                pageModels.Add(models[i]); 
+                pageModels.Add(models[i]);
             }
             numberPages = (models.Count / maxModelsPerPage) + 1;
 
@@ -104,7 +105,7 @@ namespace Scenario.Editor
 
             drawTabs = true;
         }
-    
+
         public void OnGUI(Rect position)
         {
             DrawBackground(position);
@@ -112,7 +113,7 @@ namespace Scenario.Editor
             if (drawTabs)
             {
                 string[] tabs = { "Quickstart Models", "Private Models", "Public Models" };
-                HandleTabSelection(tabs);    
+                HandleTabSelection(tabs);
             }
 
             DrawModelsGrid(position);

@@ -85,7 +85,7 @@ namespace Scenario.Editor
             GUILayout.Label(text, style, layoutOptions);
         }
 
-        public static void ButtonPrimary(string text, float height, Action action)
+        public static void ButtonPrimary(string text, float height = 30, float width = 0, Action action = null)
         {
             var style = new GUIStyle(GUI.skin.button)
             {
@@ -103,10 +103,12 @@ namespace Scenario.Editor
                 {
                     background = CommonUtils.CreateColorTexture(new Color(0, 0.5333f, 0.75f, 1)),
                     textColor = Color.white
-                }
+                },
+                fixedWidth = width,
+                fixedHeight = height,
             };
 
-            if (GUILayout.Button(text, style, GUILayout.Height(height)))
+            if (GUILayout.Button(text, style))
             {
                 action?.Invoke();
             }

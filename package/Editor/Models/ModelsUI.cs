@@ -8,16 +8,55 @@ namespace Scenario.Editor
 {
     public class ModelsUI
     {
+        /// <summary>
+        /// List all models containing inside this window
+        /// </summary>
         public List<ModelData> pageModels = new();
+
+        /// <summary>
+        /// Global padding apply on element like box, grid.
+        /// </summary>
         private float padding = 10f;
+
+        /// <summary>
+        /// Number of item displaying per row.
+        /// </summary>
         private int itemsPerRow = 5;
+
+        /// <summary>
+        /// Starting position inside the list of models
+        /// </summary>
         private int firstImageIndex = 0;
+
+        /// <summary>
+        /// Maximum of models displaying per page
+        /// </summary>
         private int maxModelsPerPage = 15;
+
+        /// <summary>
+        /// Default tab selected in the window
+        /// </summary>
         private int selectedTab = 0;
+
+        /// <summary>
+        /// Allow to display the next button
+        /// </summary>
         private bool showNextButton = false;
+
+        /// <summary>
+        /// Allow to display the previous button
+        /// </summary>
         private bool showPreviousButton = false;
-        private bool drawTabs = false;
+
+        /// <summary>
+        /// Default scroll position
+        /// </summary>
         private Vector2 scrollPosition = Vector2.zero;
+
+        /// <summary>
+        /// Reference to all tabs available in the window
+        /// </summary>
+        private string[] tabs = { "Quickstart Models", "Private Models", "Public Models" };
 
         /// <summary>
         /// Number of pages inside models display.
@@ -101,19 +140,13 @@ namespace Scenario.Editor
             {
                 showNextButton = true;
             }
-
-            drawTabs = true;
         }
     
         public void OnGUI(Rect position)
         {
             DrawBackground(position);
-
-            if (drawTabs)
-            {
-                string[] tabs = { "Quickstart Models", "Private Models", "Public Models" };
-                HandleTabSelection(tabs);    
-            }
+            
+            HandleTabSelection(tabs);
 
             DrawModelsGrid(position);
 
@@ -265,17 +298,14 @@ namespace Scenario.Editor
                 { 
                     case 0:
                         SetTab(privacyQuickStart);
-                        drawTabs = false;
                         break;
 
                     case 1:
                         SetTab(privacyPrivate);
-                        drawTabs = false;
                         break;
 
                     case 2:
                         SetTab(privacyPublic);
-                        drawTabs = false;
                         break;
                 }
             }

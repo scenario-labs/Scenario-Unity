@@ -8,6 +8,11 @@ namespace Scenario.Editor
 {
     public class IsometricWorkflowUI
     {
+        #region Public Fields
+        #endregion
+
+        #region Private Fields
+
         private static IsometricWorkflow isometricWorkflow;
         private bool baseNone = true;
         private bool baseSquare = false;
@@ -48,6 +53,13 @@ namespace Scenario.Editor
         /// Dictionary to contain each behaviour of each line item.
         /// </summary>
         private Dictionary<string, Action> drawActionPanels = new Dictionary<string, Action>();
+
+        /// <summary>
+        /// Number of model item expected on a row.
+        /// </summary>
+        private int numberItemPerRow = 3;
+
+        #endregion
 
         public void Init(IsometricWorkflow _isometricWorkflow)
         {
@@ -269,24 +281,19 @@ namespace Scenario.Editor
                             }
                             GUILayout.EndHorizontal();
 
-                            if ((int)modelStyle.style % 2 == 1) // Assuming you want 2 items per row
+                            if ((int)modelStyle.style % numberItemPerRow == numberItemPerRow - 1) // Assuming you want a specific number of items per row
                             {
                                 GUILayout.FlexibleSpace(); //flexible space at the right side
                                 GUILayout.EndHorizontal();
 
                                 CustomStyle.Space(25); // Space between each containers
 
-                                GUILayout.BeginHorizontal(); // Start a new row after every 2 items
+                                GUILayout.BeginHorizontal(); // Start a new row after every a specific number of items items
                                 GUILayout.FlexibleSpace(); //flexible space at the left side
                             }
                         }
-
-                        if (modelStyles.Count % 2 != 0)
-                        {
-                            GUILayout.EndHorizontal(); // End the row if an odd number of items
-                        }
-
                     }
+                    GUILayout.FlexibleSpace(); //flexible space at the right side
                     GUILayout.EndHorizontal();
                 }
                 GUILayout.EndScrollView();

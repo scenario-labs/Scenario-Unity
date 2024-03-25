@@ -8,7 +8,7 @@ namespace Scenario.Editor
         private static readonly float MinimumWidth = 1650f;
         private PixelEditorUI pixelEditorUI = new();
 
-        [MenuItem("Window/Scenario/Editor/Pixel Editor", false, 4)]
+        [MenuItem("Window/Scenario/Editors/Pixel Editor", false, 4)]
         public static void ShowWindow()
         {
             var window = EditorWindow.GetWindow(typeof(PixelEditor), false, "Pixel Editor") as PixelEditor;

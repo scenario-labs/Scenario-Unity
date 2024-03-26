@@ -10,7 +10,7 @@ namespace Scenario.Editor
 
         private static float minimumWidth = 1775f;
 
-        [MenuItem("Window/Scenario/Image Editor")]
+        [MenuItem("Window/Scenario/Editors/Image Editor", false, 1)]
         public static void ShowWindow()
         {
             ImageEditor window = GetWindow<ImageEditor>("Image Editor");

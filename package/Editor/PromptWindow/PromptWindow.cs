@@ -15,7 +15,7 @@ namespace Scenario.Editor
         private byte[] pngBytesUploadImage = null;
         private string fileName;
 
-        [MenuItem("Window/Scenario/Prompt Window")]
+        [MenuItem("Window/Scenario/Prompt Window", false, 5)]
         public static void ShowWindow()
         {
             GetWindow<PromptWindow>("Prompt Window");

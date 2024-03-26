@@ -94,7 +94,7 @@ namespace Scenario.Editor
 
         #region Public Methods
 
-        [MenuItem("Window/Scenario/Models")]
+        [MenuItem("Window/Scenario/Models", false, 11)]
         public static void ShowWindow()
         {
             window = GetWindow<Models>("Models");

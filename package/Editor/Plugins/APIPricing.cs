@@ -8,7 +8,7 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/API Pricing", false, 101)]
         public static void ShowWindow()
         {
-            Application.OpenURL("https://www.scenario.com/api-pricing");
+            Application.OpenURL("https://docs.scenario.com/page/api-pricing");
         }
     }
 }

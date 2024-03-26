@@ -79,9 +79,11 @@ namespace Scenario.Editor
                 alignment = alignment,
                 fixedWidth = width,
                 fixedHeight = height,
-                wordWrap = true
+                wordWrap = true,
+                hover = {
+                    textColor = Color.white
+                }
             };
-        
             GUILayout.Label(text, style, layoutOptions);
         }
 

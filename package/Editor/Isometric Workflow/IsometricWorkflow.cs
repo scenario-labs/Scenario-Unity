@@ -76,7 +76,8 @@ namespace Scenario.Editor
 
             PromptFetcher.SilenceMode = true;
 
-            GetWindow<IsometricWorkflow>();
+            var isometricWorkflow = GetWindow<IsometricWorkflow>("Isometric Workflow");
+            isometricWorkflow.minSize = new Vector2(1250, 500);
 
             settings = IsometricWorkflowSettings.GetSerializedSettings();
         }

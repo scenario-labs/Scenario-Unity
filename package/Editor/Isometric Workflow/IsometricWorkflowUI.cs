@@ -21,7 +21,7 @@ namespace Scenario.Editor
         /// <summary>
         /// if the user choose a custom texture as reference at Step 1
         /// </summary>
-        internal Texture2D customTexture;
+        internal Texture2D customTexture = null;
 
         /// <summary>
         /// The scrollview at step 4
@@ -98,12 +98,18 @@ namespace Scenario.Editor
                 //None
                 GUILayout.BeginVertical();
                 {
-                    CustomStyle.Space(45);
-                    baseNone = GUILayout.Toggle(baseNone, "", GUILayout.Height(10));
-                    CustomStyle.Space(45);
+                    if (!baseNone)
+                    { 
+                        CustomStyle.Space(45);
+                        baseNone = GUILayout.Toggle(baseNone, "", GUILayout.Height(10));
+                        CustomStyle.Space(45);
+                    }
 
                     if (baseNone)
                     {
+                        CustomStyle.Space(45);
+                        GUILayout.Toggle(baseNone, "", GUILayout.Height(10));
+                        CustomStyle.Space(45);
                         isometricWorkflow.selectedBase = IsometricWorkflow.Base.None;
                         baseSquare = false;
                         baseCustom = false;
@@ -124,12 +130,17 @@ namespace Scenario.Editor
                 //Square
                 GUILayout.BeginVertical();
                 {
-                    CustomStyle.Space(45);
-                    baseSquare = GUILayout.Toggle(baseSquare, "", GUILayout.Height(10));
-                    CustomStyle.Space(45);
-
-                    if (baseSquare)
+                    if (!baseSquare)
+                    { 
+                        CustomStyle.Space(45);
+                        baseSquare = GUILayout.Toggle(baseSquare, "", GUILayout.Height(10));
+                        CustomStyle.Space(45);
+                    }
+                    if(baseSquare)
                     {
+                        CustomStyle.Space(45);
+                        GUILayout.Toggle(true, "", GUILayout.Height(10));
+                        CustomStyle.Space(45);
                         isometricWorkflow.selectedBase = IsometricWorkflow.Base.Square;
                         baseNone = false;
                         baseCustom = false;
@@ -153,16 +164,27 @@ namespace Scenario.Editor
                 //Custom
                 GUILayout.BeginVertical();
                 {
-                    CustomStyle.Space(45);
-                    baseCustom = GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
-                    CustomStyle.Space(45);
                     if (customTexture == null)
                     {
+                        GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
                         baseCustom = false;
+                    }
+                    else
+                    {
+                        if (!baseCustom)
+                        { 
+                            CustomStyle.Space(45);
+                            baseCustom = GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
+                            CustomStyle.Space(45);
+                        }
                     }
 
                     if (baseCustom)
                     {
+                        CustomStyle.Space(45);
+                        GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
+                        CustomStyle.Space(45);
+
                         isometricWorkflow.selectedBase = IsometricWorkflow.Base.Custom;
                         baseNone = false;
                         baseSquare = false;
@@ -174,9 +196,9 @@ namespace Scenario.Editor
                 GUILayout.BeginVertical();
                 {
                     customTexture = (Texture2D)EditorGUILayout.ObjectField(customTexture, typeof(Texture2D), false, GUILayout.Width(100), GUILayout.Height(100));
+                    TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(customTexture));
                     if (customTexture != null)
                     {
-                        TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(customTexture));
                         importer.isReadable = true;
                         importer.textureCompression = TextureImporterCompression.Uncompressed;
                         EditorUtility.SetDirty(importer);
@@ -197,7 +219,6 @@ namespace Scenario.Editor
             {
                 baseNone = true;
             }
-
 
             //Bottom
             GUILayout.FlexibleSpace();
@@ -225,7 +246,7 @@ namespace Scenario.Editor
             {
                 assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(true));
                 {
-                    var modelStyles = IsometricWorkflowSettings.Instance.GetModelsIdByStyle();
+                    var modelStyles = Instance.GetModelsIdByStyle();
                     if (isometricWorkflow.selectedModel == null)
                     {
                         if (modelStyles != null && modelStyles.Count > 0)
@@ -246,24 +267,16 @@ namespace Scenario.Editor
                             {
                                 GUILayout.BeginVertical();
                                 {
-                                    GUILayout.FlexibleSpace();
-                                    // Toggle button
-                                    bool isSelected = GUILayout.Toggle(selected == (int)modelStyle.style, "");
-                                    if (isSelected && selected != (int)modelStyle.style)
-                                    {
-                                        isometricWorkflow.selectedModel = modelStyle; // Update the selected model
-                                        selected = (int)modelStyle.style;
-                                    }
-                                    GUILayout.FlexibleSpace();
-                                }
-                                GUILayout.EndVertical();
-
-                                GUILayout.BeginVertical();
-                                {
                                     // Thumbnail
                                     if (IsometricWorkflow.settings.isometricModelThumbnails.Exists(x => x.style == modelStyle.style))
                                     {
-                                        GUILayout.Label(IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle.style).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
+                                        bool isSelected = GUILayout.Toggle(selected == (int)modelStyle.style, IsometricWorkflow.settings.isometricModelThumbnails.Find(x => x.style == modelStyle.style).thumbnail, GUILayout.Width(150), GUILayout.Height(150)); // Adjust size as needed
+
+                                        if (isSelected && selected != (int)modelStyle.style)
+                                        {
+                                            isometricWorkflow.selectedModel = modelStyle; // Update the selected model
+                                            selected = (int)modelStyle.style;
+                                        }
                                     }
 
                                     // Name
@@ -301,13 +314,21 @@ namespace Scenario.Editor
             GUILayout.EndVertical();
 
             //Bottom
-            GUILayout.FlexibleSpace();
-            CustomStyle.ButtonPrimary("Next", 30, 0, () =>
-            {
-                DataCache.instance.SelectedModelId = isometricWorkflow.selectedModel.id;
-                EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
-                isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
-            });
+            GUILayout.BeginHorizontal();
+            { 
+                //GUILayout.FlexibleSpace();
+                CustomStyle.ButtonPrimary("Previous", 30, 0, () =>
+                {
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Base;
+                });
+                CustomStyle.ButtonPrimary("Next", 30, 0, () =>
+                {
+                    DataCache.instance.SelectedModelId = isometricWorkflow.selectedModel.id;
+                    EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
+                });
+            }
+            GUILayout.EndHorizontal();
             CustomStyle.Space();
         }
 
@@ -347,12 +368,21 @@ namespace Scenario.Editor
             }
             GUILayout.EndHorizontal();
 
-            //Bottom
             GUILayout.FlexibleSpace();
-            CustomStyle.ButtonPrimary("Next", 30, 0, () =>
+            //Bottom
+            GUILayout.BeginHorizontal();
             {
-                isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
-            });
+                //GUILayout.FlexibleSpace();
+                CustomStyle.ButtonPrimary("Previous", 30, 0, () =>
+                {
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Style;
+                });
+                CustomStyle.ButtonPrimary("Next", 30, 0, () =>
+                {
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
+                });
+            }
+            GUILayout.EndHorizontal();
             CustomStyle.Space();
         }
 
@@ -365,6 +395,7 @@ namespace Scenario.Editor
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 4. Choose as many assets as you want to create", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label("Write asset's type you want like: \"Temple\", then click on \"+\" button to add it to the list.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(25);
 
             GUILayout.BeginHorizontal();
@@ -416,7 +447,18 @@ namespace Scenario.Editor
                                 inputAssetName = string.Empty;
                             }
                         });
+
                         inputAssetName = GUILayout.TextField(inputAssetName, GUILayout.Height(30));
+                        if (string.IsNullOrEmpty(inputAssetName))
+                        { 
+                            var guiColor = GUI.color;
+                            GUI.color = Color.grey;
+                            var textRect = GUILayoutUtility.GetLastRect();
+                            var position = new Rect(textRect.x, textRect.y, textRect.width, textRect.height);
+                            EditorGUI.LabelField(position, "Describe what to generate");
+                            GUI.color = guiColor;
+                        }
+
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -436,28 +478,38 @@ namespace Scenario.Editor
                 {
                     //before requesting, buttons add sample + next
                     case RequestsStatus.NotRequested:
+                        CustomStyle.ButtonPrimary("Previous", 30, 100, () =>
+                        {
+                            isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
+                        });
+
                         CustomStyle.ButtonPrimary("Add Samples", 30, 100, () =>
                         {
                             isometricWorkflow.FillAssetSamples();
                         });
+
+                        //Disable next part if the assetlist is empty
+                        EditorGUI.BeginDisabledGroup(isometricWorkflow.assetList.Count == 0);
                         if (isometricWorkflow.assetList.Count > 0)
                         {
                             GUI.backgroundColor = Color.cyan;
-                            CustomStyle.ButtonPrimary("Next", 30, 100, () =>
-                            {
-                                requestStatus = RequestsStatus.Requesting;
-                                PromptFetcher.SilenceMode = true;
-                                isometricWorkflow.GenerateImages(() =>
-                                {
-                                    requestStatus = RequestsStatus.Requested;
-                                });
-                            });
                         }
                         else
                         {
                             GUI.backgroundColor = Color.grey;
-                            CustomStyle.ButtonPrimary("Next");
                         }
+
+                        CustomStyle.ButtonPrimary("Next", 30, 100, () =>
+                        {
+                            requestStatus = RequestsStatus.Requesting;
+                            PromptFetcher.SilenceMode = true;
+                            isometricWorkflow.GenerateImages(() =>
+                            {
+                                requestStatus = RequestsStatus.Requested;
+                            });
+                        });
+                        EditorGUI.EndDisabledGroup();
+
                         GUI.backgroundColor = defaultBackgroundColor;
                         break;
                     //Please wait during the request
@@ -575,67 +627,65 @@ namespace Scenario.Editor
         /// <param name="_assetName"></param>
         private void DrawInferenceButton(string _assetName)
         {
-            if (isometricWorkflow.selectedImages[_assetName] != null)
-            {
-                GUI.backgroundColor = Color.cyan;
-
-                CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DownloadAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.selectedImages[_assetName].Id, () =>
-                {
-                    drawActionPanels[_assetName] = () =>
-                    {
-                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
-                        GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
-                    };
-                },
-                () =>
-                {
-                    drawActionPanels[_assetName] = () =>
-                    {
-                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
-                        GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
-                    };
-                }));
-
-                CustomStyle.ButtonPrimary("Convert to Tile", 30, 0, () =>
-                {
-                    if (isometricWorkflow.selectedImages[_assetName] != null)
-                    {
-                        /// Contains the side window when the user want to download an image as a tile
-                        if (TileCreator.Instance == null)
-                        {
-                            TileCreator.Instance = new(isometricWorkflow.selectedImages[_assetName].Id);
-                        }
-
-                        TileCreator.Instance.SetImageData(isometricWorkflow.selectedImages[_assetName]);
-
-                        drawActionPanels[_assetName] = TileCreator.Instance.OnGUI;
-                    }
-                });
-
-                CustomStyle.ButtonPrimary("Customize (webapp)", 30, 0, () =>
-                {
-                    Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
-                });
-
-                CustomStyle.ButtonPrimary("Regenerate 4 images", 30, 0, () =>
-                {
-                    requestStatus = RequestsStatus.Requesting;
-                    
-                    isometricWorkflow.RegenerateImages(_assetName, () =>
-                    {
-                        requestStatus = RequestsStatus.Requested;
-                    });
-                });
-            }
-            else 
+            EditorGUI.BeginDisabledGroup(isometricWorkflow.selectedImages[_assetName] == null);
+            if (isometricWorkflow.selectedImages[_assetName] == null)
             {
                 GUI.backgroundColor = Color.grey;
-                CustomStyle.ButtonPrimary("Convert to Sprite");
-                CustomStyle.ButtonPrimary("Convert to Tile");
-                CustomStyle.ButtonPrimary("Customize (webapp)");
-                CustomStyle.ButtonPrimary("Regenerate 4 images");
+            }
+            else
+            { 
+                GUI.backgroundColor = Color.cyan;
             }
 
+            CustomStyle.ButtonPrimary("Convert to Sprite", 30, 0, () => Images.DownloadAsSprite(isometricWorkflow.selectedImages[_assetName].texture, isometricWorkflow.selectedImages[_assetName].Id, () =>
+            {
+                drawActionPanels[_assetName] = () =>
+                {
+                    string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+                    GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
+                };
+            },
+            () =>
+            {
+                drawActionPanels[_assetName] = () =>
+                {
+                    string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                    GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
+                };
+            }));
+
+            CustomStyle.ButtonPrimary("Convert to Tile", 30, 0, () =>
+            {
+                if (isometricWorkflow.selectedImages[_assetName] != null)
+                {
+                    /// Contains the side window when the user want to download an image as a tile
+                    if (TileCreator.Instance == null)
+                    {
+                        TileCreator.Instance = new(isometricWorkflow.selectedImages[_assetName].Id);
+                    }
+
+                    TileCreator.Instance.SetImageData(isometricWorkflow.selectedImages[_assetName]);
+
+                    drawActionPanels[_assetName] = TileCreator.Instance.OnGUI;
+                }
+            });
+
+            CustomStyle.ButtonPrimary("Customize (webapp)", 30, 0, () =>
+            {
+                Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
+            });
+
+            CustomStyle.ButtonPrimary("Regenerate 4 images", 30, 0, () =>
+            {
+                requestStatus = RequestsStatus.Requesting;
+                    
+                isometricWorkflow.RegenerateImages(_assetName, () =>
+                {
+                    requestStatus = RequestsStatus.Requested;
+                });
+            });
+
+            EditorGUI.EndDisabledGroup();
             GUI.backgroundColor = defaultBackgroundColor;
         }
 

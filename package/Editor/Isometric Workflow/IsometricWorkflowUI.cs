@@ -686,7 +686,17 @@ namespace Scenario.Editor
 
             CustomStyle.ButtonPrimary("Customize (webapp)", 30, 0, () =>
             {
-                Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
+                if (!string.IsNullOrEmpty(PluginSettings.TeamIdKey))
+                {
+                    Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
+                }
+                else
+                {
+                    if (EditorUtility.DisplayDialog("TeamID key not filled !", "Impossible to open the webApp withtout the teamID key filled inside Settings.", "Open Settings", "Stay on page"))
+                    {
+                        PluginSettings.ShowWindow();
+                    }
+                }
             });
 
             CustomStyle.ButtonPrimary("Regenerate 4 images", 30, 0, () =>

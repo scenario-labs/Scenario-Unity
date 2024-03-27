@@ -66,6 +66,23 @@ namespace Scenario.Editor
         /// </summary>
         internal ImageDataStorage.ImageData imageDataSelected = null;
 
+        internal List<string> sampleList = new List<string>() 
+        {
+            "Tavern",
+            "Hospital",
+            "Police Station",
+            "Rocket Launcher",
+            "Factory",
+            "Treehouse",
+            "Arena",
+            "Temple",
+            "Church",
+            "Building Block"
+        };
+
+        /// <summary>
+        /// Reference to setting class.
+        /// </summary>
         internal static IsometricWorkflowSettings settings;
 
         [MenuItem("Window/Scenario/Workflows/1. Isometric Workflow")]
@@ -94,26 +111,19 @@ namespace Scenario.Editor
             settings = IsometricWorkflowSettings.GetSerializedSettings();
         }
 
-        /// <summary>
-        /// Auto add some asset name as an example
-        /// </summary>
-        /// <returns></returns>
-        public void FillAssetSamples()
+        public static void CloseWindow()
         {
-            List<string> samples = new()
-            {
-                "Tavern",
-                "Hospital",
-                "Police Station",
-                "Rocket Launcher",
-                "Factory",
-                "Treehouse",
-                "Arena",
-                "Temple",
-                "Church",
-                "Building Block"
-            };
-            assetList.AddRange(samples);//
+            var isometricWorkflow = GetWindow<IsometricWorkflow>("Isometric Workflow");
+            isometricWorkflow.Close();
+        }
+
+        /// <summary>
+        /// Add to the asset list to be generate a sample select by a click on a button
+        /// </summary>
+        /// <param name="_sample"> String of the sample to add </param>
+        public void FillAssetSample(string _sample)
+        {
+            assetList.Add(_sample);//
         }
 
         private void CreateGUI()
@@ -303,10 +313,10 @@ namespace Scenario.Editor
             None,
             Medieval,
             Futuristic,
-            Comtemporary,
+            Contemporary,
             Ancient,
-            MagicalForest,
-            WorldWar,
+            Magical_Forest,
+            World_War,
         }
 
 

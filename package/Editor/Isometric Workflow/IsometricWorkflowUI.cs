@@ -354,7 +354,7 @@ namespace Scenario.Editor
                     foreach (IsometricWorkflow.Theme theme in themes)
                     {
                         CustomStyle.Space(10); // Space between each toggles
-                        bool isSelected = GUILayout.Toggle(selected == (int)theme, theme.ToString());
+                        bool isSelected = GUILayout.Toggle(selected == (int)theme, theme.ToString().Replace("_", " "));
                         if (isSelected && selected != (int)theme)
                         {
                             isometricWorkflow.selectedTheme = theme; // Update the selected theme
@@ -468,6 +468,25 @@ namespace Scenario.Editor
             GUILayout.EndHorizontal();
             CustomStyle.Space();
 
+            if (isometricWorkflow.sampleList != null && isometricWorkflow.sampleList.Count > 0)
+            {
+                CustomStyle.Space();
+                GUILayout.BeginHorizontal();
+                {
+                    GUILayout.FlexibleSpace();
+                    foreach (string sample in isometricWorkflow.sampleList)
+                    {
+                        CustomStyle.ButtonPrimary(sample, 30, 0, () =>
+                        {
+                            isometricWorkflow.FillAssetSample(sample);
+                        });
+                    }
+                    GUILayout.FlexibleSpace();
+                }
+                GUILayout.EndHorizontal();
+                CustomStyle.Space();
+            }
+
             //Bottom
             GUILayout.BeginHorizontal();
             {
@@ -481,11 +500,6 @@ namespace Scenario.Editor
                         CustomStyle.ButtonPrimary("Previous", 30, 100, () =>
                         {
                             isometricWorkflow.currentStep = IsometricWorkflow.Step.Theme;
-                        });
-
-                        CustomStyle.ButtonPrimary("Add Samples", 30, 100, () =>
-                        {
-                            isometricWorkflow.FillAssetSamples();
                         });
 
                         //Disable next part if the assetlist is empty

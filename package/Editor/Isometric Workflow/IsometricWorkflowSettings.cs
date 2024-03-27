@@ -196,9 +196,10 @@ namespace Scenario.Editor
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Buildings, "model_z6kWsPZavazKpW1oDyZhbegt", "3D Isometric Buildings", "isometric, vivid colors", 0.25f));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Buildings_FairyTale, "model_qHRAPHUvtxieYD4QwokuopFe", "3D Isometric FairyTale", "isometric, vivid colors", 0.25f));
 
-            foreach (var model in modelsIdByStyle)
+            
+            try
             {
-                try
+                foreach (var model in modelsIdByStyle)
                 {
                     Models.ModelData modelData = await Models.FetchModelById(model.id); //fetch the model
                     Texture2D texture = await Models.FetchThumbnailForModel(modelData); //fetch the texture
@@ -213,12 +214,16 @@ namespace Scenario.Editor
                         isometricModelThumbnails.Add(new ModelThumbnailByStyle(model.style, texture)); //add the thumbnail to the dictionary
                     }
                 }
-                catch (Exception e)
+            }
+            catch (Exception e)
+            {
+                if (EditorUtility.DisplayDialog("Settings from Scenario Settings are not correctly filled.", "Settings from Scenario Settings are not correctly filled.\n Isometric workflow need to be linked to your Scenario account. (API Key, Secret key, TeamID key)", "Open Settings", "Exit"))
                 {
-                    // Handle exceptions, possibly continue to the next iteration, or log the error
-                    Debug.LogError($"Error fetching model or thumbnail for {model.style}: {e.Message}");
+                    PluginSettings.ShowWindow();
+                    IsometricWorkflow.CloseWindow();
                 }
             }
+            
         }
     }
 }

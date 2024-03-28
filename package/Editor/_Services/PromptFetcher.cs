@@ -25,7 +25,7 @@ namespace Scenario.Editor
             
             string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
             string modelId = DataCache.instance.SelectedModelId;
-            
+
             ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
             {
                 PromptWindow.InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<PromptWindow.InferenceRoot>(response.Content);

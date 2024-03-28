@@ -89,7 +89,7 @@ namespace Scenario.Editor
                     "Download as Texture",  () => Images.DownloadAsTexture(selectedTexture, () => { 
                         buttonDetailPanelDrawFunction = () =>
                         {
-                            GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                            GUILayout.Label("The image has been downloaded to the directory specified in the settings of the Scenario Plugin.", EditorStyles.wordWrappedLabel);
                         };
                     })
 
@@ -103,7 +103,7 @@ namespace Scenario.Editor
                         },
                         () => {
                         buttonDetailPanelDrawFunction = () => {
-                            string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                            string messageWhileDownloading = "Please wait while the background is being removed. The processed image will be saved to the directory set in the Settings of the Scenario Plugin.";
                             GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
                         };
                     })

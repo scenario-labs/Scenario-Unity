@@ -41,6 +41,11 @@ namespace Scenario.Editor
         internal Theme selectedTheme = Theme.None;
 
         /// <summary>
+        /// Filled when other theme is selected.
+        /// </summary>
+        internal string customTheme = string.Empty;
+
+        /// <summary>
         /// Fix by default the prompt text.
         /// </summary>
         internal string basePromptText = $"isometric, solo, centered, solid color background";
@@ -168,12 +173,23 @@ namespace Scenario.Editor
                 string prompt = string.Empty;
                 if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
                 {
-                    prompt = $"{basePromptText}, {selectedTheme}, {assetName}";
+                    prompt = $"{basePromptText}, ";
                 }
                 else
                 {
-                    prompt = $"{selectedModel.DefaultPrompt}, {selectedTheme}, {assetName}";
+                    prompt = $"{selectedModel.DefaultPrompt}, ";
                 }
+
+                if (selectedTheme == Theme.Other)
+                {
+                    prompt += $"{customTheme}, ";
+                }
+                else 
+                {
+                    prompt += $"{selectedTheme}, ";
+                }
+
+                prompt += assetName;
 
                 PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
                 (inferenceId) =>
@@ -227,13 +243,24 @@ namespace Scenario.Editor
             string prompt = string.Empty;
             if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
             {
-                prompt = $"{basePromptText}, {selectedTheme}, {_assetName}";
+                prompt = $"{basePromptText}, ";
             }
             else
             {
-                prompt = $"{selectedModel.DefaultPrompt}, {selectedTheme}, {_assetName}";
+                prompt = $"{selectedModel.DefaultPrompt}, ";
             }
-            
+
+            if (selectedTheme == Theme.Other)
+            {
+                prompt += $"{customTheme}, ";
+            }
+            else
+            {
+                prompt += $"{selectedTheme}, ";
+            }
+
+            prompt += _assetName;
+
             PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
             (inferenceId) =>
             {
@@ -317,6 +344,7 @@ namespace Scenario.Editor
             Ancient,
             Magical_Forest,
             World_War,
+            Other
         }
 
 

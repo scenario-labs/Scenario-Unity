@@ -114,7 +114,7 @@ namespace Scenario.Editor
 
             apiKey = EditorGUILayout.TextField("API Key:", apiKey);
             secretKey = EditorGUILayout.PasswordField("Secret Key:", secretKey);
-            teamIdKey = EditorGUILayout.TextField("Team ID:", teamIdKey);
+            teamIdKey = EditorGUILayout.TextField("Workspace ID:", teamIdKey);
         }
 
         private void DrawImageSettings()

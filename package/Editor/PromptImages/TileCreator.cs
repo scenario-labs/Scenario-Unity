@@ -110,7 +110,7 @@ namespace Scenario.Editor
             }
             else
             {
-                GUILayout.Label($"Please wait... Image background is being removed. The resulting sprite will be saved in the Scenario Settings save folder. Then a Tile will be created and added in your Tile Palette.", EditorStyles.wordWrappedLabel);
+                GUILayout.Label($"Please wait while the background is being removed. The processed image will be saved to the directory set in the Settings of the Scenario Plugin. Then a Tile will be created and added in your Tile Palette.", EditorStyles.wordWrappedLabel);
             }
         }
 

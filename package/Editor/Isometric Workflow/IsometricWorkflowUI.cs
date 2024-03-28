@@ -3,6 +3,7 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 using static Scenario.Editor.IsometricWorkflowSettings;
+using static Scenario.Editor.IsometricWorkflow;
 
 namespace Scenario.Editor
 {
@@ -350,18 +351,31 @@ namespace Scenario.Editor
                 {
                     var themes = Enum.GetValues(typeof(IsometricWorkflow.Theme));
                     int selected = (int)isometricWorkflow.selectedTheme;
+                    bool isSelected = false;
 
                     foreach (IsometricWorkflow.Theme theme in themes)
                     {
                         CustomStyle.Space(10); // Space between each toggles
-                        bool isSelected = GUILayout.Toggle(selected == (int)theme, theme.ToString().Replace("_", " "));
+                        if (theme == Theme.Other)
+                        {
+                            GUILayout.BeginHorizontal();
+                            {
+                                isSelected = GUILayout.Toggle(selected == (int)theme, theme.ToString().Replace("_", " ") + ":");
+                                isometricWorkflow.customTheme = GUILayout.TextField(isometricWorkflow.customTheme, GUILayout.Height(25), GUILayout.MaxWidth(100));
+                            }
+                            GUILayout.EndHorizontal();
+                        }
+                        else
+                        { 
+                            isSelected = GUILayout.Toggle(selected == (int)theme, theme.ToString().Replace("_", " "));
+                        }
+
                         if (isSelected && selected != (int)theme)
                         {
                             isometricWorkflow.selectedTheme = theme; // Update the selected theme
                             selected = (int)theme;
                         }
                     }
-
                 }
                 GUILayout.EndVertical();
                 GUILayout.FlexibleSpace();
@@ -394,8 +408,8 @@ namespace Scenario.Editor
         {
             DrawBackground(_dimension);
             CustomStyle.Space();
-            CustomStyle.Label("Step 4. Choose as many assets as you want to create", 18, TextAnchor.UpperLeft, bold: true);
-            CustomStyle.Label("Write asset's type you want like: \"Temple\", then click on \"+\" button to add it to the list.", 12, TextAnchor.UpperLeft, bold: false);
+            CustomStyle.Label("Step 4. Select any number of assets you wish to create.", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label($"Type the kind of asset you'd like, such as 'Temple', and then click the '+' button to add it to your list.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(25);
 
             GUILayout.BeginHorizontal();
@@ -608,7 +622,7 @@ namespace Scenario.Editor
             GUILayout.FlexibleSpace();
             CustomStyle.ButtonPrimary("Restart", 30, 200, () =>
             {
-                if (EditorUtility.DisplayDialog("Are you certain you want \r\nto restart the process ?", "You will loose the ability to convert the \r\ngenerated image to sprites. \r\nBut the generated image will\r\n still be available on the webapp and in the images window.", "Restart", "Stay on page"))
+                if (EditorUtility.DisplayDialog("Are you sure you want \r\nto restart the process ?", "This will prevent you from converting the generated image into sprites. However, the generated images will remain accessible on the Scenario web app and in the images window.", "Restart", "Stay on page"))
                 {
                     isometricWorkflow.selectedImages.Clear();
                     drawActionPanels.Clear();
@@ -655,7 +669,7 @@ namespace Scenario.Editor
             {
                 drawActionPanels[_assetName] = () =>
                 {
-                    string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+                    string messageSuccess = "The image has been downloaded to the directory specified in the settings of the Scenario Plugin.";
                     GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
                 };
             },
@@ -663,7 +677,7 @@ namespace Scenario.Editor
             {
                 drawActionPanels[_assetName] = () =>
                 {
-                    string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                    string messageWhileDownloading = "Please wait while the background is being removed. The processed image will be saved to the directory set in the Settings of the Scenario Plugin.";
                     GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
                 };
             }));
@@ -692,7 +706,7 @@ namespace Scenario.Editor
                 }
                 else
                 {
-                    if (EditorUtility.DisplayDialog("TeamID key not filled !", "Impossible to open the webApp withtout the teamID key filled inside Settings.", "Open Settings", "Stay on page"))
+                    if (EditorUtility.DisplayDialog("WorkspaceID key not filled !", "Impossible to open the webApp withtout the WorkspaceID key filled inside Settings.", "Open Settings", "Stay on page"))
                     {
                         PluginSettings.ShowWindow();
                     }

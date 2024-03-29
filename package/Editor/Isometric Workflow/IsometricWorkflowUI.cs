@@ -208,7 +208,7 @@ namespace Scenario.Editor
                             importer.SaveAndReimport();
                         }
                     }
-                    CustomStyle.Label("Custom", alignment: TextAnchor.MiddleCenter);
+                    CustomStyle.Label("Custom Isometric Base", alignment: TextAnchor.MiddleCenter);
                 }
                 GUILayout.EndVertical();
 
@@ -529,12 +529,15 @@ namespace Scenario.Editor
 
                         CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                         {
-                            requestStatus = RequestsStatus.Requesting;
-                            PromptFetcher.SilenceMode = true;
-                            isometricWorkflow.GenerateImages(() =>
+                            if (EditorUtility.DisplayDialog($"Are you sure to launch ?", $"Are you sure to launch {isometricWorkflow.assetList.Count} inference(s) so {(isometricWorkflow.assetList.Count * 4)} images.\n\nThis consume credits.", "Launch", "Edit"))
                             {
-                                requestStatus = RequestsStatus.Requested;
-                            });
+                                requestStatus = RequestsStatus.Requesting;
+                                PromptFetcher.SilenceMode = true;
+                                isometricWorkflow.GenerateImages(() =>
+                                {
+                                    requestStatus = RequestsStatus.Requested;
+                                });
+                            }
                         });
                         EditorGUI.EndDisabledGroup();
 

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -44,12 +45,52 @@ namespace Scenario.Editor
             if (tilePalette == null)
             {
                 GUILayout.Label("Please set a Tile Palette to begin.", EditorStyles.wordWrappedLabel);
+
+                if (GUILayout.Button("Create Tile Palette"))
+                {
+                    GameObject prefab = CreatePalette();
+
+                    tilePalette = prefab;
+                }
+
                 return;
             }
 
             grid = tilePalette.GetComponent<Grid>();
-            gridPalette = CommonUtils.GetSubObjectsOfType<GridPalette>(tilePalette)[0];
-            layout = grid.cellLayout;
+            List<GridPalette> palettes = CommonUtils.GetSubObjectsOfType<GridPalette>(tilePalette);
+
+            if (palettes != null && palettes.Count > 0)
+            {
+                try
+                {
+                    gridPalette = CommonUtils.GetSubObjectOfType<GridPalette>(tilePalette);
+                }
+                catch (NullReferenceException n)
+                {
+                    Debug.LogError(n.Message, tilePalette);
+                }
+            }
+            else if(gridPalette == null)
+            {
+                GUILayout.Label("Invalid Object. No tile palette found inside the object.", EditorStyles.wordWrappedLabel);
+
+                if (GUILayout.Button("Create Tile Palette"))
+                {
+                    GameObject prefab = CreatePalette();
+
+                    tilePalette = prefab;
+                }
+                return;
+            }
+
+            if (grid != null)
+            {
+                layout = grid.cellLayout;
+            }
+            else
+            {
+                return;
+            }
 
             if (layout == CellLayout.Hexagon || layout == CellLayout.IsometricZAsY)
             {
@@ -117,6 +158,40 @@ namespace Scenario.Editor
         #endregion
 
         #region Public Methods
+
+        /// <summary>
+        /// Create Isometric palette.
+        /// </summary>
+        /// <returns></returns>
+        public GameObject CreatePalette()
+        {
+            GameObject objPalette = new GameObject();
+            GameObject layer = new GameObject();
+
+            objPalette.name = "Isometric Palette";
+            layer.name = "Layer 1";
+
+            Grid grid = objPalette.AddComponent<Grid>();
+            grid.cellLayout = CellLayout.Isometric;
+            grid.cellSize = new Vector3(1.0f, 0.5f, 0.0f);
+
+            layer.transform.parent = objPalette.transform;
+            layer.AddComponent<Tilemap>();
+            TilemapRenderer tilemapRenderer = layer.AddComponent<TilemapRenderer>();
+            tilemapRenderer.sortOrder = TilemapRenderer.SortOrder.TopRight;
+
+            GameObject prefab = PrefabUtility.SaveAsPrefabAsset(objPalette, $"{PluginSettings.SaveFolder}/Isometric Palette.prefab");
+            GridPalette palette = ScriptableObject.CreateInstance<GridPalette>();
+            palette.name = "TilePalette";
+            palette.cellSizing = GridPalette.CellSizing.Manual;
+            AssetDatabase.AddObjectToAsset(palette, prefab);
+            AssetDatabase.SaveAssets();
+
+            GameObject.DestroyImmediate(layer);
+            GameObject.DestroyImmediate(objPalette);
+
+            return prefab;
+        }
 
         /// <summary>
         /// Setter to update Image Data selected

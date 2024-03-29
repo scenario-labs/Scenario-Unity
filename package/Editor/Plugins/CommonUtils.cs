@@ -242,6 +242,25 @@ namespace Scenario.Editor
         }
 
         /// <summary>
+        /// Return a specific subObject inside an object
+        /// </summary>
+        /// <typeparam name="T"> Type expected </typeparam>
+        /// <param name="asset"> Reference asset </param>
+        /// <returns></returns>
+        public static T GetSubObjectOfType<T>(Object asset) where T : Object
+        {
+            Object[] objs = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
+            foreach (Object o in objs)
+            {
+                if (o is T)
+                {
+                    return (T)o;
+                }
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Use this function to modify the Pixels per Unit parameter of the texture
         /// </summary>
         /// <param name="filePath"></param>

@@ -65,6 +65,8 @@ namespace Scenario.Editor
 
                 //availableOptions.AddRange(dropdownOptions);
                 selectedOptionIndex = EditorGUILayout.Popup(selectedOptionIndex, availableOptions.ToArray());
+                PromptPusher.Instance.modalitySelected = selectedOptionIndex;
+                PromptPusher.Instance.modelName = correspondingOptionsValue[selectedOptionIndex - 1];
 
                 if (selectedOptionIndex > 0)
                 { 
@@ -75,6 +77,8 @@ namespace Scenario.Editor
                     {
                         sliderValue = 0.01f;
                     }
+
+                    PromptPusher.Instance.modalityValue = sliderValue;
                 }
                 GUILayout.EndHorizontal();
             }
@@ -88,6 +92,7 @@ namespace Scenario.Editor
                 if (selectedIndex >= 0 && selectedIndex < presets.Length)
                 {
                     selectedPreset = presets[selectedIndex].ToLower();
+                    PromptPusher.Instance.selectedPreset = presets[selectedIndex].ToLower();
                 }
             }
         }

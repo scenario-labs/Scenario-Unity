@@ -15,7 +15,7 @@ namespace Scenario.Editor
             GUILayout.BeginHorizontal();
             GUILayout.Label("Enable ControlNet", EditorStyles.label);
             isControlNet = GUILayout.Toggle(isControlNet, "");
-
+            
             if (isControlNet)
             {
                 GUILayout.Label("Advanced Settings", EditorStyles.label);

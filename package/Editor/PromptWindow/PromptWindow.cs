@@ -11,9 +11,13 @@ namespace Scenario.Editor
     {
         public static PromptWindowUI promptWindowUI;
         
+        public CreationMode ActiveMode { get { return activeMode; } set { activeMode = value; } }
+
         private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
         private string fileName;
+
+        private CreationMode activeMode = null;
 
         [MenuItem("Window/Scenario/Prompt Window")]
         public static void ShowWindow()

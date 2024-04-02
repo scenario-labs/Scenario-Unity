@@ -1,5 +1,7 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -137,12 +139,19 @@ namespace Scenario.Editor
         private bool shouldAutoGenerateSeed;
         private bool shouldAutoGenerateSeedPrev;
 
+        private PromptPusher pusher = null;
+
+        private ECreationMode selectedMode = ECreationMode.Text_To_Image;
 
         public string selectedModelName { get; set; } = "Choose Model";
 
         public PromptWindowUI(PromptWindow promptWindow)
         {
             this.promptWindow = promptWindow;
+            if (PromptPusher.Instance != null)
+            { 
+                pusher = PromptPusher.Instance;
+            }
         }
 
         private void PromptRecv(string str)
@@ -181,20 +190,20 @@ namespace Scenario.Editor
 
             CustomStyle.ButtonPrimary("Generate Image", 40, () =>
             {
-                promptinputText = SerializeTags(tags);
-                negativepromptinputText = SerializeTags(negativeTags);
+                pusher.promptInput = SerializeTags(tags);
+                pusher.promptNegativeInput = SerializeTags(negativeTags);
 
                 EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
 
                 if (shouldAutoGenerateSeed)
                 {
-                    promptWindow.GenerateImage(null);
+                    PromptPusher.Instance.GenerateImage(null);
                 }
                 else
                 {
                     string seed = seedinputText;
                     if (seed == "-1") { seed = null; }
-                    promptWindow.GenerateImage(seed);
+                    PromptPusher.Instance.GenerateImage(seed);
                 }
             });
 
@@ -206,37 +215,76 @@ namespace Scenario.Editor
 
             CustomStyle.Space();
 
-            string[] tabLabels = { "Text to Image", "Image to Image", "Inpainting" };
-            imageControlTab = GUILayout.Toolbar(imageControlTab, tabLabels, CustomStyle.GetTertiaryButtonStyle());
+            List<string> tabLabels = new List<string>();
 
-            switch (imageControlTab)
+            foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
             {
-                case 0:
-                    isTextToImage = true;
-                    isImageToImage = false;
-                    controlNetFoldout = false;
-                    isControlNet = false;
-                    isAdvancedSettings = false;
-                    isInpainting = false;
-                    break;
+                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                tabLabels.Add(eName);
+            }
+
+            selectedMode = (ECreationMode)EditorGUILayout.Popup("Mode: ", imageControlTab, tabLabels.ToArray());
+            imageControlTab = (int)selectedMode;
+            pusher.ActiveMode(imageControlTab);
+
+            ManageDrawMode();
             
-                case 1:
-                    isTextToImage = false;
-                    isImageToImage = true;
-                    isInpainting = false;
-                    break;
-            
-                case 2:
-                    isTextToImage = false;
-                    isImageToImage = false;
-                    controlNetFoldout = false;
-                    isControlNet = false;
-                    isAdvancedSettings = false;
-                    isInpainting = true;
+            GUILayout.EndScrollView();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ManageDrawMode()
+        {
+            promptWindow.ActiveMode = pusher.GetActiveMode();
+            CreationMode activeMode = promptWindow.ActiveMode;
+            switch (activeMode.EMode)
+            {
+                case ECreationMode.Image_To_Image:
+                    CustomStyle.Space();
+
+                    Rect dropArea = RenderImageUploadArea();
+
+                    if (imageUpload != null)
+                    {
+                        dropArea = DrawUploadedImage(dropArea);
+                    }
+
+                    if (imageMask != null)
+                    {
+                        GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
+                    }
+
+                    HandleDrag();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
+                    {
+                        if (GUILayout.Button("Create Image"))
+                        {
+                            ImageEditor.ShowWindow(imageUpload);
+                        }
+
+                        if (GUILayout.Button("Add Control"))
+                        {
+                            CompositionEditor.ShowWindow();
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    controlNetFoldout = EditorGUILayout.Foldout(controlNetFoldout, "ControlNet Options");
+
+                    RenderControlNetFoldout();
+
                     break;
             }
 
-            if (isImageToImage || isInpainting)
+            if (activeMode.EMode == ECreationMode.In_Painting /*|| activeMode.EMode == ECreationMode.In_Painting*/)
             {
                 CustomStyle.Space();
 
@@ -256,24 +304,12 @@ namespace Scenario.Editor
 
                 GUILayout.BeginHorizontal();
 
-                if (isControlNet || isImageToImage)
-                {
-                    if (GUILayout.Button("Create Image"))
-                    {
-                        ImageEditor.ShowWindow(imageUpload);
-                    }
-                }
-
-                if (isControlNet)
+                if (activeMode.IsControlNet)
                 {
                     if (GUILayout.Button("Add Control"))
                     {
                         CompositionEditor.ShowWindow();
                     }
-                }
-
-                if (isInpainting)
-                {
                     if (GUILayout.Button("Add Mask"))
                     {
                         InpaintingEditor.ShowWindow(imageUpload);
@@ -281,18 +317,7 @@ namespace Scenario.Editor
                 }
 
                 GUILayout.EndHorizontal();
-
-                if (isImageToImage)
-                {
-                    CustomStyle.Space();
-
-                    controlNetFoldout = EditorGUILayout.Foldout(controlNetFoldout, "ControlNet Options");
-
-                    RenderControlNetFoldout();
-                }
             }
-
-            GUILayout.EndScrollView();
         }
 
         private static void DrawBackground(Rect position)

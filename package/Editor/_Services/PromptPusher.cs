@@ -9,7 +9,6 @@ namespace Scenario.Editor
 {
     public enum ECreationMode 
     {
-        None,
         Text_To_Image,
         Image_To_Image,
         Control_Net,
@@ -199,7 +198,7 @@ namespace Scenario.Editor
                 }
             }
 
-            return GetMode(ECreationMode.None);
+            return GetMode(ECreationMode.Text_To_Image);
         }
 
         /// <summary>
@@ -235,14 +234,58 @@ namespace Scenario.Editor
                     }
                 }
             }
-        } 
+        }
+
+        /// <summary>
+        /// Active mode by it's name.
+        /// </summary>
+        /// <param name="_modeName"></param>
+        public void ActiveMode(string _modeName)
+        {
+            if (CheckListCreationMode())
+            {
+                foreach (CreationMode mode in creationModeList)
+                {
+                    if (mode.ModeName.Equals(_modeName))
+                    {
+                        mode.IsActive = true;
+                    }
+                    else
+                    {
+                        mode.IsActive = false;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Active a mode at a specific index
+        /// </summary>
+        /// <param name="_index"></param>
+        public void ActiveMode(int _index)
+        {
+            if (CheckListCreationMode())
+            {
+                for (int i = 0; i < creationModeList.Count; i++)
+                {
+                    if (i == _index)
+                    {
+                        creationModeList[i].IsActive = true;
+                    }
+                    else
+                    {
+                        creationModeList[i].IsActive = false;
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// 
         /// </summary>
-        public void GenerateImage()
-        { 
-            
+        public void GenerateImage(string _seed)
+        {
+            Generate(_seed);
         }
 
         /// <summary>
@@ -287,9 +330,6 @@ namespace Scenario.Editor
 
             switch (activeMode.EMode)
             {
-                case ECreationMode.None:
-                    break;
-
                 case ECreationMode.Text_To_Image:
                     
                     break;
@@ -426,7 +466,7 @@ namespace Scenario.Editor
 
         private void PrepareAdvancedModalitySettings(out string modality, /*out string operationType,*/ Dictionary<string, string> modalitySettings)
         {
-            if (activeMode.EMode != ECreationMode.None)
+            if (activeMode.EMode != ECreationMode.Text_To_Image)
             {
                 if (!string.IsNullOrEmpty(modalityName))
                 {
@@ -519,39 +559,48 @@ namespace Scenario.Editor
 
                     switch (e)
                     {
-                        case ECreationMode.None:
-                            mode.OperationName = "txt2img";
-                            break;
-
                         case ECreationMode.Text_To_Image:
+                            mode.IsControlNet = false;
                             mode.OperationName = "txt2img";
                             break;
 
                         case ECreationMode.Image_To_Image:
+                            mode.IsControlNet = true;
                             mode.OperationName = "img2img";
                             break;
 
                         case ECreationMode.In_Painting:
+                            mode.IsControlNet = true;
                             mode.OperationName = "inpaint";
                             break;
 
+                        case ECreationMode.Ip_Adapter:
+                            mode.IsControlNet = true;
+                            mode.OperationName = "ip";
+                            break;
+
+                        case ECreationMode.Reference_Only:
+                            mode.IsControlNet = true;
+                            mode.OperationName = "ref";
+                            break;
+
                         case ECreationMode.Control_Net:
-                            mode.HasAdvancedOptions = true;
+                            mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
                             break;
 
                         case ECreationMode.Control_Net__Ip_Adapter:
-                            mode.HasAdvancedOptions = true;
+                            mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
                             break;
 
                         case ECreationMode.Image_To_Image__Control_Net:
-                            mode.HasAdvancedOptions = true;
+                            mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
                             break;
 
                         case ECreationMode.Reference_Only__Control_Net:
-                            mode.HasAdvancedOptions = true;
+                            mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
                             break;
 

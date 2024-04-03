@@ -25,6 +25,13 @@ To import the package in Unity,
 4. Copy past this link `https://github.com/scenario-labs/Scenario-Unity.git?path=/package`
 5. Click "Add"
 
+## Update
+
+If we release a new version of the plugin you can easily update by clicking the Update button in the Package Manager
+
+![How to Update](https://github.com/scenario-labs/Scenario-Unity/assets/49686866/0c1b54ac-cfbf-49e5-9231-0051ca9aa9e3)
+
+
 ## License
 
 Review the [license](LICENSE) for this project.

@@ -12,25 +12,39 @@ namespace Scenario.Editor
 
             if (!showSettings) return;
 
-            EditorGUILayout.BeginHorizontal();
+            if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType))
             {
-                CustomStyle.Label("Width: ", width: 45, height: 20);
-                int widthIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
-                widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(allowedWidthValues, x => x.ToString()),
-                    allowedWidthValues.Length, CustomStyle.GetNormalButtonStyle());
-                widthSliderValue = allowedWidthValues[widthIndex];
-            }
-            EditorGUILayout.EndHorizontal();
+                switch (DataCache.instance.SelectedModelType)
+                {
+                    case "sd-xl-composition":
+                        DrawWidthValues(allowedSDXLDimensionValues);
+                        DrawHeightValues(allowedSDXLDimensionValues);
+                        break;
 
-            EditorGUILayout.BeginHorizontal();
-            {
-                CustomStyle.Label("Height: ", width: 45, height: 20);
-                int heightIndex = NearestValueIndex(heightSliderValue, allowedHeightValues);
-                heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(allowedHeightValues, x => x.ToString()),
-                    allowedHeightValues.Length, CustomStyle.GetNormalButtonStyle());
-                heightSliderValue = allowedHeightValues[heightIndex];
+                    case "sd-xl-lora":
+                        DrawWidthValues(allowedSDXLDimensionValues);
+                        DrawHeightValues(allowedSDXLDimensionValues);
+                        break;
+
+                    case "sd-xl":
+                        DrawWidthValues(allowedSDXLDimensionValues);
+                        DrawHeightValues(allowedSDXLDimensionValues);
+                        break;
+
+                    case "sd-1_5":
+                        DrawWidthValues(allowed1_5DimensionValues);
+                        DrawHeightValues(allowed1_5DimensionValues);
+                        break;
+
+                    default:
+                        break;
+                }
             }
-            EditorGUILayout.EndHorizontal();
+            else
+            {
+                DrawWidthValues(allowed1_5DimensionValues);
+                DrawHeightValues(allowed1_5DimensionValues);
+            }
 
             CustomStyle.Space();
 
@@ -102,6 +116,40 @@ namespace Scenario.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        /// <summary>
+        /// Draw list of buttons containing Width values for generated images.
+        /// </summary>
+        /// <param name="_allowedValues"> int array of dimension values </param>
+        private void DrawWidthValues(int[] _allowedValues)
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                CustomStyle.Label("Width: ", width: 45, height: 20);
+                int widthIndex = NearestValueIndex(widthSliderValue, _allowedValues);
+                widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
+                    _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
+                widthSliderValue = _allowedValues[widthIndex];
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Draw list of buttons containing Height values for generated images.
+        /// </summary>
+        /// <param name="_allowedValues"> int array of dimension values </param>
+        private void DrawHeightValues(int[] _allowedValues)
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                CustomStyle.Label("Height: ", width: 45, height: 20);
+                int heightIndex = NearestValueIndex(heightSliderValue, _allowedValues);
+                heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
+                    _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
+                heightSliderValue = _allowedValues[heightIndex];
+            }
+            EditorGUILayout.EndHorizontal();
         }
     }
 }

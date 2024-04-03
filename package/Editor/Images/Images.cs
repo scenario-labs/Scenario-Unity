@@ -20,7 +20,7 @@ namespace Scenario.Editor
 
         private static bool isVisible = false;
 
-        [MenuItem("Window/Scenario/Images")]
+        [MenuItem("Window/Scenario/Images", false, 10)]
         public static void ShowWindow()
         {
             if (isVisible)

@@ -14,16 +14,14 @@ namespace Scenario.Editor
         
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
-            float guidancesliderValue, string seedinputText)
+            float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
         {
             Debug.Log("Requesting image generation please wait..");
             
             string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
             string modelId = DataCache.instance.SelectedModelId;
 
-            Debug.Log(inputData);
-
-            /*ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
+            ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
             {
                 PromptWindow.InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<PromptWindow.InferenceRoot>(response.Content);
                 
@@ -36,13 +34,14 @@ namespace Scenario.Editor
                     widthSliderValue, 
                     heightSliderValue,
                     guidancesliderValue,
-                    "Default",
+                    _schedulerText,
                     seedinputText,
                     modelId);
 
                 GetInferenceStatus(inferenceId, modelId);
                 Images.ShowWindow();
-            });*/
+                _onInferenceRequested?.Invoke(inferenceId);
+            });
         }
         
         private static async void GetInferenceStatus(string inferenceId, string modelId)

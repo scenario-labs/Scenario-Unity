@@ -42,35 +42,6 @@ namespace Scenario.Editor
             "Line Art"
         };
 
-        /// <summary>
-        /// Translation to api calling modalities options, treat previous values in the exact same order.
-        /// </summary>
-        public readonly string[] correspondingOptionsValue =
-        {
-            "",
-            "character",
-            "landscape",
-            "canny",
-            "pose",
-            "depth",
-            "seg",
-            "illusion",
-            "city",
-            "interior",
-            "lines",
-            "scribble",
-            "normal-map",
-            "lineart"
-        };
-
-        internal readonly string[] schedulerOptions = new string[] // Scheduler options extracted from your HTML
-        {
-            "Default", "DDIMScheduler", "DDPMScheduler", "DEISMultistepScheduler", "DPMSolverMultistepScheduler",
-            "DPMSolverSinglestepScheduler", "EulerAncestralDiscreteScheduler", "EulerDiscreteScheduler",
-            "HeunDiscreteScheduler", "KDPM2AncestralDiscreteScheduler", "KDPM2DiscreteScheduler",
-            "LCMScheduler", "LMSDiscreteScheduler", "PNDMScheduler", "UniPCMultistepScheduler"
-        };
-
         public string selectedPreset = "";
 
         /// <summary>
@@ -105,7 +76,6 @@ namespace Scenario.Editor
         internal string postedModelName = "Choose Model";
         internal string seedinputText = "";
         internal bool isTextToImage = true;
-        internal int schedulerIndex = 0; // Store the current selection index
         internal int imageControlTab = 0;
 
         private int dragFromIndex = -1;
@@ -178,6 +148,8 @@ namespace Scenario.Editor
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
+            pusher.modelName = selectedModelName;
+
             CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
             CustomStyle.Separator();
             RenderPromptSection();
@@ -197,13 +169,13 @@ namespace Scenario.Editor
 
                 if (shouldAutoGenerateSeed)
                 {
-                    PromptPusher.Instance.GenerateImage(null);
+                    pusher.GenerateImage(null);
                 }
                 else
                 {
                     string seed = seedinputText;
                     if (seed == "-1") { seed = null; }
-                    PromptPusher.Instance.GenerateImage(seed);
+                    pusher.GenerateImage(seed);
                 }
             });
 
@@ -239,6 +211,10 @@ namespace Scenario.Editor
         {
             promptWindow.ActiveMode = pusher.GetActiveMode();
             CreationMode activeMode = promptWindow.ActiveMode;
+
+            pusher.imageUpload = imageUpload;
+            pusher.maskImage = imageMask;
+
             switch (activeMode.EMode)
             {
                 case ECreationMode.Image_To_Image:
@@ -276,8 +252,6 @@ namespace Scenario.Editor
                     GUILayout.EndHorizontal();
 
                     CustomStyle.Space();
-
-                    controlNetFoldout = EditorGUILayout.Foldout(controlNetFoldout, "ControlNet Options");
 
                     RenderControlNetFoldout();
 
@@ -408,10 +382,15 @@ namespace Scenario.Editor
                     matchingWidth = GetMatchingValue(currentWidth, allowedValues);
                     matchingHeight = GetMatchingValue(currentHeight, allowedValues);
 
+                    //STRANGE
+
                     widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
                     heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
 
                     selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedValues);
+
+                    //pusher.width = matchingWidth != -1 ? matchingWidth : currentWidth;
+                    //pusher.height = matchingHeight != -1 ? matchingHeight : currentHeight;
                 });
             
                 toolsMenu.DropDown(dropdownButtonRect);

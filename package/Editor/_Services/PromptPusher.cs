@@ -29,6 +29,36 @@ namespace Scenario.Editor
 
         public static PromptPusher Instance = null;
 
+
+        /// <summary>
+        /// Translation to api calling modalities options, treat previous values in the exact same order.
+        /// </summary>
+        public readonly string[] CorrespondingOptionsValue =
+        {
+            "",
+            "character",
+            "landscape",
+            "canny",
+            "pose",
+            "depth",
+            "seg",
+            "illusion",
+            "city",
+            "interior",
+            "lines",
+            "scribble",
+            "normal-map",
+            "lineart"
+        };
+
+        public readonly string[] SchedulerOptions = new string[] // Scheduler options extracted from your HTML
+        {
+            "Default", "DDIMScheduler", "DDPMScheduler", "DEISMultistepScheduler", "DPMSolverMultistepScheduler",
+            "DPMSolverSinglestepScheduler", "EulerAncestralDiscreteScheduler", "EulerDiscreteScheduler",
+            "HeunDiscreteScheduler", "KDPM2AncestralDiscreteScheduler", "KDPM2DiscreteScheduler",
+            "LCMScheduler", "LMSDiscreteScheduler", "PNDMScheduler", "UniPCMultistepScheduler"
+        };
+
         #endregion
 
         #region Private Fields
@@ -119,9 +149,14 @@ namespace Scenario.Editor
         internal Texture2D imageUpload = null;
 
         /// <summary>
+        /// Reference the mask image to be used
+        /// </summary>
+        internal Texture2D maskImage = null;
+
+        /// <summary>
         /// Reference scheluder selected.
         /// </summary>
-        internal string schedulerSelected = string.Empty;
+        internal int schedulerSelected = 0;
 
         #endregion
 
@@ -312,136 +347,152 @@ namespace Scenario.Editor
                     width,
                     height,
                     guidance,
-                    seedInput/*,
-                    _onInferenceRequested*/);
+                    SchedulerOptions[schedulerSelected],
+                    seedInput,
+                    _onInferenceRequested);
             }
         }
 
         private bool IsPromptDataValid(out string inputData)
         {
-            string modality = "";
-            string operationType = "txt2img";
-            string dataUrl = "\"\"";
-            string maskDataUrl = "\"\"";
-
-            inputData = "";
-
             activeMode = GetActiveMode();
 
-            switch (activeMode.EMode)
+            if (activeMode != null)
             {
-                case ECreationMode.Text_To_Image:
-                    
-                    break;
+                string modality = "";
+                string operationType = activeMode.OperationName;
+                string dataUrl = "\"\"";
+                string maskDataUrl = "\"\"";
 
-                case ECreationMode.Image_To_Image:
+                inputData = "";
 
-                    if (imageUpload == null)
-                    {
-                        Debug.LogError("Img2Img Must have a image uploaded.");
-                        return false;
-                    }
+                switch (activeMode.EMode)
+                {
+                    case ECreationMode.Text_To_Image:
 
-                    dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
+                        break;
 
-                    break;
+                    case ECreationMode.Image_To_Image:
 
-                case ECreationMode.Control_Net:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("Img2Img Must have a image uploaded.");
+                            return false;
+                        }
 
-                    if (PromptWindowUI.imageUpload == null)
-                    {
-                        Debug.LogError("ControlNet Must have a image uploaded.");
-                        return false;
-                    }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
 
-                    dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
+                        break;
 
-                    break;
+                    case ECreationMode.Control_Net:
 
-                case ECreationMode.In_Painting:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet Must have a image uploaded.");
+                            return false;
+                        }
 
-                    if (PromptWindowUI.imageUpload == null)
-                    {
-                        Debug.LogError("Inpainting Must have an image uploaded.");
-                        return false;
-                    }
-                    else
-                    {
-                        dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
-                    }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
 
-                    if (PromptWindowUI.imageMask == null)
-                    {
-                        Debug.LogError("Inpainting Must have a mask uploaded.");
-                        return false;
-                    }
-                    else
-                    {
-                        maskDataUrl = ProcessMask();
-                    }
+                        break;
 
-                    break;
+                    case ECreationMode.In_Painting:
 
-                case ECreationMode.Ip_Adapter:
-                    break;
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("Inpainting Must have an image uploaded.");
+                            return false;
+                        }
+                        else
+                        {
+                            dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
+                        }
 
-                case ECreationMode.Reference_Only:
-                    break;
+                        if (maskImage == null)
+                        {
+                            Debug.LogError("Inpainting Must have a mask uploaded.");
+                            return false;
+                        }
+                        else
+                        {
+                            maskDataUrl = ProcessMask();
+                        }
 
-                case ECreationMode.Image_To_Image__Control_Net:
+                        break;
 
-                    if (PromptWindowUI.imageUpload == null)
-                    {
-                        Debug.LogError("ControlNet Must have a image uploaded.");
-                        return false;
-                    }
+                    case ECreationMode.Ip_Adapter:
+                        break;
 
-                    dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
+                    case ECreationMode.Reference_Only:
+                        break;
 
-                    break;
+                    case ECreationMode.Image_To_Image__Control_Net:
 
-                case ECreationMode.Reference_Only__Control_Net:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet Must have a image uploaded.");
+                            return false;
+                        }
 
-                    if (PromptWindowUI.imageUpload == null)
-                    {
-                        Debug.LogError("ControlNet Must have a image uploaded.");
-                        return false;
-                    }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
 
-                    dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
+                        break;
 
-                    break;
+                    case ECreationMode.Reference_Only__Control_Net:
 
-                case ECreationMode.Image_To_Image__Ip_Adapter:
-                    break;
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet Must have a image uploaded.");
+                            return false;
+                        }
 
-                case ECreationMode.Control_Net__Ip_Adapter:
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
 
-                    if (PromptWindowUI.imageUpload == null)
-                    {
-                        Debug.LogError("ControlNet Must have a image uploaded.");
-                        return false;
-                    }
+                        break;
 
-                    dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
+                    case ECreationMode.Image_To_Image__Ip_Adapter:
+                        break;
 
-                    break;
+                    case ECreationMode.Control_Net__Ip_Adapter:
+
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet Must have a image uploaded.");
+                            return false;
+                        }
+
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
+
+                        break;
+                }
+
+                Dictionary<string, string> modalitySettings = PrepareModalitySettings(ref modality, ref operationType);
+
+                modality = PrepareModality(modalitySettings);
+
+                inputData = PrepareInputData(modality, operationType, dataUrl, maskDataUrl);
+                Debug.Log("Input Data: " + inputData);
+                return true;
             }
-
-            Dictionary<string, string> modalitySettings = PrepareModalitySettings(ref modality, ref operationType);
-
-            modality = PrepareModality(modalitySettings);
-
-            inputData = PrepareInputData(modality, operationType, dataUrl, maskDataUrl);
-            Debug.Log("Input Data: " + inputData);
-            return true;
+            else
+            {
+                Debug.LogError("Issue with mode selected");
+                inputData = null;
+                return false;
+            }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="modality"></param>
+        /// <param name="operationType"></param>
+        /// <returns></returns>
         private Dictionary<string, string> PrepareModalitySettings(ref string modality, ref string operationType)
         {
             Dictionary<string, string> modalitySettings = new();
 
-            if (activeMode.HasAdvancedOptions)
+            if (activeMode.UseControlNet)
             {
                 PrepareAdvancedModalitySettings(out modality, modalitySettings);
             }
@@ -449,10 +500,15 @@ namespace Scenario.Editor
             return modalitySettings;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="modalitySettings"></param>
+        /// <returns></returns>
         private string PrepareModality(Dictionary<string, string> modalitySettings)
         {
             string modality;
-            if (activeMode.OperationName.Contains("Control Net") && activeMode.HasAdvancedOptions)
+            if (activeMode.UseControlNet && activeMode.UseAdvanceSettings)
             {
                 modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
             }
@@ -464,22 +520,29 @@ namespace Scenario.Editor
             return modality;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="modality"></param>
+        /// <param name="modalitySettings"></param>
         private void PrepareAdvancedModalitySettings(out string modality, /*out string operationType,*/ Dictionary<string, string> modalitySettings)
         {
-            if (activeMode.EMode != ECreationMode.Text_To_Image)
+            if (modalitySelected > 0)
             {
-                if (!string.IsNullOrEmpty(modalityName))
+                modalityName = CorrespondingOptionsValue[modalitySelected - 1];
+                if (!modalitySettings.ContainsKey(modalityName))
                 {
-                    if (!modalitySettings.ContainsKey(modalityName))
-                    {
-                        modalitySettings.Add(modalityName, $"{modalityValue:0.00}");
-                    }
+                    modalitySettings.Add(modalityName, $"{modalityValue:0.00}");
                 }
             }
             
             modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         private static string ProcessMask()
         {
             Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
@@ -522,19 +585,19 @@ namespace Scenario.Editor
             int height = (int)this.height;
             int numInferenceSteps = (int)samplesStep;
             int numSamples = (int)numberOfImages;
-            string scheduler = schedulerSelected;
+            string scheduler = SchedulerOptions[schedulerSelected];
 
             string inputData = $@"{{
                 ""parameters"": {{
                     ""hideResults"": {hideResults.ToString().ToLower()},
                     ""type"": ""{type}"",
-                    {/*TODO add other option containing thoses parts*/(activeMode.EMode == ECreationMode.Image_To_Image || activeMode.EMode == ECreationMode.In_Painting || activeMode.EMode == ECreationMode.Control_Net ? $@"""image"": ""{dataUrl}""," : "")}
-                    {(activeMode.EMode == ECreationMode.Control_Net || activeMode.HasAdvancedOptions ? $@"""modality"": ""{modality}""," : "")}
+                    {/*TODO add other option containing thoses parts*/(activeMode.UseControlNet ? $@"""image"": ""{dataUrl}""," : "")}
+                    {(activeMode.EMode == ECreationMode.Control_Net || activeMode.UseControlNet ? $@"""modality"": ""{modality}""," : "")}
                     {(activeMode.EMode == ECreationMode.In_Painting ? $@"""mask"": ""{maskDataUrl}""," : "")}
                     ""prompt"": ""{prompt}"",
                     {seedField}
                     {(string.IsNullOrEmpty(negativePrompt) ? "" : $@"""negativePrompt"": ""{negativePrompt}"",")}
-                    {(activeMode.EMode == ECreationMode.Image_To_Image || activeMode.EMode == ECreationMode.Control_Net ? $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)}," : "")}
+                    {(activeMode.UseControlNet ? $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)}," : "")}
                     ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
                     ""numInferenceSteps"": {numInferenceSteps},
                     ""width"": {width},

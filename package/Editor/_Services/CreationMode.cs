@@ -13,7 +13,8 @@ namespace Scenario.Editor
         public bool IsActive { get { return isActive; } set { isActive = value; } }
         public string OperationName { get { return operationName; } set { operationName = value; } }
         public bool IsControlNet { get { return isControlNet; } set { isControlNet = value; } }
-        public bool HasAdvancedOptions { get { return hasAdvancedOptions; } set { hasAdvancedOptions = value; } }
+        public bool UseControlNet { get { return useControlNet; } set { useControlNet = value; } }
+        public bool UseAdvanceSettings { get { return useAdvanceSettings; } set { useAdvanceSettings = value; } }
 
         #endregion
 
@@ -47,7 +48,12 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
-        private bool hasAdvancedOptions = false;
+        private bool useControlNet = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private bool useAdvanceSettings = false;
 
         #endregion
 
@@ -60,12 +66,12 @@ namespace Scenario.Editor
             isActive = false;
         }
 
-        public CreationMode(string _modeName, ECreationMode _eMode, bool _isActive = false, bool _hasAdvancedOptions = false) 
+        public CreationMode(string _modeName, ECreationMode _eMode, bool _isActive = false, bool _useControlNet = false) 
         {
             modeName= _modeName;
             eMode = _eMode;
             isActive = _isActive;
-            hasAdvancedOptions = _hasAdvancedOptions;
+            useControlNet = _useControlNet;
         }
 
         #endregion

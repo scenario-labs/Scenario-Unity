@@ -51,7 +51,7 @@ namespace Scenario.Editor
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Scheduler: ");
-                schedulerIndex = EditorGUILayout.Popup(schedulerIndex, schedulerOptions);
+                pusher.schedulerSelected = EditorGUILayout.Popup(pusher.schedulerSelected, pusher.SchedulerOptions);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -68,6 +68,7 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Images: " + imagesliderIntValue, GUILayout.Width(labelWidth));
                 imagesliderValue = GUILayout.HorizontalSlider(imagesliderValue, 1, 16, GUILayout.Width(sliderWidth));
+                pusher.numberOfImages = (int)imagesliderValue;
             }
             EditorGUILayout.EndHorizontal();
 
@@ -75,6 +76,7 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
                 samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 10, 150, GUILayout.Width(sliderWidth));
+                pusher.samplesStep = samplesliderValue;
             }
             EditorGUILayout.EndHorizontal();
 
@@ -82,19 +84,24 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
                 guidancesliderValue =
-                    Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) *
-                                10) / 10f;
+                    Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) * 10) / 10f;
+                pusher.guidance = guidancesliderValue;
             }
             EditorGUILayout.EndHorizontal();
 
-            if (isImageToImage || isControlNet)
-            {
-                EditorGUILayout.BeginHorizontal();
+            if (promptWindow.ActiveMode != null)
+            { 
+                if (promptWindow.ActiveMode.EMode == ECreationMode.Image_To_Image || promptWindow.ActiveMode.IsControlNet)
                 {
-                    GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
-                    influenceSliderValue = (int)GUILayout.HorizontalSlider(influenceSliderValue, 0, 99, GUILayout.Width(sliderWidth));
+                    //Connected to strengh value
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
+                        influenceSliderValue = (int)GUILayout.HorizontalSlider(influenceSliderValue, 0, 99, GUILayout.Width(sliderWidth));
+                        pusher.influenceOption = influenceSliderValue;
+                    }
+                    EditorGUILayout.EndHorizontal();
                 }
-                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.BeginHorizontal();
@@ -131,6 +138,7 @@ namespace Scenario.Editor
                 widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
                     _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
                 widthSliderValue = _allowedValues[widthIndex];
+                pusher.width = widthSliderValue;
             }
             EditorGUILayout.EndHorizontal();
         }
@@ -148,6 +156,7 @@ namespace Scenario.Editor
                 heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
                     _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
                 heightSliderValue = _allowedValues[heightIndex];
+                pusher.height = heightSliderValue;
             }
             EditorGUILayout.EndHorizontal();
         }

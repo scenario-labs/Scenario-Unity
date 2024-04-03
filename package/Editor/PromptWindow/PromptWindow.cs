@@ -72,14 +72,14 @@ namespace Scenario.Editor
             Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.selectedModelName + ", Seed: " + seed);
             if (IsPromptDataValid(out string inputData))
             {
-                PromptFetcher.PostInferenceRequest(inputData,
+                /*PromptFetcher.PostInferenceRequest(inputData,
                     promptWindowUI.imagesliderIntValue,
                     promptWindowUI.promptinputText,
                     promptWindowUI.samplesliderValue,
                     promptWindowUI.widthSliderValue,
                     promptWindowUI.heightSliderValue,
                     promptWindowUI.guidancesliderValue,
-                    promptWindowUI.seedinputText);
+                    promptWindowUI.seedinputText);*/
             }
         }
 
@@ -179,7 +179,7 @@ namespace Scenario.Editor
             int height = (int)promptWindowUI.heightSliderValue;
             int numInferenceSteps = (int)promptWindowUI.samplesliderValue;
             int numSamples = (int)promptWindowUI.imagesliderIntValue;
-            string scheduler = promptWindowUI.schedulerOptions[promptWindowUI.schedulerIndex];
+            string scheduler = PromptPusher.Instance.SchedulerOptions[PromptPusher.Instance.schedulerSelected];
 
             string inputData = $@"{{
                 ""parameters"": {{
@@ -209,7 +209,7 @@ namespace Scenario.Editor
 
             if (promptWindowUI.selectedOptionIndex > 0)
             {
-                string optionName = promptWindowUI.correspondingOptionsValue[promptWindowUI.selectedOptionIndex - 1];
+                string optionName = PromptPusher.Instance.CorrespondingOptionsValue[promptWindowUI.selectedOptionIndex - 1];
                 if (!modalitySettings.ContainsKey(optionName))
                 { 
                     modalitySettings.Add(optionName, $"{promptWindowUI.sliderValue:0.00}");
@@ -266,9 +266,10 @@ namespace Scenario.Editor
             return CommonUtils.Texture2DToDataURL(processedMask);
         }
 
-        public void SetSeed(string seed)
+        public void SetSeed(string _seed)
         {
             // Set the seed value here
+            PromptPusher.Instance.seedInput = _seed;
         }
 
         /// <summary>

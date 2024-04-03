@@ -10,16 +10,17 @@ namespace Scenario.Editor
     {
         private void RenderControlNetFoldout()
         {
-            if (!controlNetFoldout) return;
-        
             GUILayout.BeginHorizontal();
             GUILayout.Label("Enable ControlNet", EditorStyles.label);
             isControlNet = GUILayout.Toggle(isControlNet, "");
             
+            promptWindow.ActiveMode.UseControlNet = isControlNet;
+
             if (isControlNet)
             {
                 GUILayout.Label("Advanced Settings", EditorStyles.label);
                 isAdvancedSettings = GUILayout.Toggle(isAdvancedSettings, "");
+                promptWindow.ActiveMode.UseAdvanceSettings = isAdvancedSettings;
             }
 
             GUILayout.EndHorizontal();
@@ -66,7 +67,6 @@ namespace Scenario.Editor
                 //availableOptions.AddRange(dropdownOptions);
                 selectedOptionIndex = EditorGUILayout.Popup(selectedOptionIndex, availableOptions.ToArray());
                 PromptPusher.Instance.modalitySelected = selectedOptionIndex;
-                PromptPusher.Instance.modelName = correspondingOptionsValue[selectedOptionIndex - 1];
 
                 if (selectedOptionIndex > 0)
                 { 

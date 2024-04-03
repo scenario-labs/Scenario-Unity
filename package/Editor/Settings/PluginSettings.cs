@@ -13,7 +13,16 @@ namespace Scenario.Editor
 
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
         public static string WebAppUrl { get { return webAppUrl; } }
-        public static string SaveFolder { get { return EditorPrefs.GetString("SaveFolder"); } }
+        public static string SaveFolder { 
+            get 
+            {
+                if (!string.IsNullOrEmpty(EditorPrefs.GetString("SaveFolder")))
+                {
+                    CheckAndCreateFolder(EditorPrefs.GetString("SaveFolder"));
+                }
+                return EditorPrefs.GetString("SaveFolder"); 
+            } 
+        }
         public static Preset TexturePreset { get { return GetPreset(EditorPrefs.GetString("scenario/texturePreset")); } }
         public static Preset SpritePreset { get { return GetPreset(EditorPrefs.GetString("scenario/spritePreset")); } }
         public static Preset TilePreset { get { return GetPreset(EditorPrefs.GetString("scenario/tilePreset")); } }
@@ -59,6 +68,12 @@ namespace Scenario.Editor
         private class PackageInfo
         {
             public string version;
+        }
+
+        static PluginSettings()
+        {
+            GetVersionFromPackageJson();
+            PluginSettings settings = ScriptableObject.CreateInstance<PluginSettings>();
         }
 
         #region Unity Methods
@@ -282,7 +297,7 @@ namespace Scenario.Editor
         /// Check if the folder exist else create it.
         /// </summary>
         /// <param name="_folder"> Folder string </param>
-        private void CheckAndCreateFolder(string _folder)
+        private static void CheckAndCreateFolder(string _folder)
         {
             if (!AssetDatabase.IsValidFolder(_folder))
             {
@@ -292,8 +307,15 @@ namespace Scenario.Editor
                 {
                     if (!path.Equals("Assets"))
                     {
-                        AssetDatabase.CreateFolder(parentFolder, path);
-                        parentFolder += "/" + path;
+                        if (!AssetDatabase.IsValidFolder($"{parentFolder}/{path}"))
+                        {
+                            AssetDatabase.CreateFolder(parentFolder, path);
+                            parentFolder += "/" + path;
+                        }
+                        else
+                        {
+                            parentFolder += "/" + path;
+                        }
                     }
                     else
                     {

@@ -88,7 +88,8 @@ namespace Scenario.Editor
                 importPreset = PluginSettings.TexturePreset;
             }
 
-            string downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
+            
+            string downloadPath = PluginSettings.SaveFolder;
             string filePath = Path.Combine(downloadPath, fileName);
 
             File.WriteAllBytesAsync(filePath, pngBytes).ContinueWith(task =>

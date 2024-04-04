@@ -93,8 +93,8 @@ namespace Scenario.Editor
         internal bool isInpainting = false;
         internal string promptinputText = "";
         internal string negativepromptinputText = "";
-        internal int widthSliderValue = 512;
-        internal int heightSliderValue = 512;
+        internal int widthSliderValue = 1024;
+        internal int heightSliderValue = 1024;
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
         internal int samplesliderValue = 30;
@@ -118,8 +118,15 @@ namespace Scenario.Editor
         private Vector2 dragStartPos;
         private Vector2 negativeDragStartPos;
 
-        private readonly int[] allowedWidthValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
-        private readonly int[] allowedHeightValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+        /// <summary>
+        /// Reference all dimension values available for SD 1.5 models
+        /// </summary>
+        private readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+
+        /// <summary>
+        /// Reference all dimension values available for SDXL models
+        /// </summary>
+        private readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824, 2048 };
 
         internal List<string> tags = new();
         private List<Rect> tagRects = new();
@@ -338,17 +345,50 @@ namespace Scenario.Editor
                 toolsMenu.AddItem(new GUIContent("Adjust aspect ratio"), false, () =>
                 {
                     if (imageUpload == null) return;
-                
+
                     int currentWidth = imageUpload.width;
                     int currentHeight = imageUpload.height;
 
-                    int matchingWidth = GetMatchingValue(currentWidth, allowedWidthValues);
-                    int matchingHeight = GetMatchingValue(currentHeight, allowedHeightValues);
+                    int matchingWidth = 0;
+                    int matchingHeight = 0;
+
+                    int[] allowedValues = new int[0];
+                    if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType))
+                    {
+                        switch (DataCache.instance.SelectedModelType)
+                        {
+                            case "sd-xl-composition":
+                                allowedValues = allowedSDXLDimensionValues;
+                                break;
+
+                            case "sd-xl-lora":
+                                allowedValues = allowedSDXLDimensionValues;
+                                break;
+
+                            case "sd-xl":
+                                allowedValues = allowedSDXLDimensionValues;
+                                break;
+
+                            case "sd-1_5":
+                                allowedValues = allowed1_5DimensionValues;
+                                break;
+
+                            default:
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        allowedValues = allowed1_5DimensionValues;
+                    }
+
+                    matchingWidth = GetMatchingValue(currentWidth, allowedValues);
+                    matchingHeight = GetMatchingValue(currentHeight, allowedValues);
 
                     widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
                     heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
 
-                    selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
+                    selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedValues);
                 });
             
                 toolsMenu.DropDown(dropdownButtonRect);

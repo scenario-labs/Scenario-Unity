@@ -204,6 +204,11 @@ namespace Scenario.Editor
             GUILayout.EndScrollView();
         }
 
+        private static void DrawBackground(Rect position)
+        {
+            EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -218,21 +223,7 @@ namespace Scenario.Editor
             switch (activeMode.EMode)
             {
                 case ECreationMode.Image_To_Image:
-                    CustomStyle.Space();
-
-                    Rect dropArea = RenderImageUploadArea();
-
-                    if (imageUpload != null)
-                    {
-                        dropArea = DrawUploadedImage(dropArea);
-                    }
-
-                    if (imageMask != null)
-                    {
-                        GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
-                    }
-
-                    HandleDrag();
+                    DrawHandleImage();
 
                     GUILayout.BeginHorizontal();
 
@@ -256,47 +247,51 @@ namespace Scenario.Editor
                     RenderControlNetFoldout();
 
                     break;
-            }
 
-            if (activeMode.EMode == ECreationMode.In_Painting /*|| activeMode.EMode == ECreationMode.In_Painting*/)
-            {
-                CustomStyle.Space();
+                case ECreationMode.In_Painting:
 
-                Rect dropArea = RenderImageUploadArea();
+                    DrawHandleImage();
 
-                if (imageUpload != null)
-                {
-                    dropArea = DrawUploadedImage(dropArea);
-                }
+                    GUILayout.BeginHorizontal();
 
-                if (imageMask != null)
-                {
-                    GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
-                }
-
-                HandleDrag();
-
-                GUILayout.BeginHorizontal();
-
-                if (activeMode.IsControlNet)
-                {
-                    if (GUILayout.Button("Add Control"))
+                    if (activeMode.IsControlNet)
                     {
-                        CompositionEditor.ShowWindow();
+                        if (GUILayout.Button("Add Control"))
+                        {
+                            CompositionEditor.ShowWindow();
+                        }
+                        if (GUILayout.Button("Add Mask"))
+                        {
+                            InpaintingEditor.ShowWindow(imageUpload);
+                        }
                     }
-                    if (GUILayout.Button("Add Mask"))
-                    {
-                        InpaintingEditor.ShowWindow(imageUpload);
-                    }
-                }
 
-                GUILayout.EndHorizontal();
+                    GUILayout.EndHorizontal();
+
+                    break;
             }
         }
 
-        private static void DrawBackground(Rect position)
+        /// <summary>
+        /// 
+        /// </summary>
+        private void DrawHandleImage()
         {
-            EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
+            CustomStyle.Space();
+
+            Rect dropArea = RenderImageUploadArea();
+
+            if (imageUpload != null)
+            {
+                dropArea = DrawUploadedImage(dropArea);
+            }
+
+            if (imageMask != null)
+            {
+                GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
+            }
+
+            HandleDrag();
         }
 
         private static void HandleDrag()
@@ -382,15 +377,10 @@ namespace Scenario.Editor
                     matchingWidth = GetMatchingValue(currentWidth, allowedValues);
                     matchingHeight = GetMatchingValue(currentHeight, allowedValues);
 
-                    //STRANGE
-
                     widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
                     heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
 
                     selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedValues);
-
-                    //pusher.width = matchingWidth != -1 ? matchingWidth : currentWidth;
-                    //pusher.height = matchingHeight != -1 ? matchingHeight : currentHeight;
                 });
             
                 toolsMenu.DropDown(dropdownButtonRect);

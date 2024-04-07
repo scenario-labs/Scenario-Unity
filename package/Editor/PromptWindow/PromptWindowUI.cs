@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -10,9 +8,14 @@ namespace Scenario.Editor
 {
     public partial class PromptWindowUI
     {
+        #region Public Fields
+
+        public string selectedModelName { get; set; } = "Choose Model";
+
+        public int WidthSliderValue { get { return widthSliderValue; } set { widthSliderValue = value; } }
+        public int HeightSliderValue { get { return heightSliderValue; } set { heightSliderValue = value; } }
+
         public static Texture2D imageMask;
-    
-        internal static Texture2D imageUpload;
 
         /// <summary>
         /// First dropdown options according to SDXL models
@@ -42,6 +45,16 @@ namespace Scenario.Editor
             "Line Art"
         };
 
+        /// <summary>
+        /// Reference all dimension values available for SD 1.5 models
+        /// </summary>
+        public readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+
+        /// <summary>
+        /// Reference all dimension values available for SDXL models
+        /// </summary>
+        public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824, 2048 };
+
         public string selectedPreset = "";
 
         /// <summary>
@@ -58,7 +71,23 @@ namespace Scenario.Editor
         /// Value from the guidance slider in controlNet options, use to send to generation
         /// </summary>
         public float sliderValue = 0.0f;
-    
+
+        /// <summary>
+        /// Specific additional modality value of the slider
+        /// </summary>
+        public float additionalModalitySliderValue = 50.0f;
+
+        /// <summary>
+        /// Specific additional modality value
+        /// </summary>
+        public float additionalModalityValue = 0.5f;
+
+        #endregion
+        #region Private Fields
+
+        internal static Texture2D imageUpload;
+        internal static Texture2D additionalImageUpload;
+
         internal bool isImageToImage = false;
         internal bool isControlNet = false;
         internal bool isAdvancedSettings = false;
@@ -83,22 +112,9 @@ namespace Scenario.Editor
         private string inputText = "";
         private string negativeInputText = "";
         private bool showSettings = true;
-        private bool controlNetFoldout = false;
-        private Vector2 scrollPosition;
-        private Vector2 scrollPosition1 = Vector2.zero;
-        private Vector2 scrollPosition2 = Vector2.zero;
-        private Vector2 dragStartPos;
-        private Vector2 negativeDragStartPos;
-
-        /// <summary>
-        /// Reference all dimension values available for SD 1.5 models
-        /// </summary>
-        private readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
-
-        /// <summary>
-        /// Reference all dimension values available for SDXL models
-        /// </summary>
-        private readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824, 2048 };
+        private Vector2 scrollPosition = new Vector2();
+        private Vector2 dragStartPos = new Vector2();
+        private Vector2 negativeDragStartPos = new Vector2();
 
         internal List<string> tags = new();
         private List<Rect> tagRects = new();
@@ -106,32 +122,70 @@ namespace Scenario.Editor
         private List<Rect> negativeTagRects = new();
 
         private PromptWindow promptWindow;
+
         private bool shouldAutoGenerateSeed;
         private bool shouldAutoGenerateSeedPrev;
 
+        /// <summary>
+        /// Get a reference of the prompt pusher
+        /// </summary>
         private PromptPusher pusher = null;
 
+        /// <summary>
+        /// Get a reference to necessary image display editor
+        /// </summary>
+        private DropImageView dropImageView = null;
+        
+        /// <summary>
+        /// Get a reference to additional Image display editor
+        /// </summary>
+        private DropImageView dropAdditionalImageView = null;
+
+        /// <summary>
+        /// Default selected creation mode.
+        /// </summary>
         private ECreationMode selectedMode = ECreationMode.Text_To_Image;
 
-        public string selectedModelName { get; set; } = "Choose Model";
+        #endregion
+
+        #region Public Methods
 
         public PromptWindowUI(PromptWindow promptWindow)
         {
             this.promptWindow = promptWindow;
+
             if (PromptPusher.Instance != null)
-            { 
+            {
                 pusher = PromptPusher.Instance;
+            }
+
+            if (dropImageView == null)
+            {
+                dropImageView = new DropImageView(this);
+            }
+
+            if (dropAdditionalImageView == null)
+            {
+                dropAdditionalImageView = new DropImageView(this);
             }
         }
 
-        private void PromptRecv(string str)
+        public int NearestValueIndex(int currentValue, int[] allowedValues)
         {
-            //promptinputText = str;
-        }
+            int nearestIndex = 0;
+            int minDifference = int.MaxValue;
 
-        private void NegativePromptRecv(string str)
-        {
-            //negativeInputText = str;
+            for (int i = 0; i < allowedValues.Length; i++)
+            {
+                int difference = Mathf.Abs(currentValue - allowedValues[i]);
+                if (difference < minDifference)
+                {
+                    minDifference = difference;
+                    nearestIndex = i;
+                }
+            }
+
+            return nearestIndex;
         }
 
         public void Render(Rect position)
@@ -200,9 +254,13 @@ namespace Scenario.Editor
             pusher.ActiveMode(imageControlTab);
 
             ManageDrawMode();
-            
+
             GUILayout.EndScrollView();
         }
+
+        #endregion
+
+        #region Private Methods
 
         private static void DrawBackground(Rect position)
         {
@@ -210,20 +268,24 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// WARNING --> may have to remove activeMode.IsControlNet if it useless
+        /// Manage all display available depending on active creation mode
         /// </summary>
         private void ManageDrawMode()
         {
             promptWindow.ActiveMode = pusher.GetActiveMode();
             CreationMode activeMode = promptWindow.ActiveMode;
 
-            pusher.imageUpload = imageUpload;
-            pusher.maskImage = imageMask;
+            pusher.imageUpload = dropImageView.ImageUpload;
+            pusher.maskImage = dropImageView.ImageMask;
+
+            pusher.additionalImageUpload = dropAdditionalImageView.ImageUpload;
 
             switch (activeMode.EMode)
             {
                 case ECreationMode.Image_To_Image:
-                    DrawHandleImage();
+
+                    dropImageView.DrawHandleImage();
 
                     GUILayout.BeginHorizontal();
 
@@ -231,7 +293,49 @@ namespace Scenario.Editor
                     {
                         if (GUILayout.Button("Create Image"))
                         {
-                            ImageEditor.ShowWindow(imageUpload);
+                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    break;
+
+                case ECreationMode.In_Painting:
+
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
+                    {
+                        if (GUILayout.Button("Add Control"))
+                        {
+                            CompositionEditor.ShowWindow();
+                        }
+                        if (GUILayout.Button("Add Mask"))
+                        {
+                            InpaintingEditor.ShowWindow(dropImageView.ImageUpload);
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    break;
+
+                case ECreationMode.Control_Net:
+
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
+                    {
+                        if (GUILayout.Button("Create Image"))
+                        {
+                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
                         }
 
                         if (GUILayout.Button("Add Control"))
@@ -248,179 +352,229 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.In_Painting:
+                case ECreationMode.Ip_Adapter:
 
-                    DrawHandleImage();
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (GUILayout.Button("Create Image"))
+                    {
+                        ImageEditor.ShowWindow(dropImageView.ImageUpload);
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space(); 
+
+                    DrawAdditionalModality("Ip Adapter Scale");
+
+                    break;
+
+                case ECreationMode.Reference_Only:
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (GUILayout.Button("Create Image"))
+                    {
+                        ImageEditor.ShowWindow(dropImageView.ImageUpload);
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    DrawAdditionalModality("Style Fidelity");
+
+                    GUILayout.BeginHorizontal();
+                    { 
+                        GUILayout.Label("Reference Attn: ", EditorStyles.label);
+                        if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
+                        {
+                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "");
+                            activeMode.AdditionalSettings["Reference Attn"] = refAtt;
+                        }
+                        else
+                        {
+                            bool refAtt = GUILayout.Toggle(true, "");
+                            activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("Reference AdaIN: ", EditorStyles.label);
+                        if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
+                        {
+                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "");
+                            activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
+                        }
+                        else
+                        {
+                            bool refAd = GUILayout.Toggle(false, "");
+                            activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+
+                    break;
+
+                case ECreationMode.Image_To_Image__Control_Net:
+
+                    dropImageView.DrawHandleImage();
 
                     GUILayout.BeginHorizontal();
 
                     if (activeMode.IsControlNet)
                     {
-                        if (GUILayout.Button("Add Control"))
+                        if (GUILayout.Button("Create Image"))
                         {
-                            CompositionEditor.ShowWindow();
-                        }
-                        if (GUILayout.Button("Add Mask"))
-                        {
-                            InpaintingEditor.ShowWindow(imageUpload);
+                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
                         }
                     }
 
                     GUILayout.EndHorizontal();
 
-                    break;
-            }
-        }
+                    CustomStyle.Space();
 
-        /// <summary>
-        /// 
-        /// </summary>
-        private void DrawHandleImage()
-        {
-            CustomStyle.Space();
+                    dropAdditionalImageView.DrawHandleImage();
 
-            Rect dropArea = RenderImageUploadArea();
+                    GUILayout.BeginHorizontal();
 
-            if (imageUpload != null)
-            {
-                dropArea = DrawUploadedImage(dropArea);
-            }
-
-            if (imageMask != null)
-            {
-                GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
-            }
-
-            HandleDrag();
-        }
-
-        private static void HandleDrag()
-        {
-            Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
-            {
-                if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-                {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
-
-                    if (currentEvent.type == EventType.DragPerform)
+                    if (activeMode.IsControlNet)
                     {
-                        DragAndDrop.AcceptDrag();
-                        string path = DragAndDrop.paths[0];
-                        imageUpload = new Texture2D(2, 2);
-                        byte[] imageData = File.ReadAllBytes(path);
-                        imageUpload.LoadImage(imageData);
-                    }
-
-                    currentEvent.Use();
-                }
-            }
-        }
-
-        private Rect DrawUploadedImage(Rect dropArea)
-        {
-            GUI.DrawTexture(dropArea, imageUpload, ScaleMode.ScaleToFit);
-
-            Rect dropdownButtonRect = new Rect(dropArea.xMax - 90, dropArea.yMax - 25, 30, 30);
-            if (imageUpload != null && GUI.Button(dropdownButtonRect, "..."))
-            {
-                GenericMenu toolsMenu = new GenericMenu();
-                toolsMenu.AddItem(new GUIContent("Remove bg"), false, () =>
-                {
-                    Debug.Log("Remove bg button pressed");
-                    BackgroundRemoval.RemoveBackground(imageUpload, bytes =>
-                    {
-                        imageUpload.LoadImage(bytes);
-                    });
-                });
-            
-                toolsMenu.AddItem(new GUIContent("Adjust aspect ratio"), false, () =>
-                {
-                    if (imageUpload == null) return;
-
-                    int currentWidth = imageUpload.width;
-                    int currentHeight = imageUpload.height;
-
-                    int matchingWidth = 0;
-                    int matchingHeight = 0;
-
-                    int[] allowedValues = new int[0];
-                    if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType))
-                    {
-                        switch (DataCache.instance.SelectedModelType)
+                        if (GUILayout.Button("Create Image"))
                         {
-                            case "sd-xl-composition":
-                                allowedValues = allowedSDXLDimensionValues;
-                                break;
+                            ImageEditor.ShowWindow(dropAdditionalImageView.ImageUpload);
+                        }
 
-                            case "sd-xl-lora":
-                                allowedValues = allowedSDXLDimensionValues;
-                                break;
-
-                            case "sd-xl":
-                                allowedValues = allowedSDXLDimensionValues;
-                                break;
-
-                            case "sd-1_5":
-                                allowedValues = allowed1_5DimensionValues;
-                                break;
-
-                            default:
-                                break;
+                        if (GUILayout.Button("Add Control"))
+                        {
+                            CompositionEditor.ShowWindow();
                         }
                     }
-                    else
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    RenderControlNetFoldout();
+
+                    break;
+
+                case ECreationMode.Image_To_Image__Ip_Adapter:
+
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
                     {
-                        allowedValues = allowed1_5DimensionValues;
+                        if (GUILayout.Button("Create Image"))
+                        {
+                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
+                        }
                     }
 
-                    matchingWidth = GetMatchingValue(currentWidth, allowedValues);
-                    matchingHeight = GetMatchingValue(currentHeight, allowedValues);
+                    GUILayout.EndHorizontal();
 
-                    widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
-                    heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
+                    CustomStyle.Space();
 
-                    selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedValues);
-                });
-            
-                toolsMenu.DropDown(dropdownButtonRect);
+                    dropAdditionalImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
+                    {
+                        if (GUILayout.Button("Create Image"))
+                        {
+                            ImageEditor.ShowWindow(dropAdditionalImageView.ImageUpload);
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    DrawAdditionalModality("Ip Adapter Scale");
+
+                    break;
+
+                case ECreationMode.Control_Net__Ip_Adapter:
+
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
+                    {
+                        if (GUILayout.Button("Create Image"))
+                        {
+                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
+                        }
+
+                        if (GUILayout.Button("Add Control"))
+                        {
+                            CompositionEditor.ShowWindow();
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    RenderControlNetFoldout();
+
+                    CustomStyle.Space();
+
+                    dropAdditionalImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
+                    {
+                        if (GUILayout.Button("Create Image"))
+                        {
+                            ImageEditor.ShowWindow(dropAdditionalImageView.ImageUpload);
+                        }
+                    }
+
+                    GUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
+
+                    DrawAdditionalModality("Ip Adapter Scale");
+
+                    break;
             }
 
-            Rect clearImageButtonRect = new Rect(dropArea.xMax - 50, dropArea.yMax - 25, 30, 30);
-            if (imageUpload != null && GUI.Button(clearImageButtonRect, "X"))
-            {
-                imageUpload = null;
-                imageMask = null;
-            }
-
-            return dropArea;
+            pusher.UpdateActiveMode(activeMode);
         }
 
-        private static Rect RenderImageUploadArea()
+
+        /// <summary>
+        /// Draw display for additional modality
+        /// </summary>
+        /// <param name="_additionalName"> Name of the additional variables. </param>
+        private void DrawAdditionalModality(string _additionalName)
         {
-            CustomStyle.Label("Upload Image");
-
-            Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
-            if (imageUpload == null)
-            {
-                GUI.Box(dropArea, "Drag & Drop an image here");
-
-                Rect buttonRect = new Rect(dropArea.center.x - 50f, dropArea.center.y - 15f, 100f, 30f);
-                if (GUI.Button(buttonRect, "Choose Image"))
+            GUILayout.BeginHorizontal();
+            { 
+                GUILayout.Label($"{_additionalName} :", EditorStyles.label);
+                additionalModalitySliderValue = (int)EditorGUILayout.Slider(Mathf.Clamp(additionalModalitySliderValue, 0, 100), 0, 100);
+                additionalModalityValue = additionalModalitySliderValue / 100.0f;
+                if (additionalModalityValue == 0)
                 {
-                    string imagePath = EditorUtility.OpenFilePanel("Choose Image", "", "png,jpg,jpeg");
-                    if (!string.IsNullOrEmpty(imagePath))
-                    {
-                        imageUpload = new Texture2D(2, 2);
-                        byte[] imageData = File.ReadAllBytes(imagePath);
-                        imageUpload.LoadImage(imageData);
-                    }
+                    additionalModalityValue = 0.01f;
                 }
-            }
 
-            return dropArea;
+                pusher.additionalModalityValue = additionalModalityValue;
+            }
+            GUILayout.EndHorizontal();
         }
-    
+
         private string SerializeTags(List<string> tags)
         {
             if (tags == null || tags.Count == 0)
@@ -444,24 +598,6 @@ namespace Scenario.Editor
         
             int lastSpaceIndex = tag.LastIndexOf(' ', 30);
             return lastSpaceIndex == -1 ? tag[..30] : tag[..lastSpaceIndex];
-        }
-
-        private int NearestValueIndex(int currentValue, int[] allowedValues)
-        {
-            int nearestIndex = 0;
-            int minDifference = int.MaxValue;
-
-            for (int i = 0; i < allowedValues.Length; i++)
-            {
-                int difference = Mathf.Abs(currentValue - allowedValues[i]);
-                if (difference < minDifference)
-                {
-                    minDifference = difference;
-                    nearestIndex = i;
-                }
-            }
-
-            return nearestIndex;
         }
 
         private int GetNewIndex(Vector2 currentPos)
@@ -490,17 +626,16 @@ namespace Scenario.Editor
             return result;
         }
 
-        private int GetMatchingValue(int targetValue, int[] values)
+        private void PromptRecv(string str)
         {
-            foreach (int value in values)
-            {
-                if (value == targetValue)
-                {
-                    return value;
-                }
-            }
-
-            return -1;
+            //promptinputText = str;
         }
+
+        private void NegativePromptRecv(string str)
+        {
+            //negativeInputText = str;
+        }
+
+        #endregion
     }
 }

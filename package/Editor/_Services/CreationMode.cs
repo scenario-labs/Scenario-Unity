@@ -15,45 +15,51 @@ namespace Scenario.Editor
         public bool IsControlNet { get { return isControlNet; } set { isControlNet = value; } }
         public bool UseControlNet { get { return useControlNet; } set { useControlNet = value; } }
         public bool UseAdvanceSettings { get { return useAdvanceSettings; } set { useAdvanceSettings = value; } }
+        public Dictionary<string, bool> AdditionalSettings { get { return additionalSettings; } }
 
         #endregion
 
         #region Private Fields
 
         /// <summary>
-        /// 
+        /// Name of the creation mode created
         /// </summary>
         private string modeName = string.Empty;
 
         /// <summary>
-        /// 
+        /// Type mode of the creation mode
         /// </summary>
         private ECreationMode eMode = ECreationMode.Text_To_Image;
 
         /// <summary>
-        /// 
+        /// If this creation mode is active or not
         /// </summary>
         private bool isActive = false;
 
         /// <summary>
-        /// 
+        /// Api request operation name
         /// </summary>
         private string operationName = string.Empty;
 
         /// <summary>
-        /// 
+        /// If it's a control net mode // May have to be rename ?
         /// </summary>
         private bool isControlNet = false;
 
         /// <summary>
-        /// 
+        /// If this creation mode use a control net option
         /// </summary>
         private bool useControlNet = false;
 
         /// <summary>
-        /// 
+        /// If this mode has advance settings and use it
         /// </summary>
         private bool useAdvanceSettings = false;
+
+        /// <summary>
+        /// Stock all additional settings value inside it to get it to api request
+        /// </summary>
+        private Dictionary<string, bool> additionalSettings = new Dictionary<string, bool>();
 
         #endregion
 

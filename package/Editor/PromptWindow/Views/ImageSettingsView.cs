@@ -68,7 +68,7 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Images: " + imagesliderIntValue, GUILayout.Width(labelWidth));
                 imagesliderValue = GUILayout.HorizontalSlider(imagesliderValue, 1, 16, GUILayout.Width(sliderWidth));
-                pusher.numberOfImages = (int)imagesliderValue;
+                pusher.numberOfImages = Mathf.RoundToInt(imagesliderValue);
             }
             EditorGUILayout.EndHorizontal();
 

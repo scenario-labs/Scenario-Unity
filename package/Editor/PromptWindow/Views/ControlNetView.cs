@@ -11,12 +11,10 @@ namespace Scenario.Editor
         private void RenderControlNetFoldout()
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Enable ControlNet", EditorStyles.label);
-            isControlNet = GUILayout.Toggle(isControlNet, "");
             
-            promptWindow.ActiveMode.UseControlNet = isControlNet;
+            promptWindow.ActiveMode.UseControlNet = true;
 
-            if (isControlNet)
+            if (promptWindow.ActiveMode.UseControlNet)
             {
                 GUILayout.Label("Advanced Settings", EditorStyles.label);
                 isAdvancedSettings = GUILayout.Toggle(isAdvancedSettings, "");
@@ -25,7 +23,7 @@ namespace Scenario.Editor
 
             GUILayout.EndHorizontal();
 
-            if (!isControlNet) return;
+            if (!promptWindow.ActiveMode.UseControlNet) return;
         
             CustomStyle.Space(20);
 

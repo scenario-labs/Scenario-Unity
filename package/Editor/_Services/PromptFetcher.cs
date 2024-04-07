@@ -1,9 +1,7 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
 namespace Scenario.Editor

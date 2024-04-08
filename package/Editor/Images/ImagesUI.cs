@@ -18,11 +18,9 @@ namespace Scenario.Editor
         /// <summary>
         /// The id of the image that is currently selected
         /// </summary>
-        private string selectedImageId = string.Empty;
+        private string selectedTextureId = string.Empty;
 
-        /// <summary>
-        /// Dictionary containing button labels and associated actions
-        /// </summary>
+        // Dictionary containing button labels and associated actions
         private Dictionary<string, Action> buttonActions = new Dictionary<string, Action>();
 
         /// <summary>
@@ -72,64 +70,104 @@ namespace Scenario.Editor
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), backgroundColor);
         }
 
+        /// <summary>
+        /// Set action on buttons after selected image.
+        /// </summary>
         private void InitializeButtons()
         {
             // Dictionary containing button labels and associated actions
             buttonActions = new Dictionary<string, Action>()
             {
                 {
-                    "Set Image as Reference", () => Images.SetImageAsReference(selectedTexture, () => {
+                    "Set Image as Reference", () =>
+                    {
+                        PromptWindowUI.imageUpload = selectedTexture;
+                        PromptWindow.ShowWindow();
+                        PromptWindow.SetImageControlTab(1);
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been set in the Image to Image parameter in the Prompt Window.", EditorStyles.wordWrappedLabel);
                         };
-                    })
-                },
-                {
-                    "Download as Texture",  () => Images.DownloadAsTexture(selectedTexture, () => { 
-                        buttonDetailPanelDrawFunction = () =>
-                        {
-                            GUILayout.Label("The image has been downloaded to the directory specified in the settings of the Scenario Plugin.", EditorStyles.wordWrappedLabel);
-                        };
-                    })
 
+                    }
                 },
                 {
-                    "Download as Sprite", () => Images.DownloadAsSprite(selectedTexture, selectedImageId, () => {
-                            buttonDetailPanelDrawFunction = () => {
-                                string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+                    "Download as Texture",  () =>
+                    {
+                        CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response =>{
+                            CommonUtils.SaveTextureAsPNG(response, importPreset:PluginSettings.TexturePreset);
+                            buttonDetailPanelDrawFunction = () =>
+                            {
+                                GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                            };
+                        });
+                    }
+                },
+                {
+                    "Download as Sprite", () =>
+                    {
+                        string messageWhileDownloading = "Please wait... The background is currently being removed. The result will be downloaded in the folder you specified in the Scenario Plugin Settings.";
+                        string messageSuccess = "Your image has been downloaded in the folder you specified in the Scenario Plugin Settings.";
+
+                        //What to do when file is downloaded
+                        Action<string> successAction = (filePath) =>
+                        {
+                            buttonDetailPanelDrawFunction = () =>
+                            {
                                 GUILayout.Label(messageSuccess, EditorStyles.wordWrappedLabel);
                             };
-                        },
-                        () => {
-                        buttonDetailPanelDrawFunction = () => {
-                            string messageWhileDownloading = "Please wait while the background is being removed. The processed image will be saved to the directory set in the Settings of the Scenario Plugin.";
-                            GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
+
+                            if (PluginSettings.UsePixelsUnitsEqualToImage)
+                            {
+                                CommonUtils.ApplyPixelsPerUnit(filePath);
+                            }
                         };
-                    })
+                        CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response =>{
+                            if (PluginSettings.AlwaysRemoveBackgroundForSprites)
+                            {
+                                BackgroundRemoval.RemoveBackground(response, imageBytes =>
+                                {
+                                    CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.SpritePreset, successAction);
+                                });
+
+                                buttonDetailPanelDrawFunction = () =>
+                                {
+                                    GUILayout.Label(messageWhileDownloading, EditorStyles.wordWrappedLabel);
+                                };
+                            }
+                            else
+                            {
+                                CommonUtils.SaveTextureAsPNG(response, null, PluginSettings.SpritePreset, successAction);
+                            }
+                        });
+                    }
                 },
                 {
                     "Download as a Tile", () =>
                     {
                         /// Contains the side window when the user want to download an image as a tile
-                        if(TileCreator.Instance == null)
-                        {
-                            TileCreator.Instance = new(selectedImageId);
-                        }
-                        else
-                        {
-                            TileCreator.Instance.SetSelectedImageId(selectedImageId);
-                        }
-                        buttonDetailPanelDrawFunction = TileCreator.Instance.OnGUI;
+                        TileCreator tileCreator = new(selectedTextureId);
+                        buttonDetailPanelDrawFunction = tileCreator.OnGUI;
                     }
                 },
-                { "Pixelate Image", () => PixelEditor.ShowWindow(selectedTexture, Images.GetImageDataById(selectedImageId))},
-                { "Upscale Image",  () => UpscaleEditor.ShowWindow(selectedTexture, Images.GetImageDataById(selectedImageId))},
+                { "Pixelate Image", () =>
+                    {
+                        CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => {
+                            PixelEditor.ShowWindow(response, Images.GetImageDataById(selectedTextureId));
+                        });
+                    }
+                },
+                { "Upscale Image",  () => {
+                        CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => {
+                            UpscaleEditor.ShowWindow(response, Images.GetImageDataById(selectedTextureId));
+                        });
+                    }
+                },
                 {
                     "Delete", () =>
                     {
                         // Delete the image at the selected index and clear the selected texture
-                        images.DeleteImage(selectedImageId);
+                        images.DeleteImage(selectedTextureId);
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been deleted.");
@@ -305,9 +343,9 @@ namespace Scenario.Editor
         /// </summary>
         private void DrawImageData()
         {
-            var currentImageData = Images.GetImageDataById(selectedImageId); //try to get image from Images
+            var currentImageData = Images.GetImageDataById(selectedTextureId); //try to get image from Images
             if (currentImageData == null)
-                currentImageData = DataCache.instance.GetImageDataById(selectedImageId); //try to get from Datacache (if it has just been prompted)
+                currentImageData = DataCache.instance.GetImageDataById(selectedTextureId); //try to get from Datacache (if it has just been prompted)
             if (currentImageData == null)
                 return;
 
@@ -441,7 +479,7 @@ namespace Scenario.Editor
             if (GUI.Button(boxRect, ""))
             {
                 selectedTexture = texture;
-                selectedImageId = _id;
+                selectedTextureId = _id;
                 buttonDetailPanelDrawFunction = null; //reset the button detail panel when you select a new image
             }
         }

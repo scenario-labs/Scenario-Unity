@@ -59,6 +59,11 @@ namespace Scenario.Editor
         /// </summary>
         public static string privacyPublic = "public";
 
+        /// <summary>
+        /// Reference of compression url's extension to reduce memory storage and consumption
+        /// </summary>
+        internal static string cdnExtension = "&format=jpeg&quality=80&width=256";
+
         #endregion
 
         #region Private Fields
@@ -289,11 +294,11 @@ namespace Scenario.Editor
 
                 if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
                 {
-                    downloadUrl = item.thumbnail.url;
+                    downloadUrl = item.thumbnail.url + cdnExtension;
                 }
                 else if (item.trainingImages != null && item.trainingImages.Count > 0)
                 {
-                    downloadUrl = item.trainingImages[0].downloadUrl;
+                    downloadUrl = item.trainingImages[0].downloadUrl + cdnExtension;
                 }
 
                 if (string.IsNullOrEmpty(downloadUrl)) continue;
@@ -326,11 +331,11 @@ namespace Scenario.Editor
 
                 if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
                 {
-                    downloadUrl = item.thumbnail.url;
+                    downloadUrl = item.thumbnail.url + cdnExtension;
                 }
                 else if (item.trainingImages != null && item.trainingImages.Count > 0)
                 {
-                    downloadUrl = item.trainingImages[0].downloadUrl;
+                    downloadUrl = item.trainingImages[0].downloadUrl + cdnExtension;
                 }
 
                 if (string.IsNullOrEmpty(downloadUrl)) continue;
@@ -364,11 +369,11 @@ namespace Scenario.Editor
 
                 if (item.thumbnail != null && !string.IsNullOrEmpty(item.thumbnail.url))
                 {
-                    downloadUrl = item.thumbnail.url;
+                    downloadUrl = item.thumbnail.url + cdnExtension;
                 }
                 else if (item.trainingImages != null && item.trainingImages.Count > 0)
                 {
-                    downloadUrl = item.trainingImages[0].downloadUrl;
+                    downloadUrl = item.trainingImages[0].downloadUrl + cdnExtension;
                 }
 
                 if (string.IsNullOrEmpty(downloadUrl)) continue;

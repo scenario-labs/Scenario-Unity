@@ -29,6 +29,11 @@ namespace Scenario.Editor
 
         #region EditorBehaviour Callbacks
 
+        /// <summary>
+        /// Reference of compression url's extension to reduce memory storage and consumption
+        /// </summary>
+        internal static string cdnExtension = "&format=jpeg&quality=80&width=256";
+
         [MenuItem("Window/Scenario/Images", false, 10)]
         public static void ShowWindow()
         {
@@ -78,6 +83,10 @@ namespace Scenario.Editor
 
         #region Public Methods
 
+        /// <summary>
+        /// Make a request to get an inference of four images based on existing image on database.
+        /// </summary>
+        /// <param name="callback_OnDataGet"></param>
         public static void GetInferencesData(Action callback_OnDataGet = null) //why get inferences instead of getting the assets ??
         {
             string request = $"inferences";
@@ -128,7 +137,19 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Fetch a texture for a specific ImageData
+        /// </summary>
+        private static void FetchTextureFor(ImageDataStorage.ImageData _image, Action callback_OnTextureGet = null)
+        {
+            CommonUtils.FetchTextureFromURL(_image.Url + cdnExtension, texture =>
+            {
+                _image.texture = texture;
+                callback_OnTextureGet?.Invoke();
+            });
+        }
+
+        /// <summary>
+        /// Delete selected Image
         /// </summary>
         /// <param name="_id">The id of the image you want to delete</param>
         public void DeleteImage(string _id)
@@ -149,6 +170,11 @@ namespace Scenario.Editor
             Repaint();
         }
 
+        /// <summary>
+        /// Get the whole object of an image by it' Id
+        /// </summary>
+        /// <param name="_id"> The id of the image object </param>
+        /// <returns></returns>
         public static ImageDataStorage.ImageData GetImageDataById(string _id)
         {
             var imageData = imageDataList.Find(x => x.Id == _id);
@@ -158,6 +184,11 @@ namespace Scenario.Editor
             return imageData;
         }
 
+        /// <summary>
+        /// Get only the texture of an Image Object selected by it' Id
+        /// </summary>
+        /// <param name="_id"> The id of the image object </param>
+        /// <returns></returns>
         public static Texture2D GetTextureByImageId(string _id)
         {
             var imageData = Images.GetImageDataById(_id); //try to get image from Images

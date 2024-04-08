@@ -137,18 +137,6 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Fetch a texture for a specific ImageData
-        /// </summary>
-        private static void FetchTextureFor(ImageDataStorage.ImageData _image, Action callback_OnTextureGet = null)
-        {
-            CommonUtils.FetchTextureFromURL(_image.Url + cdnExtension, texture =>
-            {
-                _image.texture = texture;
-                callback_OnTextureGet?.Invoke();
-            });
-        }
-
-        /// <summary>
         /// Delete selected Image
         /// </summary>
         /// <param name="_id">The id of the image you want to delete</param>
@@ -277,7 +265,7 @@ namespace Scenario.Editor
         /// </summary>
         private static void FetchTextureFor(ImageDataStorage.ImageData _image, Action callback_OnTextureGet = null)
         {
-            CommonUtils.FetchTextureFromURL(_image.Url, texture =>
+            CommonUtils.FetchTextureFromURL(_image.Url + cdnExtension, texture =>
             {
                 _image.texture = texture;
                 callback_OnTextureGet?.Invoke();

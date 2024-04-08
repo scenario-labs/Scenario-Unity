@@ -6,6 +6,9 @@ using UnityEngine;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// PromptFetcher Class manage all API request (post inference generation, get inferences generated)
+    /// </summary>
     public class PromptFetcher
     {
         public static List<string> cancelledInferences = new();

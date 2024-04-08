@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
@@ -45,11 +43,11 @@ namespace Scenario.Editor
         /// <summary>
         /// Draw display to the drag & drop area of the image
         /// </summary>
-        public void DrawHandleImage()
+        public void DrawHandleImage(string _modeNamePart = "")
         {
             CustomStyle.Space();
 
-            Rect dropArea = RenderImageUploadArea();
+            Rect dropArea = RenderImageUploadArea(_modeNamePart);
 
             if (imageUpload != null)
             {
@@ -98,9 +96,9 @@ namespace Scenario.Editor
         /// Display the image uploaded 
         /// </summary>
         /// <returns></returns>
-        private Rect RenderImageUploadArea()
+        private Rect RenderImageUploadArea(string _modeNamePart)
         {
-            CustomStyle.Label("Upload Image");
+            CustomStyle.Label($"Upload Image {_modeNamePart}");
 
             Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
             if (imageUpload == null)

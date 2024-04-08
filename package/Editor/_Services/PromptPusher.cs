@@ -21,6 +21,10 @@ namespace Scenario.Editor
         Control_Net__Ip_Adapter
     }
 
+    /// <summary>
+    /// PromptPusher class, manage all the generation process by itself.
+    /// Containing all necessary data to display, or not, the settings and also use it from everywhere.
+    /// </summary>
     [ExecuteInEditMode]
     [InitializeOnLoad]
     public class PromptPusher
@@ -363,7 +367,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Re launch the generation process
+        /// Re launch the generation process, Isometric incoming
         /// </summary>
         public void ReGenerateImage()
         { 
@@ -856,12 +860,12 @@ namespace Scenario.Editor
                             mode.OperationName = "inpaint";
                             break;
 
-                        case ECreationMode.Ip_Adapter: // image ref ipAdapterScale
+                        case ECreationMode.Ip_Adapter:
                             mode.IsControlNet = true;
                             mode.OperationName = "txt2img_ip_adapter";
                             break;
 
-                        case ECreationMode.Reference_Only: //image ref styleFidelity
+                        case ECreationMode.Reference_Only:
                             mode.IsControlNet = true;
                             mode.OperationName = "reference";
                             break;
@@ -871,17 +875,17 @@ namespace Scenario.Editor
                             mode.OperationName = "controlnet";
                             break;
 
-                        case ECreationMode.Control_Net__Ip_Adapter: // double ref image and modality on second
+                        case ECreationMode.Control_Net__Ip_Adapter:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet_ip_adapter";
                             break;
 
-                        case ECreationMode.Image_To_Image__Control_Net: // double ref image and modality on second
+                        case ECreationMode.Image_To_Image__Control_Net:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet_img2img";
                             break;
 
-                        case ECreationMode.Image_To_Image__Ip_Adapter: // double ref image and influence on second ipAdapterScale: 0.75
+                        case ECreationMode.Image_To_Image__Ip_Adapter:
                             mode.IsControlNet = true;
                             mode.OperationName = "img2img_ip_adapter";
                             break;

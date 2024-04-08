@@ -83,6 +83,7 @@ namespace Scenario.Editor
         public float additionalModalityValue = 0.5f;
 
         #endregion
+
         #region Private Fields
 
         internal static Texture2D imageUpload;
@@ -287,18 +288,6 @@ namespace Scenario.Editor
 
                     dropImageView.DrawHandleImage();
 
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
-
                     CustomStyle.Space();
 
                     break;
@@ -311,10 +300,6 @@ namespace Scenario.Editor
 
                     if (activeMode.IsControlNet)
                     {
-                        if (GUILayout.Button("Add Control"))
-                        {
-                            CompositionEditor.ShowWindow();
-                        }
                         if (GUILayout.Button("Add Mask"))
                         {
                             InpaintingEditor.ShowWindow(dropImageView.ImageUpload);
@@ -329,23 +314,6 @@ namespace Scenario.Editor
 
                     dropImageView.DrawHandleImage();
 
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                        }
-
-                        if (GUILayout.Button("Add Control"))
-                        {
-                            CompositionEditor.ShowWindow();
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
-
                     CustomStyle.Space();
 
                     RenderControlNetFoldout();
@@ -356,15 +324,6 @@ namespace Scenario.Editor
 
                     dropImageView.DrawHandleImage();
 
-                    GUILayout.BeginHorizontal();
-
-                    if (GUILayout.Button("Create Image"))
-                    {
-                        ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                    }
-
-                    GUILayout.EndHorizontal();
-
                     CustomStyle.Space(); 
 
                     DrawAdditionalModality("Ip Adapter Scale");
@@ -373,15 +332,6 @@ namespace Scenario.Editor
 
                 case ECreationMode.Reference_Only:
                     dropImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (GUILayout.Button("Create Image"))
-                    {
-                        ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                    }
-
-                    GUILayout.EndHorizontal();
 
                     CustomStyle.Space();
 
@@ -423,40 +373,11 @@ namespace Scenario.Editor
 
                 case ECreationMode.Image_To_Image__Control_Net:
 
-                    dropImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
+                    dropImageView.DrawHandleImage("(Image to image)");
 
                     CustomStyle.Space();
 
-                    dropAdditionalImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropAdditionalImageView.ImageUpload);
-                        }
-
-                        if (GUILayout.Button("Add Control"))
-                        {
-                            CompositionEditor.ShowWindow();
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
+                    dropAdditionalImageView.DrawHandleImage("(Control Net)");
 
                     CustomStyle.Space();
 
@@ -466,35 +387,11 @@ namespace Scenario.Editor
 
                 case ECreationMode.Image_To_Image__Ip_Adapter:
 
-                    dropImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
+                    dropImageView.DrawHandleImage("(Image to image)");
 
                     CustomStyle.Space();
 
-                    dropAdditionalImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropAdditionalImageView.ImageUpload);
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
+                    dropAdditionalImageView.DrawHandleImage("(Ip Adapter)");
 
                     CustomStyle.Space();
 
@@ -504,24 +401,7 @@ namespace Scenario.Editor
 
                 case ECreationMode.Control_Net__Ip_Adapter:
 
-                    dropImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropImageView.ImageUpload);
-                        }
-
-                        if (GUILayout.Button("Add Control"))
-                        {
-                            CompositionEditor.ShowWindow();
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
+                    dropImageView.DrawHandleImage("(Control Net)");
 
                     CustomStyle.Space();
 
@@ -529,19 +409,7 @@ namespace Scenario.Editor
 
                     CustomStyle.Space();
 
-                    dropAdditionalImageView.DrawHandleImage();
-
-                    GUILayout.BeginHorizontal();
-
-                    if (activeMode.IsControlNet)
-                    {
-                        if (GUILayout.Button("Create Image"))
-                        {
-                            ImageEditor.ShowWindow(dropAdditionalImageView.ImageUpload);
-                        }
-                    }
-
-                    GUILayout.EndHorizontal();
+                    dropAdditionalImageView.DrawHandleImage("(Ip Adapter)");
 
                     CustomStyle.Space();
 

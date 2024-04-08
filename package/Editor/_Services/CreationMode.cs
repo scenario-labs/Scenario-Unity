@@ -1,9 +1,10 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEngine;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// Creation Mode Class is a way to create variable generation mode.
+    /// </summary>
     public class CreationMode
     {
         #region Public Fields

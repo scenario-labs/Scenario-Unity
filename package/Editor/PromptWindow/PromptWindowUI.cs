@@ -130,7 +130,7 @@ namespace Scenario.Editor
         /// <summary>
         /// Get a reference of the prompt pusher
         /// </summary>
-        private PromptPusher pusher = null;
+        private PromptPusher promptPusher = null;
 
         /// <summary>
         /// Get a reference to necessary image display editor
@@ -157,7 +157,7 @@ namespace Scenario.Editor
 
             if (PromptPusher.Instance != null)
             {
-                pusher = PromptPusher.Instance;
+                promptPusher = PromptPusher.Instance;
             }
 
             if (dropImageView == null)
@@ -203,7 +203,7 @@ namespace Scenario.Editor
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
-            pusher.modelName = selectedModelName;
+            promptPusher.modelName = selectedModelName;
 
             CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
             CustomStyle.Separator();
@@ -217,20 +217,20 @@ namespace Scenario.Editor
 
             CustomStyle.ButtonPrimary("Generate Image", 40, () =>
             {
-                pusher.promptInput = SerializeTags(tags);
-                pusher.promptNegativeInput = SerializeTags(negativeTags);
+                promptPusher.promptInput = SerializeTags(tags);
+                promptPusher.promptNegativeInput = SerializeTags(negativeTags);
 
                 EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
 
                 if (shouldAutoGenerateSeed)
                 {
-                    pusher.GenerateImage(null);
+                    promptPusher.GenerateImage(null);
                 }
                 else
                 {
                     string seed = seedinputText;
                     if (seed == "-1") { seed = null; }
-                    pusher.GenerateImage(seed);
+                    promptPusher.GenerateImage(seed);
                 }
             });
 
@@ -252,7 +252,7 @@ namespace Scenario.Editor
 
             selectedMode = (ECreationMode)EditorGUILayout.Popup("Mode: ", imageControlTab, tabLabels.ToArray());
             imageControlTab = (int)selectedMode;
-            pusher.ActiveMode(imageControlTab);
+            promptPusher.ActiveMode(imageControlTab);
 
             ManageDrawMode();
 
@@ -274,13 +274,13 @@ namespace Scenario.Editor
         /// </summary>
         private void ManageDrawMode()
         {
-            promptWindow.ActiveMode = pusher.GetActiveMode();
+            promptWindow.ActiveMode = promptPusher.GetActiveMode();
             CreationMode activeMode = promptWindow.ActiveMode;
 
-            pusher.imageUpload = dropImageView.ImageUpload;
-            pusher.maskImage = dropImageView.ImageMask;
+            promptPusher.imageUpload = dropImageView.ImageUpload;
+            promptPusher.maskImage = dropImageView.ImageMask;
 
-            pusher.additionalImageUpload = dropAdditionalImageView.ImageUpload;
+            promptPusher.additionalImageUpload = dropAdditionalImageView.ImageUpload;
 
             switch (activeMode.EMode)
             {
@@ -418,7 +418,7 @@ namespace Scenario.Editor
                     break;
             }
 
-            pusher.UpdateActiveMode(activeMode);
+            promptPusher.UpdateActiveMode(activeMode);
         }
 
 
@@ -438,7 +438,7 @@ namespace Scenario.Editor
                     additionalModalityValue = 0.01f;
                 }
 
-                pusher.additionalModalityValue = additionalModalityValue;
+                promptPusher.additionalModalityValue = additionalModalityValue;
             }
             GUILayout.EndHorizontal();
         }

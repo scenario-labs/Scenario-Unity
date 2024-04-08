@@ -388,7 +388,7 @@ namespace Scenario.Editor
             Debug.Log("Generate Image button clicked. Model: " + modelName + ", Seed: " + _seed);
             if (IsPromptDataValid(out string inputData))
             {
-                PromptFetcher.PostInferenceRequest(inputData,
+                InferenceManager.PostInferenceRequest(inputData,
                     numberOfImages,
                     promptInput,
                     samplesStep,

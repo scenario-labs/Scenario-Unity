@@ -4,6 +4,10 @@ using UnityEngine;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// Implement in prompt window UI, possibility to have drag and drop zone for an image.
+    /// Or select existing image. To insert inside the generation process.
+    /// </summary>
     public class DropImageView
     {
 

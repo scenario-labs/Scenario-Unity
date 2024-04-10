@@ -259,6 +259,36 @@ namespace Scenario.Editor
             GUILayout.EndScrollView();
         }
 
+        /// <summary>
+        /// Set the image directly inside the drop content
+        /// </summary>
+        /// <param name="_newImage"></param>
+        public void SetDropImage(Texture2D _newImage)
+        { 
+            dropImageView.ImageUpload = _newImage;
+            promptPusher.imageUpload = dropImageView.ImageUpload;
+        }
+
+        /// <summary>
+        /// Set the image directly inside the additional drop content
+        /// </summary>
+        /// <param name="_newImage"></param>
+        public void SetAdditionalDropImage(Texture2D _newImage)
+        {
+            dropAdditionalImageView.ImageUpload = _newImage;
+            promptPusher.imageUpload = dropAdditionalImageView.ImageUpload;
+        }
+
+        /// <summary>
+        /// Set the image directly inside the drop mask content
+        /// </summary>
+        /// <param name="_newImage"></param>
+        public void SetDropMaskImage(Texture2D _newImage)
+        {
+            dropImageView.ImageMask = _newImage;
+            promptPusher.maskImage = dropImageView.ImageMask;
+        }
+
         #endregion
 
         #region Private Methods
@@ -292,7 +322,7 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.In_Painting:
+                case ECreationMode.InPainting:
 
                     dropImageView.DrawHandleImage();
 
@@ -310,7 +340,7 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.Control_Net:
+                case ECreationMode.ControlNet:
 
                     dropImageView.DrawHandleImage();
 
@@ -320,13 +350,13 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.Ip_Adapter:
+                case ECreationMode.IP_Adapter:
 
                     dropImageView.DrawHandleImage();
 
                     CustomStyle.Space(); 
 
-                    DrawAdditionalModality("Ip Adapter Scale");
+                    DrawAdditionalModality("IP Adapter Scale");
 
                     break;
 
@@ -371,13 +401,13 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.Image_To_Image__Control_Net:
+                case ECreationMode.Image_To_Image__ControlNet:
 
                     dropImageView.DrawHandleImage("(Image to image)");
 
                     CustomStyle.Space();
 
-                    dropAdditionalImageView.DrawHandleImage("(Control Net)");
+                    dropAdditionalImageView.DrawHandleImage("(ControlNet)");
 
                     CustomStyle.Space();
 
@@ -385,23 +415,23 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.Image_To_Image__Ip_Adapter:
+                case ECreationMode.Image_To_Image__IP_Adapter:
 
                     dropImageView.DrawHandleImage("(Image to image)");
 
                     CustomStyle.Space();
 
-                    dropAdditionalImageView.DrawHandleImage("(Ip Adapter)");
+                    dropAdditionalImageView.DrawHandleImage("(IP Adapter)");
 
                     CustomStyle.Space();
 
-                    DrawAdditionalModality("Ip Adapter Scale");
+                    DrawAdditionalModality("IP Adapter Scale");
 
                     break;
 
-                case ECreationMode.Control_Net__Ip_Adapter:
+                case ECreationMode.ControlNet__IP_Adapter:
 
-                    dropImageView.DrawHandleImage("(Control Net)");
+                    dropImageView.DrawHandleImage("(ControlNet)");
 
                     CustomStyle.Space();
 
@@ -409,11 +439,11 @@ namespace Scenario.Editor
 
                     CustomStyle.Space();
 
-                    dropAdditionalImageView.DrawHandleImage("(Ip Adapter)");
+                    dropAdditionalImageView.DrawHandleImage("(IP Adapter)");
 
                     CustomStyle.Space();
 
-                    DrawAdditionalModality("Ip Adapter Scale");
+                    DrawAdditionalModality("IP Adapter Scale");
 
                     break;
             }

@@ -13,8 +13,8 @@ namespace Scenario.Editor
 
         #region Public Fields
 
-        public Texture2D ImageUpload { get { return imageUpload; } }
-        public Texture2D ImageMask { get { return imageMask; } }
+        public Texture2D ImageUpload { get { return imageUpload; } set { imageUpload = value; } }
+        public Texture2D ImageMask { get { return imageMask; } set { imageMask = value; } }
 
         #endregion
 

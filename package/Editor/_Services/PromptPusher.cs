@@ -11,14 +11,14 @@ namespace Scenario.Editor
     {
         Text_To_Image,
         Image_To_Image,
-        Control_Net,
-        In_Painting,
-        Ip_Adapter,
+        ControlNet,
+        InPainting,
+        IP_Adapter,
         Reference_Only,
-        Image_To_Image__Control_Net,
+        Image_To_Image__ControlNet,
         //Reference_Only__Control_Net,
-        Image_To_Image__Ip_Adapter,
-        Control_Net__Ip_Adapter
+        Image_To_Image__IP_Adapter,
+        ControlNet__IP_Adapter
     }
 
     /// <summary>
@@ -438,7 +438,7 @@ namespace Scenario.Editor
 
                         break;
 
-                    case ECreationMode.Control_Net:
+                    case ECreationMode.ControlNet:
 
                         if (imageUpload == null)
                         {
@@ -450,7 +450,7 @@ namespace Scenario.Editor
 
                         break;
 
-                    case ECreationMode.In_Painting:
+                    case ECreationMode.InPainting:
 
                         if (imageUpload == null)
                         {
@@ -474,7 +474,7 @@ namespace Scenario.Editor
 
                         break;
 
-                    case ECreationMode.Ip_Adapter:
+                    case ECreationMode.IP_Adapter:
                         if (imageUpload == null)
                         {
                             Debug.LogError("ControlNet Must have a image uploaded.");
@@ -494,7 +494,7 @@ namespace Scenario.Editor
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         break;
 
-                    case ECreationMode.Image_To_Image__Control_Net:
+                    case ECreationMode.Image_To_Image__ControlNet:
 
                         if (imageUpload == null || additionalImageUpload == null)
                         {
@@ -520,7 +520,7 @@ namespace Scenario.Editor
 
                         break;*/
 
-                    case ECreationMode.Image_To_Image__Ip_Adapter:
+                    case ECreationMode.Image_To_Image__IP_Adapter:
                         if (imageUpload == null || additionalImageUpload == null)
                         {
                             Debug.LogError("Must have a image uploaded.");
@@ -531,7 +531,7 @@ namespace Scenario.Editor
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
                         break;
 
-                    case ECreationMode.Control_Net__Ip_Adapter:
+                    case ECreationMode.ControlNet__IP_Adapter:
 
                         if (imageUpload == null || additionalImageUpload == null)
                         {
@@ -622,9 +622,9 @@ namespace Scenario.Editor
         /// Process generation of a mask
         /// </summary>
         /// <returns></returns>
-        private static string ProcessMask()
+        private string ProcessMask()
         {
-            Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
+            Texture2D processedMask = Texture2D.Instantiate(maskImage);
 
             Color[] pixels = processedMask.GetPixels();
 
@@ -701,7 +701,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.In_Painting:
+                case ECreationMode.InPainting:
                     if (activeMode.IsControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
@@ -716,7 +716,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.Ip_Adapter: // image ref ipAdapterScale
+                case ECreationMode.IP_Adapter: // image ref ipAdapterScale
                     if (activeMode.IsControlNet)
                     {
                         inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
@@ -747,7 +747,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.Control_Net:
+                case ECreationMode.ControlNet:
                     if (activeMode.IsControlNet && activeMode.UseControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
@@ -760,7 +760,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.Control_Net__Ip_Adapter: // double ref image and modality on second
+                case ECreationMode.ControlNet__IP_Adapter: // double ref image and modality on second
                     if (activeMode.IsControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
@@ -777,7 +777,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.Image_To_Image__Control_Net: // double ref image and modality on second
+                case ECreationMode.Image_To_Image__ControlNet: // double ref image and modality on second
                     if (activeMode.IsControlNet && activeMode.UseControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
@@ -794,7 +794,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.Image_To_Image__Ip_Adapter: // double ref image and influence on second ipAdapterScale: 0.75
+                case ECreationMode.Image_To_Image__IP_Adapter: // double ref image and influence on second ipAdapterScale: 0.75
                     if (activeMode.IsControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
@@ -855,12 +855,12 @@ namespace Scenario.Editor
                             mode.OperationName = "img2img";
                             break;
 
-                        case ECreationMode.In_Painting:
+                        case ECreationMode.InPainting:
                             mode.IsControlNet = true;
                             mode.OperationName = "inpaint";
                             break;
 
-                        case ECreationMode.Ip_Adapter:
+                        case ECreationMode.IP_Adapter:
                             mode.IsControlNet = true;
                             mode.OperationName = "txt2img_ip_adapter";
                             break;
@@ -870,22 +870,22 @@ namespace Scenario.Editor
                             mode.OperationName = "reference";
                             break;
 
-                        case ECreationMode.Control_Net:
+                        case ECreationMode.ControlNet:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
                             break;
 
-                        case ECreationMode.Control_Net__Ip_Adapter:
+                        case ECreationMode.ControlNet__IP_Adapter:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet_ip_adapter";
                             break;
 
-                        case ECreationMode.Image_To_Image__Control_Net:
+                        case ECreationMode.Image_To_Image__ControlNet:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet_img2img";
                             break;
 
-                        case ECreationMode.Image_To_Image__Ip_Adapter:
+                        case ECreationMode.Image_To_Image__IP_Adapter:
                             mode.IsControlNet = true;
                             mode.OperationName = "img2img_ip_adapter";
                             break;

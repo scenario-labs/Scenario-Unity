@@ -78,6 +78,33 @@ namespace Scenario.Editor
             promptWindowUI.imageControlTab = tabIndex;
         }
 
+        /// <summary>
+        /// Call to set the image from the drop content.
+        /// </summary>
+        /// <param name="_newContent"></param>
+        public static void SetDropImageContent(Texture2D _newContent)
+        {
+            promptWindowUI.SetDropImage(_newContent);
+        }
+
+        /// <summary>
+        /// Call to set the image from the drop mask content.
+        /// </summary>
+        /// <param name="_newContent"></param>
+        public static void SetDropMaskImageContent(Texture2D _newContent)
+        {
+            promptWindowUI.SetDropMaskImage(_newContent);
+        }
+
+        /// <summary>
+        /// Call to set the image from the additional drop content.
+        /// </summary>
+        /// <param name="_newContent"></param>
+        public static void SetDropAdditionalImageContent(Texture2D _newContent)
+        {
+            promptWindowUI.SetAdditionalDropImage(_newContent);
+        }
+
         #region API_DTO
 
         [Serializable]

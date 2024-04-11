@@ -365,19 +365,18 @@ namespace Scenario.Editor
 
                     CustomStyle.Space();
 
-                    DrawAdditionalModality("Style Fidelity");
-
+                    DrawAdditionalModality("Influence");
+                    
                     GUILayout.BeginHorizontal();
-                    { 
-                        GUILayout.Label("Reference Attn: ", EditorStyles.label);
+                    {
                         if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
                         {
-                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "");
+                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "Reference Attn");
                             activeMode.AdditionalSettings["Reference Attn"] = refAtt;
                         }
                         else
                         {
-                            bool refAtt = GUILayout.Toggle(true, "");
+                            bool refAtt = GUILayout.Toggle(true, "Reference Attn");
                             activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
                         }
                     }
@@ -385,15 +384,14 @@ namespace Scenario.Editor
 
                     GUILayout.BeginHorizontal();
                     {
-                        GUILayout.Label("Reference AdaIN: ", EditorStyles.label);
                         if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
                         {
-                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "");
+                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "Reference AdaIN");
                             activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
                         }
                         else
                         {
-                            bool refAd = GUILayout.Toggle(false, "");
+                            bool refAd = GUILayout.Toggle(false, "Reference AdaIN");
                             activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
                         }
                     }

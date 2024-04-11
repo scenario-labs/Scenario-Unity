@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Scenario.Editor
 {
@@ -35,6 +37,8 @@ namespace Scenario.Editor
         /// </summary>
         private Texture2D imageMask = null;
 
+        private Rect dropArea = new Rect();
+
         #endregion
 
         #region Public Methods
@@ -51,7 +55,7 @@ namespace Scenario.Editor
         {
             CustomStyle.Space();
 
-            Rect dropArea = RenderImageUploadArea(_modeNamePart);
+            dropArea = RenderImageUploadArea(_modeNamePart);
 
             if (imageUpload != null)
             {
@@ -63,7 +67,7 @@ namespace Scenario.Editor
                 GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
             }
 
-            HandleDrag();
+            HandleDrag(_modeNamePart);
         }
 
         #endregion
@@ -73,10 +77,10 @@ namespace Scenario.Editor
         /// <summary>
         /// Get the drag & drop action
         /// </summary>
-        private void HandleDrag()
+        private void HandleDrag(string _modeNamePart)
         {
             Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
+            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform && dropArea.Contains(currentEvent.mousePosition))
             {
                 if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
                 {

@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -11,11 +9,14 @@ namespace Scenario.Editor
     {
         public static PromptWindowUI promptWindowUI;
         
+        public CreationMode ActiveMode { get { return activeMode; } set { activeMode = value; } }
+
         private bool processReceivedUploadImage = false;
         private byte[] pngBytesUploadImage = null;
-        private string fileName;
 
-        [MenuItem("Window/Scenario/Prompt Window")]
+        private CreationMode activeMode = null;
+
+        [MenuItem("Window/Scenario/Prompt Window", false, 5)]
         public static void ShowWindow()
         {
             GetWindow<PromptWindow>("Prompt Window");
@@ -63,208 +64,10 @@ namespace Scenario.Editor
             promptWindowUI.Render(this.position);
         }
 
-        public void GenerateImage(string seed)
-        {
-            Debug.Log("Generate Image button clicked. Model: " + promptWindowUI.selectedModelName + ", Seed: " + seed);
-            if (IsPromptDataValid(out string inputData))
-            {
-                PromptFetcher.PostInferenceRequest(inputData,
-                    promptWindowUI.imagesliderIntValue,
-                    promptWindowUI.promptinputText,
-                    promptWindowUI.samplesliderValue,
-                    promptWindowUI.widthSliderValue,
-                    promptWindowUI.heightSliderValue,
-                    promptWindowUI.guidancesliderValue,
-                    promptWindowUI.seedinputText);
-            }
-        }
-
-        private bool IsPromptDataValid(out string inputData)
-        {
-            string modality = "";
-            string operationType = "txt2img";
-            string dataUrl = "\"\"";
-            string maskDataUrl = "\"\"";
-            
-            inputData = "";
-
-            if (promptWindowUI.isImageToImage)
-            {
-                operationType = "img2img";
-
-                if (PromptWindowUI.imageUpload == null)
-                {
-                    Debug.LogError("Img2Img Must have a image uploaded.");
-                    return false;
-                }
-
-                dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
-            }
-            else if (promptWindowUI.isControlNet)
-            {
-                operationType = "controlnet";
-
-                if (PromptWindowUI.imageUpload == null)
-                {
-                    Debug.LogError("ControlNet Must have a image uploaded.");
-                    return false;
-                }
-
-                dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
-            }
-
-            if (promptWindowUI.isImageToImage && promptWindowUI.isControlNet)
-            {
-                operationType = "controlnet";
-            }
-
-            Dictionary<string, string> modalitySettings = PrepareModalitySettings(ref modality, ref operationType);
-
-            modality = PrepareModality(modalitySettings);
-
-            if (promptWindowUI.isInpainting)
-            {
-                operationType = "inpaint";
-
-                if (PromptWindowUI.imageUpload == null)
-                {
-                    Debug.LogError("Inpainting Must have an image uploaded.");
-                    return false;
-                }
-                else
-                {
-                    dataUrl = CommonUtils.Texture2DToDataURL(PromptWindowUI.imageUpload);
-                }
-
-                if (PromptWindowUI.imageMask == null)
-                {
-                    Debug.LogError("Inpainting Must have a mask uploaded.");
-                    return false;
-                }
-                else
-                {
-                    maskDataUrl = ProcessMask();
-                }
-            }
-
-            inputData = PrepareInputData(modality, operationType, dataUrl, maskDataUrl);
-            Debug.Log("Input Data: " + inputData);
-
-            return true;
-        }
-
-        private string PrepareInputData(string modality, string operationType, string dataUrl, string maskDataUrl)
-        {
-            bool hideResults = false;
-            string type = operationType;
-            string mask = $"\"{maskDataUrl}\"";
-            string prompt = promptWindowUI.promptinputText;
-            string seedField = "";
-            string image = $"\"{dataUrl}\"";
-            
-            if (promptWindowUI.seedinputText != "-1")
-            {
-                ulong seed = ulong.Parse(promptWindowUI.seedinputText);
-                seedField = $@"""seed"": {seed},";
-            }
-            
-            string negativePrompt = promptWindowUI.negativepromptinputText;
-            float strength = Mathf.Clamp((float)Math.Round((100 - promptWindowUI.influenceSliderValue) * 0.01f, 2), 0.01f, 1f); //strength is 100-influence (and between 0.01 & 1)
-            float guidance = promptWindowUI.guidancesliderValue;
-            int width = (int)promptWindowUI.widthSliderValue;
-            int height = (int)promptWindowUI.heightSliderValue;
-            int numInferenceSteps = (int)promptWindowUI.samplesliderValue;
-            int numSamples = (int)promptWindowUI.imagesliderIntValue;
-            string scheduler = promptWindowUI.schedulerOptions[promptWindowUI.schedulerIndex];
-
-            string inputData = $@"{{
-                ""parameters"": {{
-                    ""hideResults"": {hideResults.ToString().ToLower()},
-                    ""type"": ""{type}"",
-                    {(promptWindowUI.isImageToImage || promptWindowUI.isInpainting || promptWindowUI.isControlNet ? $@"""image"": ""{dataUrl}""," : "")}
-                    {(promptWindowUI.isControlNet || promptWindowUI.isAdvancedSettings ? $@"""modality"": ""{modality}""," : "")}
-                    {(promptWindowUI.isInpainting ? $@"""mask"": ""{maskDataUrl}""," : "")}
-                    ""prompt"": ""{prompt}"",
-                    {seedField}
-                    {(string.IsNullOrEmpty(negativePrompt) ? "" : $@"""negativePrompt"": ""{negativePrompt}"",")}
-                    {(promptWindowUI.isImageToImage || promptWindowUI.isControlNet ? $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)}," : "")}
-                    ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-                    ""numInferenceSteps"": {numInferenceSteps},
-                    ""width"": {width},
-                    ""height"": {height},
-                    ""numSamples"": {numSamples}
-                    {(scheduler != "Default" ? $@",""scheduler"": ""{scheduler}""" : "")}
-                }}
-            }}";
-            return inputData;
-        }
-
-        private void PrepareAdvancedModalitySettings(out string modality, out string operationType, Dictionary<string, string> modalitySettings)
-        {
-            operationType = "controlnet";
-
-            if (promptWindowUI.selectedOptionIndex > 0)
-            {
-                string optionName = promptWindowUI.correspondingOptionsValue[promptWindowUI.selectedOptionIndex - 1];
-                if (!modalitySettings.ContainsKey(optionName))
-                { 
-                    modalitySettings.Add(optionName, $"{promptWindowUI.sliderValue:0.00}");
-                }
-            }
-
-            modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
-        }
-        
-        private string PrepareModality(Dictionary<string, string> modalitySettings)
-        {
-            string modality;
-            if (promptWindowUI.isControlNet && promptWindowUI.isAdvancedSettings)
-            {
-                modality = string.Join(",", modalitySettings.Select(kv => $"{kv.Key}:{float.Parse(kv.Value).ToString(CultureInfo.InvariantCulture)}"));
-            }
-            else
-            {
-                modality = promptWindowUI.selectedPreset;
-            }
-
-            return modality;
-        }
-
-        private Dictionary<string, string> PrepareModalitySettings(ref string modality, ref string operationType)
-        {
-            Dictionary<string, string> modalitySettings = new();
-
-            if (promptWindowUI.isAdvancedSettings)
-            {
-                PrepareAdvancedModalitySettings(out modality, out operationType, modalitySettings);
-            }
-
-            return modalitySettings;
-        }
-        
-        private static string ProcessMask()
-        {
-            Texture2D processedMask = Texture2D.Instantiate(PromptWindowUI.imageMask);
-
-            Color[] pixels = processedMask.GetPixels();
-
-            for (int i = 0; i < pixels.Length; i++)
-            {
-                if (pixels[i].a == 0)
-                {
-                    pixels[i] = Color.black;
-                }
-            }
-
-            processedMask.SetPixels(pixels);
-            processedMask.Apply();
-
-            return CommonUtils.Texture2DToDataURL(processedMask);
-        }
-
-        public void SetSeed(string seed)
+        public void SetSeed(string _seed)
         {
             // Set the seed value here
+            PromptPusher.Instance.seedInput = _seed;
         }
 
         /// <summary>
@@ -273,6 +76,33 @@ namespace Scenario.Editor
         public static void SetImageControlTab(int tabIndex)
         {
             promptWindowUI.imageControlTab = tabIndex;
+        }
+
+        /// <summary>
+        /// Call to set the image from the drop content.
+        /// </summary>
+        /// <param name="_newContent"></param>
+        public static void SetDropImageContent(Texture2D _newContent)
+        {
+            promptWindowUI.SetDropImage(_newContent);
+        }
+
+        /// <summary>
+        /// Call to set the image from the drop mask content.
+        /// </summary>
+        /// <param name="_newContent"></param>
+        public static void SetDropMaskImageContent(Texture2D _newContent)
+        {
+            promptWindowUI.SetDropMaskImage(_newContent);
+        }
+
+        /// <summary>
+        /// Call to set the image from the additional drop content.
+        /// </summary>
+        /// <param name="_newContent"></param>
+        public static void SetDropAdditionalImageContent(Texture2D _newContent)
+        {
+            promptWindowUI.SetAdditionalDropImage(_newContent);
         }
 
         #region API_DTO

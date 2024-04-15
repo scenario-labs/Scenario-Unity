@@ -12,32 +12,46 @@ namespace Scenario.Editor
 
             if (!showSettings) return;
 
-            EditorGUILayout.BeginHorizontal();
+            if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType))
             {
-                CustomStyle.Label("Width: ", width: 45, height: 20);
-                int widthIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
-                widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(allowedWidthValues, x => x.ToString()),
-                    allowedWidthValues.Length, CustomStyle.GetNormalButtonStyle());
-                widthSliderValue = allowedWidthValues[widthIndex];
-            }
-            EditorGUILayout.EndHorizontal();
+                switch (DataCache.instance.SelectedModelType)
+                {
+                    case "sd-xl-composition":
+                        DrawWidthValues(allowedSDXLDimensionValues);
+                        DrawHeightValues(allowedSDXLDimensionValues);
+                        break;
 
-            EditorGUILayout.BeginHorizontal();
-            {
-                CustomStyle.Label("Height: ", width: 45, height: 20);
-                int heightIndex = NearestValueIndex(heightSliderValue, allowedHeightValues);
-                heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(allowedHeightValues, x => x.ToString()),
-                    allowedHeightValues.Length, CustomStyle.GetNormalButtonStyle());
-                heightSliderValue = allowedHeightValues[heightIndex];
+                    case "sd-xl-lora":
+                        DrawWidthValues(allowedSDXLDimensionValues);
+                        DrawHeightValues(allowedSDXLDimensionValues);
+                        break;
+
+                    case "sd-xl":
+                        DrawWidthValues(allowedSDXLDimensionValues);
+                        DrawHeightValues(allowedSDXLDimensionValues);
+                        break;
+
+                    case "sd-1_5":
+                        DrawWidthValues(allowed1_5DimensionValues);
+                        DrawHeightValues(allowed1_5DimensionValues);
+                        break;
+
+                    default:
+                        break;
+                }
             }
-            EditorGUILayout.EndHorizontal();
+            else
+            {
+                DrawWidthValues(allowed1_5DimensionValues);
+                DrawHeightValues(allowed1_5DimensionValues);
+            }
 
             CustomStyle.Space();
 
             EditorGUILayout.BeginHorizontal();
             {
                 GUILayout.Label("Scheduler: ");
-                schedulerIndex = EditorGUILayout.Popup(schedulerIndex, schedulerOptions);
+                promptPusher.schedulerSelected = EditorGUILayout.Popup(promptPusher.schedulerSelected, promptPusher.SchedulerOptions);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -54,6 +68,7 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Images: " + imagesliderIntValue, GUILayout.Width(labelWidth));
                 imagesliderValue = GUILayout.HorizontalSlider(imagesliderValue, 1, 16, GUILayout.Width(sliderWidth));
+                promptPusher.numberOfImages = Mathf.RoundToInt(imagesliderValue);
             }
             EditorGUILayout.EndHorizontal();
 
@@ -61,6 +76,7 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
                 samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 10, 150, GUILayout.Width(sliderWidth));
+                promptPusher.samplesStep = samplesliderValue;
             }
             EditorGUILayout.EndHorizontal();
 
@@ -68,19 +84,24 @@ namespace Scenario.Editor
             {
                 GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
                 guidancesliderValue =
-                    Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) *
-                                10) / 10f;
+                    Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) * 10) / 10f;
+                promptPusher.guidance = guidancesliderValue;
             }
             EditorGUILayout.EndHorizontal();
 
-            if (isImageToImage || isControlNet)
-            {
-                EditorGUILayout.BeginHorizontal();
+            if (promptWindow.ActiveMode != null)
+            { 
+                if (promptWindow.ActiveMode.EMode == ECreationMode.Image_To_Image || promptWindow.ActiveMode.IsControlNet)
                 {
-                    GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
-                    influenceSliderValue = (int)GUILayout.HorizontalSlider(influenceSliderValue, 0, 99, GUILayout.Width(sliderWidth));
+                    //Connected to strengh value
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
+                        influenceSliderValue = (int)GUILayout.HorizontalSlider(influenceSliderValue, 0, 99, GUILayout.Width(sliderWidth));
+                        promptPusher.influenceOption = influenceSliderValue;
+                    }
+                    EditorGUILayout.EndHorizontal();
                 }
-                EditorGUILayout.EndHorizontal();
             }
 
             EditorGUILayout.BeginHorizontal();
@@ -102,6 +123,42 @@ namespace Scenario.Editor
             EditorGUILayout.EndHorizontal();
 
             EditorGUILayout.EndFoldoutHeaderGroup();
+        }
+
+        /// <summary>
+        /// Draw list of buttons containing Width values for generated images.
+        /// </summary>
+        /// <param name="_allowedValues"> int array of dimension values </param>
+        private void DrawWidthValues(int[] _allowedValues)
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                CustomStyle.Label("Width: ", width: 45, height: 20);
+                int widthIndex = NearestValueIndex(widthSliderValue, _allowedValues);
+                widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
+                    _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
+                widthSliderValue = _allowedValues[widthIndex];
+                promptPusher.width = widthSliderValue;
+            }
+            EditorGUILayout.EndHorizontal();
+        }
+
+        /// <summary>
+        /// Draw list of buttons containing Height values for generated images.
+        /// </summary>
+        /// <param name="_allowedValues"> int array of dimension values </param>
+        private void DrawHeightValues(int[] _allowedValues)
+        {
+            EditorGUILayout.BeginHorizontal();
+            {
+                CustomStyle.Label("Height: ", width: 45, height: 20);
+                int heightIndex = NearestValueIndex(heightSliderValue, _allowedValues);
+                heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
+                    _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
+                heightSliderValue = _allowedValues[heightIndex];
+                promptPusher.height = heightSliderValue;
+            }
+            EditorGUILayout.EndHorizontal();
         }
     }
 }

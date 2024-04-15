@@ -14,6 +14,8 @@ namespace Scenario.Editor
         private GridPalette gridPalette;
         private CellLayout layout;
 
+        private ImageDataStorage.ImageData selectedImage = null;
+
         private string selectedTextureId;
 
         private bool isProcessing = false;
@@ -22,6 +24,11 @@ namespace Scenario.Editor
         public TileCreator(string _selectedTextureIndex)
         {
             selectedTextureId = _selectedTextureIndex;
+        }
+
+        public TileCreator(ImageDataStorage.ImageData _selectedImage)
+        {
+            selectedImage = _selectedImage;
         }
 
         public void OnGUI()
@@ -53,19 +60,20 @@ namespace Scenario.Editor
                 if(GUILayout.Button(new GUIContent("Download as Tile", "The image will be processed to remove background then downloaded as a sprite in the Scenario Settings save folder. Then a Tile asset will be created (in the same folder as your Tile Palette) out of this Sprite and added to the Tile Palette your referenced.")))
                 {
                     isProcessing = true;
-
-                    BackgroundRemoval.RemoveBackground(Images.GetImageDataById(selectedTextureId).texture, imageBytes =>
-                    {
-                        CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
+                    CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => { 
+                        BackgroundRemoval.RemoveBackground(response, imageBytes =>
                         {
-                            if (PluginSettings.UsePixelsUnitsEqualToImage)
+                            CommonUtils.SaveImageDataAsPNG(imageBytes, null, PluginSettings.TilePreset, (spritePath) =>
                             {
-                                CommonUtils.ApplyPixelsPerUnit(spritePath);
-                            }
+                                if (PluginSettings.UsePixelsUnitsEqualToImage)
+                                {
+                                    CommonUtils.ApplyPixelsPerUnit(spritePath);
+                                }
 
-                            Tile tile = CreateTile(Path.GetDirectoryName(AssetDatabase.GetAssetPath(tilePalette)), (Sprite)AssetDatabase.LoadAssetAtPath(spritePath, typeof(Sprite)));
-                            AddTileToTilePalette(tile);
-                            isProcessing = false;
+                                Tile tile = CreateTile(Path.GetDirectoryName(AssetDatabase.GetAssetPath(tilePalette)), (Sprite)AssetDatabase.LoadAssetAtPath(spritePath, typeof(Sprite)));
+                                AddTileToTilePalette(tile);
+                                isProcessing = false;
+                            });
                         });
                     });
                 }

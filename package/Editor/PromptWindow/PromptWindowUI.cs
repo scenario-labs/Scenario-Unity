@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
@@ -8,9 +8,14 @@ namespace Scenario.Editor
 {
     public partial class PromptWindowUI
     {
+        #region Public Fields
+
+        public string selectedModelName { get; set; } = "Choose Model";
+
+        public int WidthSliderValue { get { return widthSliderValue; } set { widthSliderValue = value; } }
+        public int HeightSliderValue { get { return heightSliderValue; } set { heightSliderValue = value; } }
+
         public static Texture2D imageMask;
-    
-        internal static Texture2D imageUpload;
 
         /// <summary>
         /// First dropdown options according to SDXL models
@@ -41,33 +46,14 @@ namespace Scenario.Editor
         };
 
         /// <summary>
-        /// Translation to api calling modalities options, treat previous values in the exact same order.
+        /// Reference all dimension values available for SD 1.5 models
         /// </summary>
-        public readonly string[] correspondingOptionsValue =
-        {
-            "",
-            "character",
-            "landscape",
-            "canny",
-            "pose",
-            "depth",
-            "seg",
-            "illusion",
-            "city",
-            "interior",
-            "lines",
-            "scribble",
-            "normal-map",
-            "lineart"
-        };
+        public readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
 
-        internal readonly string[] schedulerOptions = new string[] // Scheduler options extracted from your HTML
-        {
-            "Default", "DDIMScheduler", "DDPMScheduler", "DEISMultistepScheduler", "DPMSolverMultistepScheduler",
-            "DPMSolverSinglestepScheduler", "EulerAncestralDiscreteScheduler", "EulerDiscreteScheduler",
-            "HeunDiscreteScheduler", "KDPM2AncestralDiscreteScheduler", "KDPM2DiscreteScheduler",
-            "LCMScheduler", "LMSDiscreteScheduler", "PNDMScheduler", "UniPCMultistepScheduler"
-        };
+        /// <summary>
+        /// Reference all dimension values available for SDXL models
+        /// </summary>
+        public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824, 2048 };
 
         public string selectedPreset = "";
 
@@ -85,7 +71,24 @@ namespace Scenario.Editor
         /// Value from the guidance slider in controlNet options, use to send to generation
         /// </summary>
         public float sliderValue = 0.0f;
-    
+
+        /// <summary>
+        /// Specific additional modality value of the slider
+        /// </summary>
+        public float additionalModalitySliderValue = 50.0f;
+
+        /// <summary>
+        /// Specific additional modality value
+        /// </summary>
+        public float additionalModalityValue = 0.5f;
+
+        #endregion
+
+        #region Private Fields
+
+        internal static Texture2D imageUpload;
+        internal static Texture2D additionalImageUpload;
+
         internal bool isImageToImage = false;
         internal bool isControlNet = false;
         internal bool isAdvancedSettings = false;
@@ -93,8 +96,8 @@ namespace Scenario.Editor
         internal bool isInpainting = false;
         internal string promptinputText = "";
         internal string negativepromptinputText = "";
-        internal int widthSliderValue = 512;
-        internal int heightSliderValue = 512;
+        internal int widthSliderValue = 1024;
+        internal int heightSliderValue = 1024;
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
         internal int samplesliderValue = 30;
@@ -103,7 +106,6 @@ namespace Scenario.Editor
         internal string postedModelName = "Choose Model";
         internal string seedinputText = "";
         internal bool isTextToImage = true;
-        internal int schedulerIndex = 0; // Store the current selection index
         internal int imageControlTab = 0;
 
         private int dragFromIndex = -1;
@@ -111,15 +113,9 @@ namespace Scenario.Editor
         private string inputText = "";
         private string negativeInputText = "";
         private bool showSettings = true;
-        private bool controlNetFoldout = false;
-        private Vector2 scrollPosition;
-        private Vector2 scrollPosition1 = Vector2.zero;
-        private Vector2 scrollPosition2 = Vector2.zero;
-        private Vector2 dragStartPos;
-        private Vector2 negativeDragStartPos;
-
-        private readonly int[] allowedWidthValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
-        private readonly int[] allowedHeightValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+        private Vector2 scrollPosition = new Vector2();
+        private Vector2 dragStartPos = new Vector2();
+        private Vector2 negativeDragStartPos = new Vector2();
 
         internal List<string> tags = new();
         private List<Rect> tagRects = new();
@@ -127,25 +123,70 @@ namespace Scenario.Editor
         private List<Rect> negativeTagRects = new();
 
         private PromptWindow promptWindow;
+
         private bool shouldAutoGenerateSeed;
         private bool shouldAutoGenerateSeedPrev;
 
+        /// <summary>
+        /// Get a reference of the prompt pusher
+        /// </summary>
+        private PromptPusher promptPusher = null;
 
-        public string selectedModelName { get; set; } = "Choose Model";
+        /// <summary>
+        /// Get a reference to necessary image display editor
+        /// </summary>
+        private DropImageView dropImageView = null;
+        
+        /// <summary>
+        /// Get a reference to additional Image display editor
+        /// </summary>
+        private DropImageView dropAdditionalImageView = null;
+
+        /// <summary>
+        /// Default selected creation mode.
+        /// </summary>
+        private ECreationMode selectedMode = ECreationMode.Text_To_Image;
+
+        #endregion
+
+        #region Public Methods
 
         public PromptWindowUI(PromptWindow promptWindow)
         {
             this.promptWindow = promptWindow;
+
+            if (PromptPusher.Instance != null)
+            {
+                promptPusher = PromptPusher.Instance;
+            }
+
+            if (dropImageView == null)
+            {
+                dropImageView = new DropImageView(this);
+            }
+
+            if (dropAdditionalImageView == null)
+            {
+                dropAdditionalImageView = new DropImageView(this);
+            }
         }
 
-        private void PromptRecv(string str)
+        public int NearestValueIndex(int currentValue, int[] allowedValues)
         {
-            //promptinputText = str;
-        }
+            int nearestIndex = 0;
+            int minDifference = int.MaxValue;
 
-        private void NegativePromptRecv(string str)
-        {
-            //negativeInputText = str;
+            for (int i = 0; i < allowedValues.Length; i++)
+            {
+                int difference = Mathf.Abs(currentValue - allowedValues[i]);
+                if (difference < minDifference)
+                {
+                    minDifference = difference;
+                    nearestIndex = i;
+                }
+            }
+
+            return nearestIndex;
         }
 
         public void Render(Rect position)
@@ -162,6 +203,8 @@ namespace Scenario.Editor
 
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
+            promptPusher.modelName = selectedModelName;
+
             CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
             CustomStyle.Separator();
             RenderPromptSection();
@@ -174,20 +217,20 @@ namespace Scenario.Editor
 
             CustomStyle.ButtonPrimary("Generate Image", 40, () =>
             {
-                promptinputText = SerializeTags(tags);
-                negativepromptinputText = SerializeTags(negativeTags);
+                promptPusher.promptInput = SerializeTags(tags);
+                promptPusher.promptNegativeInput = SerializeTags(negativeTags);
 
                 EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
 
                 if (shouldAutoGenerateSeed)
                 {
-                    promptWindow.GenerateImage(null);
+                    promptPusher.GenerateImage(null);
                 }
                 else
                 {
                     string seed = seedinputText;
                     if (seed == "-1") { seed = null; }
-                    promptWindow.GenerateImage(seed);
+                    promptPusher.GenerateImage(seed);
                 }
             });
 
@@ -199,194 +242,235 @@ namespace Scenario.Editor
 
             CustomStyle.Space();
 
-            string[] tabLabels = { "Text to Image", "Image to Image", "Inpainting" };
-            imageControlTab = GUILayout.Toolbar(imageControlTab, tabLabels, CustomStyle.GetTertiaryButtonStyle());
+            List<string> tabLabels = new List<string>();
 
-            switch (imageControlTab)
+            foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
             {
-                case 0:
-                    isTextToImage = true;
-                    isImageToImage = false;
-                    controlNetFoldout = false;
-                    isControlNet = false;
-                    isAdvancedSettings = false;
-                    isInpainting = false;
-                    break;
-            
-                case 1:
-                    isTextToImage = false;
-                    isImageToImage = true;
-                    isInpainting = false;
-                    break;
-            
-                case 2:
-                    isTextToImage = false;
-                    isImageToImage = false;
-                    controlNetFoldout = false;
-                    isControlNet = false;
-                    isAdvancedSettings = false;
-                    isInpainting = true;
-                    break;
+                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                tabLabels.Add(eName);
             }
 
-            if (isImageToImage || isInpainting)
-            {
-                CustomStyle.Space();
+            selectedMode = (ECreationMode)EditorGUILayout.Popup("Mode: ", imageControlTab, tabLabels.ToArray());
+            imageControlTab = (int)selectedMode;
+            promptPusher.ActiveMode(imageControlTab);
 
-                Rect dropArea = RenderImageUploadArea();
-
-                if (imageUpload != null)
-                {
-                    dropArea = DrawUploadedImage(dropArea);
-                }
-
-                if (imageMask != null)
-                {
-                    GUI.DrawTexture(dropArea, imageMask, ScaleMode.ScaleToFit, true);
-                }
-
-                HandleDrag();
-
-                GUILayout.BeginHorizontal();
-
-                if (isControlNet || isImageToImage)
-                {
-                    if (GUILayout.Button("Create Image"))
-                    {
-                        ImageEditor.ShowWindow(imageUpload);
-                    }
-                }
-
-                if (isControlNet)
-                {
-                    if (GUILayout.Button("Add Control"))
-                    {
-                        CompositionEditor.ShowWindow();
-                    }
-                }
-
-                if (isInpainting)
-                {
-                    if (GUILayout.Button("Add Mask"))
-                    {
-                        InpaintingEditor.ShowWindow(imageUpload);
-                    }
-                }
-
-                GUILayout.EndHorizontal();
-
-                if (isImageToImage)
-                {
-                    CustomStyle.Space();
-
-                    controlNetFoldout = EditorGUILayout.Foldout(controlNetFoldout, "ControlNet Options");
-
-                    RenderControlNetFoldout();
-                }
-            }
+            ManageDrawMode();
 
             GUILayout.EndScrollView();
         }
+
+        /// <summary>
+        /// Set the image directly inside the drop content
+        /// </summary>
+        /// <param name="_newImage"></param>
+        public void SetDropImage(Texture2D _newImage)
+        { 
+            dropImageView.ImageUpload = _newImage;
+            promptPusher.imageUpload = dropImageView.ImageUpload;
+        }
+
+        /// <summary>
+        /// Set the image directly inside the additional drop content
+        /// </summary>
+        /// <param name="_newImage"></param>
+        public void SetAdditionalDropImage(Texture2D _newImage)
+        {
+            dropAdditionalImageView.ImageUpload = _newImage;
+            promptPusher.imageUpload = dropAdditionalImageView.ImageUpload;
+        }
+
+        /// <summary>
+        /// Set the image directly inside the drop mask content
+        /// </summary>
+        /// <param name="_newImage"></param>
+        public void SetDropMaskImage(Texture2D _newImage)
+        {
+            dropImageView.ImageMask = _newImage;
+            promptPusher.maskImage = dropImageView.ImageMask;
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private static void DrawBackground(Rect position)
         {
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
         }
 
-        private static void HandleDrag()
+        /// <summary>
+        /// WARNING --> may have to remove activeMode.IsControlNet if it useless
+        /// Manage all display available depending on active creation mode
+        /// </summary>
+        private void ManageDrawMode()
         {
-            Event currentEvent = Event.current;
-            if (currentEvent.type == EventType.DragUpdated || currentEvent.type == EventType.DragPerform)
-            {
-                if (DragAndDrop.paths != null && DragAndDrop.paths.Length > 0)
-                {
-                    DragAndDrop.visualMode = DragAndDropVisualMode.Copy;
+            promptWindow.ActiveMode = promptPusher.GetActiveMode();
+            CreationMode activeMode = promptWindow.ActiveMode;
 
-                    if (currentEvent.type == EventType.DragPerform)
+            promptPusher.imageUpload = dropImageView.ImageUpload;
+            promptPusher.maskImage = dropImageView.ImageMask;
+
+            promptPusher.additionalImageUpload = dropAdditionalImageView.ImageUpload;
+
+            switch (activeMode.EMode)
+            {
+                case ECreationMode.Image_To_Image:
+
+                    dropImageView.DrawHandleImage();
+
+                    CustomStyle.Space();
+
+                    break;
+
+                case ECreationMode.Inpaint:
+
+                    dropImageView.DrawHandleImage();
+
+                    GUILayout.BeginHorizontal();
+
+                    if (activeMode.IsControlNet)
                     {
-                        DragAndDrop.AcceptDrag();
-                        string path = DragAndDrop.paths[0];
-                        imageUpload = new Texture2D(2, 2);
-                        byte[] imageData = File.ReadAllBytes(path);
-                        imageUpload.LoadImage(imageData);
+                        if (GUILayout.Button("Add Mask"))
+                        {
+                            InpaintingEditor.ShowWindow(dropImageView.ImageUpload);
+                        }
                     }
 
-                    currentEvent.Use();
-                }
-            }
-        }
+                    GUILayout.EndHorizontal();
 
-        private Rect DrawUploadedImage(Rect dropArea)
-        {
-            GUI.DrawTexture(dropArea, imageUpload, ScaleMode.ScaleToFit);
+                    break;
 
-            Rect dropdownButtonRect = new Rect(dropArea.xMax - 90, dropArea.yMax - 25, 30, 30);
-            if (imageUpload != null && GUI.Button(dropdownButtonRect, "..."))
-            {
-                GenericMenu toolsMenu = new GenericMenu();
-                toolsMenu.AddItem(new GUIContent("Remove bg"), false, () =>
-                {
-                    Debug.Log("Remove bg button pressed");
-                    BackgroundRemoval.RemoveBackground(imageUpload, bytes =>
+                case ECreationMode.ControlNet:
+
+                    dropImageView.DrawHandleImage();
+
+                    CustomStyle.Space();
+
+                    RenderControlNetFoldout();
+
+                    break;
+
+                case ECreationMode.IP_Adapter:
+
+                    dropImageView.DrawHandleImage();
+
+                    CustomStyle.Space(); 
+
+                    DrawAdditionalModality("IP Adapter Scale");
+
+                    break;
+
+                case ECreationMode.Reference_Only:
+                    dropImageView.DrawHandleImage();
+
+                    CustomStyle.Space();
+
+                    DrawAdditionalModality("Influence");
+                    
+                    GUILayout.BeginHorizontal();
                     {
-                        imageUpload.LoadImage(bytes);
-                    });
-                });
-            
-                toolsMenu.AddItem(new GUIContent("Adjust aspect ratio"), false, () =>
-                {
-                    if (imageUpload == null) return;
-                
-                    int currentWidth = imageUpload.width;
-                    int currentHeight = imageUpload.height;
-
-                    int matchingWidth = GetMatchingValue(currentWidth, allowedWidthValues);
-                    int matchingHeight = GetMatchingValue(currentHeight, allowedHeightValues);
-
-                    widthSliderValue = matchingWidth != -1 ? matchingWidth : currentWidth;
-                    heightSliderValue = matchingHeight != -1 ? matchingHeight : currentHeight;
-
-                    selectedOptionIndex = NearestValueIndex(widthSliderValue, allowedWidthValues);
-                });
-            
-                toolsMenu.DropDown(dropdownButtonRect);
-            }
-
-            Rect clearImageButtonRect = new Rect(dropArea.xMax - 50, dropArea.yMax - 25, 30, 30);
-            if (imageUpload != null && GUI.Button(clearImageButtonRect, "X"))
-            {
-                imageUpload = null;
-                imageMask = null;
-            }
-
-            return dropArea;
-        }
-
-        private static Rect RenderImageUploadArea()
-        {
-            CustomStyle.Label("Upload Image");
-
-            Rect dropArea = GUILayoutUtility.GetRect(0f, 150f, GUILayout.ExpandWidth(true));
-            if (imageUpload == null)
-            {
-                GUI.Box(dropArea, "Drag & Drop an image here");
-
-                Rect buttonRect = new Rect(dropArea.center.x - 50f, dropArea.center.y - 15f, 100f, 30f);
-                if (GUI.Button(buttonRect, "Choose Image"))
-                {
-                    string imagePath = EditorUtility.OpenFilePanel("Choose Image", "", "png,jpg,jpeg");
-                    if (!string.IsNullOrEmpty(imagePath))
-                    {
-                        imageUpload = new Texture2D(2, 2);
-                        byte[] imageData = File.ReadAllBytes(imagePath);
-                        imageUpload.LoadImage(imageData);
+                        if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
+                        {
+                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "Reference Attn");
+                            activeMode.AdditionalSettings["Reference Attn"] = refAtt;
+                        }
+                        else
+                        {
+                            bool refAtt = GUILayout.Toggle(true, "Reference Attn");
+                            activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
+                        }
                     }
-                }
+                    GUILayout.EndHorizontal();
+
+                    GUILayout.BeginHorizontal();
+                    {
+                        if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
+                        {
+                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "Reference AdaIN");
+                            activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
+                        }
+                        else
+                        {
+                            bool refAd = GUILayout.Toggle(false, "Reference AdaIN");
+                            activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
+                        }
+                    }
+                    GUILayout.EndHorizontal();
+
+                    break;
+
+                case ECreationMode.Image_To_Image__ControlNet:
+
+                    dropImageView.DrawHandleImage("(Image to image)");
+
+                    CustomStyle.Space();
+
+                    dropAdditionalImageView.DrawHandleImage("(ControlNet)");
+
+                    CustomStyle.Space();
+
+                    RenderControlNetFoldout();
+
+                    break;
+
+                case ECreationMode.Image_To_Image__IP_Adapter:
+
+                    dropImageView.DrawHandleImage("(Image to image)");
+
+                    CustomStyle.Space();
+
+                    dropAdditionalImageView.DrawHandleImage("(IP Adapter)");
+
+                    CustomStyle.Space();
+
+                    DrawAdditionalModality("IP Adapter Scale");
+
+                    break;
+
+                case ECreationMode.ControlNet__IP_Adapter:
+
+                    dropImageView.DrawHandleImage("(ControlNet)");
+
+                    CustomStyle.Space();
+
+                    RenderControlNetFoldout();
+
+                    CustomStyle.Space();
+
+                    dropAdditionalImageView.DrawHandleImage("(IP Adapter)");
+
+                    CustomStyle.Space();
+
+                    DrawAdditionalModality("IP Adapter Scale");
+
+                    break;
             }
 
-            return dropArea;
+            promptPusher.UpdateActiveMode(activeMode);
         }
-    
+
+
+        /// <summary>
+        /// Draw display for additional modality
+        /// </summary>
+        /// <param name="_additionalName"> Name of the additional variables. </param>
+        private void DrawAdditionalModality(string _additionalName)
+        {
+            GUILayout.BeginHorizontal();
+            { 
+                GUILayout.Label($"{_additionalName} :", EditorStyles.label);
+                additionalModalitySliderValue = (int)EditorGUILayout.Slider(Mathf.Clamp(additionalModalitySliderValue, 0, 100), 0, 100);
+                additionalModalityValue = additionalModalitySliderValue / 100.0f;
+                if (additionalModalityValue == 0)
+                {
+                    additionalModalityValue = 0.01f;
+                }
+
+                promptPusher.additionalModalityValue = additionalModalityValue;
+            }
+            GUILayout.EndHorizontal();
+        }
+
         private string SerializeTags(List<string> tags)
         {
             if (tags == null || tags.Count == 0)
@@ -410,24 +494,6 @@ namespace Scenario.Editor
         
             int lastSpaceIndex = tag.LastIndexOf(' ', 30);
             return lastSpaceIndex == -1 ? tag[..30] : tag[..lastSpaceIndex];
-        }
-
-        private int NearestValueIndex(int currentValue, int[] allowedValues)
-        {
-            int nearestIndex = 0;
-            int minDifference = int.MaxValue;
-
-            for (int i = 0; i < allowedValues.Length; i++)
-            {
-                int difference = Mathf.Abs(currentValue - allowedValues[i]);
-                if (difference < minDifference)
-                {
-                    minDifference = difference;
-                    nearestIndex = i;
-                }
-            }
-
-            return nearestIndex;
         }
 
         private int GetNewIndex(Vector2 currentPos)
@@ -456,17 +522,16 @@ namespace Scenario.Editor
             return result;
         }
 
-        private int GetMatchingValue(int targetValue, int[] values)
+        private void PromptRecv(string str)
         {
-            foreach (int value in values)
-            {
-                if (value == targetValue)
-                {
-                    return value;
-                }
-            }
-
-            return -1;
+            //promptinputText = str;
         }
+
+        private void NegativePromptRecv(string str)
+        {
+            //negativeInputText = str;
+        }
+
+        #endregion
     }
 }

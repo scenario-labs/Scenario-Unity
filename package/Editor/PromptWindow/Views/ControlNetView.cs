@@ -10,21 +10,20 @@ namespace Scenario.Editor
     {
         private void RenderControlNetFoldout()
         {
-            if (!controlNetFoldout) return;
-        
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Enable ControlNet", EditorStyles.label);
-            isControlNet = GUILayout.Toggle(isControlNet, "");
+            
+            promptWindow.ActiveMode.UseControlNet = true;
 
-            if (isControlNet)
+            if (promptWindow.ActiveMode.UseControlNet)
             {
                 GUILayout.Label("Advanced Settings", EditorStyles.label);
                 isAdvancedSettings = GUILayout.Toggle(isAdvancedSettings, "");
+                promptWindow.ActiveMode.UseAdvanceSettings = isAdvancedSettings;
             }
 
             GUILayout.EndHorizontal();
 
-            if (!isControlNet) return;
+            if (!promptWindow.ActiveMode.UseControlNet) return;
         
             CustomStyle.Space(20);
 
@@ -65,6 +64,7 @@ namespace Scenario.Editor
 
                 //availableOptions.AddRange(dropdownOptions);
                 selectedOptionIndex = EditorGUILayout.Popup(selectedOptionIndex, availableOptions.ToArray());
+                PromptPusher.Instance.modalitySelected = selectedOptionIndex;
 
                 if (selectedOptionIndex > 0)
                 { 
@@ -75,6 +75,8 @@ namespace Scenario.Editor
                     {
                         sliderValue = 0.01f;
                     }
+
+                    PromptPusher.Instance.modalityValue = sliderValue;
                 }
                 GUILayout.EndHorizontal();
             }
@@ -88,6 +90,7 @@ namespace Scenario.Editor
                 if (selectedIndex >= 0 && selectedIndex < presets.Length)
                 {
                     selectedPreset = presets[selectedIndex].ToLower();
+                    PromptPusher.Instance.selectedPreset = presets[selectedIndex].ToLower();
                 }
             }
         }

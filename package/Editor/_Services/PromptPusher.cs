@@ -12,7 +12,7 @@ namespace Scenario.Editor
         Text_To_Image,
         Image_To_Image,
         ControlNet,
-        InPainting,
+        Inpaint,
         IP_Adapter,
         Reference_Only,
         Image_To_Image__ControlNet,
@@ -450,11 +450,11 @@ namespace Scenario.Editor
 
                         break;
 
-                    case ECreationMode.InPainting:
+                    case ECreationMode.Inpaint:
 
                         if (imageUpload == null)
                         {
-                            Debug.LogError("Inpainting Must have an image uploaded.");
+                            Debug.LogError("Inpaint Must have an image uploaded.");
                             return false;
                         }
                         else
@@ -464,7 +464,7 @@ namespace Scenario.Editor
 
                         if (maskImage == null)
                         {
-                            Debug.LogError("Inpainting Must have a mask uploaded.");
+                            Debug.LogError("Inpaint Must have a mask uploaded.");
                             return false;
                         }
                         else
@@ -701,7 +701,7 @@ namespace Scenario.Editor
                     }
                     break;
 
-                case ECreationMode.InPainting:
+                case ECreationMode.Inpaint:
                     if (activeMode.IsControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
@@ -855,7 +855,7 @@ namespace Scenario.Editor
                             mode.OperationName = "img2img";
                             break;
 
-                        case ECreationMode.InPainting:
+                        case ECreationMode.Inpaint:
                             mode.IsControlNet = true;
                             mode.OperationName = "inpaint";
                             break;

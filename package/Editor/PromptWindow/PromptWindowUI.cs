@@ -322,7 +322,7 @@ namespace Scenario.Editor
 
                     break;
 
-                case ECreationMode.InPainting:
+                case ECreationMode.Inpaint:
 
                     dropImageView.DrawHandleImage();
 

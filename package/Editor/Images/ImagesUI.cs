@@ -81,9 +81,26 @@ namespace Scenario.Editor
                 {
                     "Set Image as Reference", () =>
                     {
-                        PromptWindowUI.imageUpload = selectedTexture;
+                        if(PromptPusher.Instance != null)
+                        {
+                            PromptWindow.SetDropImageContent(selectedTexture);
+                        }
                         PromptWindow.ShowWindow();
-                        PromptWindow.SetImageControlTab(1);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been set in the Image to Image parameter in the Prompt Window.", EditorStyles.wordWrappedLabel);
+                        };
+
+                    }
+                },
+                {
+                    "Set Image as Mode Reference", () =>
+                    {
+                        if(PromptPusher.Instance != null)
+                        {
+                            PromptWindow.SetDropAdditionalImageContent(selectedTexture);
+                        }
+                        PromptWindow.ShowWindow();
                         buttonDetailPanelDrawFunction = () =>
                         {
                             GUILayout.Label("Your image has been set in the Image to Image parameter in the Prompt Window.", EditorStyles.wordWrappedLabel);

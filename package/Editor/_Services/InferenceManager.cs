@@ -1,14 +1,15 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
 namespace Scenario.Editor
 {
-    public class PromptFetcher
+    /// <summary>
+    /// InferenceManager Class manage all API request about image generation (post inference generation, get inferences generated)
+    /// </summary>
+    public class InferenceManager
     {
         public static List<string> cancelledInferences = new();
 
@@ -19,7 +20,7 @@ namespace Scenario.Editor
 
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
-            float guidancesliderValue, string seedinputText, Action<string> _onInferenceRequested = null)
+            float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
         {
             Debug.Log("Requesting image generation please wait..");
             
@@ -39,7 +40,7 @@ namespace Scenario.Editor
                     widthSliderValue, 
                     heightSliderValue,
                     guidancesliderValue,
-                    "Default",
+                    _schedulerText,
                     seedinputText,
                     modelId);
 

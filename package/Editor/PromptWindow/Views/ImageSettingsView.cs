@@ -17,23 +17,19 @@ namespace Scenario.Editor
                 switch (DataCache.instance.SelectedModelType)
                 {
                     case "sd-xl-composition":
-                        DrawWidthValues(allowedSDXLDimensionValues);
-                        DrawHeightValues(allowedSDXLDimensionValues);
+                        DrawSliderSizeValue(allowedSDXLDimensionValues);
                         break;
 
                     case "sd-xl-lora":
-                        DrawWidthValues(allowedSDXLDimensionValues);
-                        DrawHeightValues(allowedSDXLDimensionValues);
+                        DrawSliderSizeValue(allowedSDXLDimensionValues);
                         break;
 
                     case "sd-xl":
-                        DrawWidthValues(allowedSDXLDimensionValues);
-                        DrawHeightValues(allowedSDXLDimensionValues);
+                        DrawSliderSizeValue(allowedSDXLDimensionValues);
                         break;
 
                     case "sd-1_5":
-                        DrawWidthValues(allowed1_5DimensionValues);
-                        DrawHeightValues(allowed1_5DimensionValues);
+                        DrawSliderSizeValue(allowed1_5DimensionValues);
                         break;
 
                     default:
@@ -42,8 +38,7 @@ namespace Scenario.Editor
             }
             else
             {
-                DrawWidthValues(allowed1_5DimensionValues);
-                DrawHeightValues(allowed1_5DimensionValues);
+                DrawSliderSizeValue(allowed1_5DimensionValues);
             }
 
             CustomStyle.Space();
@@ -126,37 +121,37 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Draw list of buttons containing Width values for generated images.
+        /// Draw a slider to select the width and height of the image, still according to the Scenario's web app
         /// </summary>
-        /// <param name="_allowedValues"> int array of dimension values </param>
-        private void DrawWidthValues(int[] _allowedValues)
+        /// <param name="_allowedValues"> Reference Array </param>
+        private void DrawSliderSizeValue(int[] _allowedValues)
         {
+            float sliderWidthPercentage = 0.78f;
+            int sliderWidth = Mathf.RoundToInt(EditorGUIUtility.currentViewWidth * sliderWidthPercentage);
             EditorGUILayout.BeginHorizontal();
             {
-                CustomStyle.Label("Width: ", width: 45, height: 20);
-                int widthIndex = NearestValueIndex(widthSliderValue, _allowedValues);
-                widthIndex = GUILayout.SelectionGrid(widthIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
-                    _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
-                widthSliderValue = _allowedValues[widthIndex];
-                promptPusher.width = widthSliderValue;
-            }
-            EditorGUILayout.EndHorizontal();
-        }
+                //CustomStyle.Label("Size: ", width: 45, height: 20);
+                GUILayout.Label("Size: " + promptPusher.width + " x " + promptPusher.height);
+                sizeSliderValue = GUILayout.HorizontalSlider(sizeSliderValue, 1, (_allowedValues.Length *2)-1, GUILayout.Width(sliderWidth));
 
-        /// <summary>
-        /// Draw list of buttons containing Height values for generated images.
-        /// </summary>
-        /// <param name="_allowedValues"> int array of dimension values </param>
-        private void DrawHeightValues(int[] _allowedValues)
-        {
-            EditorGUILayout.BeginHorizontal();
-            {
-                CustomStyle.Label("Height: ", width: 45, height: 20);
-                int heightIndex = NearestValueIndex(heightSliderValue, _allowedValues);
-                heightIndex = GUILayout.SelectionGrid(heightIndex, Array.ConvertAll(_allowedValues, x => x.ToString()),
-                    _allowedValues.Length, CustomStyle.GetNormalButtonStyle());
-                heightSliderValue = _allowedValues[heightIndex];
-                promptPusher.height = heightSliderValue;
+                int correspondingValue = 0;
+
+                if (sizeSliderValue > _allowedValues.Length)
+                {
+                    correspondingValue = (int)sizeSliderValue - _allowedValues.Length;
+                    heightSliderValue = _allowedValues[correspondingValue];
+                    widthSliderValue = _allowedValues[0];
+                    promptPusher.height = heightSliderValue;
+                    promptPusher.width = widthSliderValue;
+                }
+                else if (sizeSliderValue < _allowedValues.Length)
+                {
+                    correspondingValue = _allowedValues.Length - (int)sizeSliderValue;
+                    widthSliderValue = _allowedValues[correspondingValue];
+                    heightSliderValue = _allowedValues[0];
+                    promptPusher.width = widthSliderValue;
+                    promptPusher.height = heightSliderValue;
+                }
             }
             EditorGUILayout.EndHorizontal();
         }

@@ -98,6 +98,10 @@ namespace Scenario.Editor
         internal string negativepromptinputText = "";
         internal int widthSliderValue = 1024;
         internal int heightSliderValue = 1024;
+        /// <summary>
+        /// Default slide value for the size slider
+        /// </summary>
+        internal float sizeSliderValue = 8;
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
         internal int samplesliderValue = 30;

@@ -532,7 +532,7 @@ namespace Scenario.Editor
                             if (EditorUtility.DisplayDialog($"Are you sure to launch ?", $"Are you sure to launch {isometricWorkflow.assetList.Count} inference(s) so {(isometricWorkflow.assetList.Count * 4)} images.\n\nThis consume credits.", "Launch", "Edit"))
                             {
                                 requestStatus = RequestsStatus.Requesting;
-                                PromptFetcher.SilenceMode = true;
+                                InferenceManager.SilenceMode = true;
                                 isometricWorkflow.GenerateImages(() =>
                                 {
                                     requestStatus = RequestsStatus.Requested;

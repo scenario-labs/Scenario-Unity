@@ -96,7 +96,7 @@ namespace Scenario.Editor
             if (isVisible)
                 return;
 
-            PromptFetcher.SilenceMode = true;
+            InferenceManager.SilenceMode = true;
 
             var isometricWorkflow = GetWindow<IsometricWorkflow>("Isometric Workflow");
             isometricWorkflow.minSize = new Vector2(1250, 500);
@@ -106,7 +106,7 @@ namespace Scenario.Editor
 
         public void Restart()
         {
-            PromptFetcher.SilenceMode = true;
+            InferenceManager.SilenceMode = true;
 
             var isometricWorkflow = (IsometricWorkflow)GetWindow(typeof(IsometricWorkflow));
             
@@ -191,24 +191,27 @@ namespace Scenario.Editor
 
                 prompt += assetName;
 
-                PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
-                (inferenceId) =>
+                if (PromptPusher.Instance != null)
                 {
-                    if (inferenceIdByAssetList.ContainsKey(tempName))
+                    PromptPusher.Instance.GenerateIsometricImage(modelName, ECreationMode.ControlNet, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
+                    (inferenceId) =>
                     {
-                        inferenceIdByAssetList[tempName] = inferenceId;
-                    }
-                    else
-                    { 
-                        inferenceIdByAssetList.Add(tempName, inferenceId);
-                    }
+                        if (inferenceIdByAssetList.ContainsKey(tempName))
+                        {
+                            inferenceIdByAssetList[tempName] = inferenceId;
+                        }
+                        else
+                        { 
+                            inferenceIdByAssetList.Add(tempName, inferenceId);
+                        }
 
-                    completedRequests++;
-                    if (completedRequests == totalRequests)
-                    {
-                        _onRequestSent?.Invoke();
-                    }
-                });
+                        completedRequests++;
+                        if (completedRequests == totalRequests)
+                        {
+                            _onRequestSent?.Invoke();
+                        }
+                    });
+                }
             }
         }
 
@@ -261,25 +264,27 @@ namespace Scenario.Editor
 
             prompt += _assetName;
 
-            PromptWindow.GenerateImage(modelName, useBaseTexture, useBaseTexture, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
-            (inferenceId) =>
+            if (PromptPusher.Instance != null)
             {
-                if (inferenceIdByAssetList.ContainsKey(_assetName))
+                PromptPusher.Instance.GenerateIsometricImage(modelName, ECreationMode.ControlNet, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence,
+                (inferenceId) =>
                 {
-                    inferenceIdByAssetList[_assetName] = inferenceId;
-                }
-                else
-                {
-                    inferenceIdByAssetList.Add(_assetName, inferenceId);
-                }
+                    if (inferenceIdByAssetList.ContainsKey(_assetName))
+                    {
+                        inferenceIdByAssetList[_assetName] = inferenceId;
+                    }
+                    else
+                    {
+                        inferenceIdByAssetList.Add(_assetName, inferenceId);
+                    }
 
-                completedRequests++;
-                if (completedRequests == totalRequests)
-                {
-                    _onRequestSent?.Invoke();
-                }
-            });
-
+                    completedRequests++;
+                    if (completedRequests == totalRequests)
+                    {
+                        _onRequestSent?.Invoke();
+                    }
+                });
+            }
         }
 
         private void OnGUI()
@@ -308,7 +313,7 @@ namespace Scenario.Editor
 
         private void OnDestroy()
         {
-            PromptFetcher.SilenceMode = false;
+            InferenceManager.SilenceMode = false;
         }
 
         private void OnBecameVisible()

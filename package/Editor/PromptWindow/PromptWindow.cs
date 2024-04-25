@@ -23,52 +23,7 @@ namespace Scenario.Editor
         }
 
         #region Static Methods
-        /// <summary>
-        /// If you want to generate an image through script, call this
-        /// </summary>
-        /// <param name="_modelName"></param>
-        /// <param name="_isImageToImage"></param>
-        /// <param name="_isControlNet"></param>
-        /// <param name="_texture"></param>
-        /// <param name="_numberOfImages"></param>
-        /// <param name="_promptText"></param>
-        /// <param name="_samples"></param>
-        /// <param name="_width"></param>
-        /// <param name="_height"></param>
-        /// <param name="_guidance"></param>
-        /// <param name="_seed"></param>
-        /// <param name="_useCanny"></param>
-        /// <param name="_cannyStrength"></param>
-        public static void GenerateImage(string _modelName, bool _isImageToImage = false, bool _isControlNet = false, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
-        {
-            if (promptWindowUI != null)
-            {
-                promptWindowUI.selectedModelName = _modelName;
-                promptWindowUI.isImageToImage = _isImageToImage;
-                promptWindowUI.isControlNet = _isControlNet;
-                PromptWindowUI.imageUpload = _texture;
-                promptWindowUI.imagesliderIntValue = _numberOfImages;
-                promptWindowUI.promptinputText = _promptText;
-                promptWindowUI.samplesliderValue = _samples;
-                promptWindowUI.widthSliderValue = _width;
-                promptWindowUI.heightSliderValue = _height;
-                promptWindowUI.guidancesliderValue = _guidance;
-                promptWindowUI.seedinputText = _seed;
-                if (_useCanny)
-                {
-                    promptWindowUI.isAdvancedSettings = _useCanny;
-                    promptWindowUI.selectedOptionIndex = Array.IndexOf(promptWindowUI.correspondingOptionsValue, "canny") + 1;
-                    promptWindowUI.sliderValue = _cannyStrength;
-                }
-
-                GetWindow<PromptWindow>().GenerateImage(_seed == "-1" ? null : _seed, _onInferenceRequested);
-            }
-            else
-            {
-                ShowWindow();
-                GenerateImage(_modelName, _isImageToImage, _isControlNet, _texture, _numberOfImages, _promptText, _samples, _width, _height, _guidance, _seed, _useCanny, _cannyStrength, _onInferenceRequested);
-            }
-        }
+        
 
         #endregion
 
@@ -77,14 +32,14 @@ namespace Scenario.Editor
         private void OnEnable()
         {
             promptWindowUI = new PromptWindowUI(this);
-            UpdateSelectedModel(promptWindowUI.selectedModelName);
+            UpdateSelectedModel();
         }
 
         private void OnFocus()
         {
             if (promptWindowUI != null)
             {
-                UpdateSelectedModel(promptWindowUI.selectedModelName);
+                UpdateSelectedModel();
             }
         }
 
@@ -96,10 +51,27 @@ namespace Scenario.Editor
             PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
         }
 
+        private void UpdateSelectedModel()
+        {
+            string selectedModelId = DataCache.instance.SelectedModelId;
+            string selectedModelName = EditorPrefs.GetString("SelectedModelName");
+
+            if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
+            {
+                promptWindowUI.selectedModelName = selectedModelName;
+            }
+            else
+            {
+                promptWindowUI.selectedModelName = "Choose Model";
+            }
+        }
+
         private void OnGUI()
         {
             promptWindowUI.Render(this.position);
         }
+
+        #endregion
 
         public void SetSeed(string _seed)
         {

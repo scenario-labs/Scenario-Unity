@@ -122,7 +122,7 @@ namespace Scenario.Editor
         /// <summary>
         /// Reference number of samples expected on generation
         /// </summary>
-        internal int samplesStep = 30;
+        internal int samplesStep = 4;
 
         /// <summary>
         /// 

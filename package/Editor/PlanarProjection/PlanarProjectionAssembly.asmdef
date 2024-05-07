@@ -1,0 +1,28 @@
+{
+    "name": "PlanarProjectionAssembly",
+    "rootNamespace": "",
+    "references": [
+        "GUID:d60799ab2a985554ea1a39cd38695018",
+        "GUID:832a8ef6e615e9a41a5076e1c9a43782"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [
+        {
+            "name": "com.unity.recorder",
+            "expression": "",
+            "define": "UNITY_RECORDER"
+        },
+        {
+            "name": "com.unity.postprocessing",
+            "expression": "",
+            "define": "UNITY_PP"
+        }
+    ],
+    "noEngineReferences": false
+}

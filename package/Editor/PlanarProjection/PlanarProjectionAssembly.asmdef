@@ -1,9 +1,11 @@
 {
     "name": "PlanarProjectionAssembly",
-    "rootNamespace": "",
+    "rootNamespace": "Scenario",
     "references": [
         "GUID:d60799ab2a985554ea1a39cd38695018",
-        "GUID:832a8ef6e615e9a41a5076e1c9a43782"
+        "GUID:832a8ef6e615e9a41a5076e1c9a43782",
+        "GUID:847b179520b009e4c8d15c296b1cbf35",
+        "GUID:478a2357cc57436488a56e564b08d223"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

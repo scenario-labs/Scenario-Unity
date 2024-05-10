@@ -113,11 +113,18 @@ namespace Scenario.Editor
                     planarProjection.AutoConfigureScene();
                 }
 
-                if (GUILayout.Button("Next", button))
+                GUILayout.BeginHorizontal();
                 {
-                    planarProjection.FlagWindow = 2;
+                    if (GUILayout.Button("Previous", button))
+                    {
+                        planarProjection.FlagWindow = 0;
+                    }
+                    if (GUILayout.Button("Next", button))
+                    {
+                        planarProjection.FlagWindow = 2;
+                    }
                 }
-
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();
         }
@@ -139,19 +146,48 @@ namespace Scenario.Editor
 
                 GUILayout.Label("Render scene", title);
 
-                if (GUILayout.Button("Capture Scene", button))
+#if UNITY_RECORDER
+#else    
+                if(!planarProjection.CallRecorderInstall)
                 {
-                    
+                    if (EditorUtility.DisplayDialog("Unity Recorder required", "Unity Recorder is required for this stage. Would you like to install it?", "Install", "Cancel"))
+                    {
+                        planarProjection.CheckUnityRecorder();
+                        planarProjection.CallRecorderInstall = true;
+                    }
+                    else
+                    {
+                        planarProjection.CallRecorderInstall = true;
+                    }
                 }
 
-                if (GUILayout.Button("Next", button))
+                if (GUILayout.Button("Install Recorder", button))
                 {
-                    planarProjection.FlagWindow = 3;
+                    planarProjection.CheckUnityRecorder();
                 }
+#endif
+
+                if (GUILayout.Button("Capture Scene", button))
+                {
+                    planarProjection.LaunchUnityRecorder();
+                }
+
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Previous", button))
+                    {
+                        planarProjection.FlagWindow = 1;
+                    }
+                    if (GUILayout.Button("Next", button))
+                    {
+                        planarProjection.FlagWindow = 3;
+                    }
+                }
+                GUILayout.EndHorizontal();
             }
             GUILayout.EndVertical();   
         }
 
-        #endregion
+#endregion
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +21,7 @@ namespace Scenario.Editor
         public GameObject ReferenceObject { get { return referenceObject; } set { referenceObject = value; } }
         public bool CallRecorderInstall { get { return callRecorderInstall; } set { callRecorderInstall = value; } }
         public bool CallPPInstall { get { return callPPInstall; } set { callPPInstall = value; } }
+        public Texture2D CaptureImage { get { return captureImage; } set { captureImage = value; } }
 
         #endregion
 
@@ -46,6 +48,10 @@ namespace Scenario.Editor
         private RecorderController recorderController = null;
         private ImageRecorderSettings imageRecorderSettings = null;
 
+        private DirectoryInfo directoryInfo = null;
+
+        private Texture2D captureImage = null;
+
         #endregion
 
         #region MonoBehaviour Callbacks
@@ -59,6 +65,18 @@ namespace Scenario.Editor
         private void OnEnable()
         {
             planarProjectionView = new PlanarProjectionView(this);
+
+            if (recorderWindow != null)
+            {
+                EditorCoroutineUtility.StartCoroutine(CloseRecorder(), this);
+            }
+
+            if (directoryInfo == null)
+            {
+                directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
+                LoadLastCapture();
+                Debug.Log(directoryInfo.FullName);
+            }
         }
 
         private void OnGUI()
@@ -121,6 +139,12 @@ namespace Scenario.Editor
             EditorApplication.update += Progress;
         }
 
+        public void CheckPostProcessing()
+        {
+            request = Client.Add("com.unity.postprocessing");
+            EditorApplication.update += Progress;
+        }
+
         public void LaunchUnityRecorder()
         {
             recorderWindow = GetWindow<RecorderWindow>();
@@ -129,12 +153,21 @@ namespace Scenario.Editor
 
         }
 
-        private void PrepareRecorderSettings()
+        #endregion
+
+        #region Private Methods
+
+        private void GetMainCamera()
         { 
+            mainCamera = Camera.main;
+        }
+
+        private void PrepareRecorderSettings()
+        {
             recorderSettings = CreateInstance<RecorderControllerSettings>();
             recorderSettings.ExitPlayMode = true;
             recorderSettings.SetRecordModeToSingleFrame(1);
-            
+
             imageRecorderSettings = CreateInstance<ImageRecorderSettings>();
             imageRecorderSettings.Enabled = true;
             imageRecorderSettings.RecordMode = RecordMode.Manual;
@@ -151,8 +184,13 @@ namespace Scenario.Editor
             imageRecorderSettings.FileNameGenerator.FileName = "<Recorder>_<Take>";
 
             if (!Directory.Exists($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}"))
-            { 
-                Directory.CreateDirectory($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}");
+            {
+                directoryInfo = Directory.CreateDirectory($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}");
+            }
+            else
+            {
+                directoryInfo = new DirectoryInfo($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}");
+                Debug.Log(directoryInfo.FullName);
             }
 
             recorderSettings.AddRecorderSettings(imageRecorderSettings);
@@ -162,26 +200,33 @@ namespace Scenario.Editor
             EditorCoroutineUtility.StartCoroutine(Start(), this);
         }
 
-        IEnumerator Start()
+        private void LoadLastCapture()
         {
-            yield return new WaitForSeconds(1f);
-            recorderWindow.StartRecording();
-
-            while (recorderWindow.IsRecording())
+            if (directoryInfo != null && directoryInfo.GetFileSystemInfos().Length > 0)
             { 
-                yield return new WaitForEndOfFrame();
+                string pathFile = string.Empty;
+                FileSystemInfo fileSystemInfo = null;
+                foreach (FileSystemInfo fsi in directoryInfo.EnumerateFileSystemInfos())
+                {
+                    if (fileSystemInfo == null)
+                    { 
+                        fileSystemInfo = fsi;
+                        continue;
+                    }
+
+                    if (fsi.CreationTimeUtc < fileSystemInfo.CreationTimeUtc)
+                    {
+                        fileSystemInfo = fsi;
+                        continue;
+                    }
+                }
+                Debug.Log(fileSystemInfo.FullName);
+                pathFile = fileSystemInfo.FullName;
+
+                captureImage = new Texture2D(2, 2);
+                byte[] imageData = File.ReadAllBytes(pathFile);
+                captureImage.LoadImage(imageData);
             }
-            Debug.Log("CLose window ?");
-            recorderWindow.Close();
-        }
-
-        #endregion
-
-        #region Private Methods
-
-        private void GetMainCamera()
-        { 
-            mainCamera = Camera.main;
         }
 
         private void Progress()
@@ -199,6 +244,20 @@ namespace Scenario.Editor
 
                 EditorApplication.update -= Progress;
             }
+        }
+
+        IEnumerator Start()
+        {
+            yield return new EditorWaitForSeconds(1f);
+            // TODO Trouble on register the first capture from the recorder inside assets folder
+            recorderWindow.StartRecording();
+        }
+
+        IEnumerator CloseRecorder()
+        {
+            yield return new EditorWaitForSeconds(1f);
+            recorderWindow.Close();
+            recorderWindow = null;
         }
 
         #endregion

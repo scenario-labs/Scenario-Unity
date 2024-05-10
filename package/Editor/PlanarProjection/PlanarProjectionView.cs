@@ -172,6 +172,11 @@ namespace Scenario.Editor
                     planarProjection.LaunchUnityRecorder();
                 }
 
+                if (planarProjection.CaptureImage != null)
+                {
+                    GUI.DrawTexture(planarProjection.position, planarProjection.CaptureImage);
+                }
+
                 GUILayout.BeginHorizontal();
                 {
                     if (GUILayout.Button("Previous", button))

@@ -172,9 +172,11 @@ namespace Scenario.Editor
                     planarProjection.LaunchUnityRecorder();
                 }
 
+                Rect boxRect = CalculateBoxRect(75, 75, 2, 1);
+
                 if (planarProjection.CaptureImage != null)
                 {
-                    GUI.DrawTexture(planarProjection.position, planarProjection.CaptureImage);
+                    GUI.DrawTexture(boxRect, planarProjection.CaptureImage, ScaleMode.ScaleToFit);
                 }
 
                 GUILayout.BeginHorizontal();
@@ -193,6 +195,22 @@ namespace Scenario.Editor
             GUILayout.EndVertical();   
         }
 
-#endregion
+
+        /// <summary>
+        /// Calculates the position and dimensions of each texture box within the grid based on the specified box width, box height, row index, and column index.
+        /// </summary>
+        /// <param name="boxWidth">The width of each texture box.</param>
+        /// <param name="boxHeight">The height of each texture box.</param>
+        /// <param name="rowIndex">The row index of the texture box.</param>
+        /// <param name="colIndex">The column index of the texture box.</param>
+        /// <returns>A Rect representing the position and dimensions of the texture box.</returns>
+        private Rect CalculateBoxRect(float boxWidth, float boxHeight, int rowIndex, int colIndex)
+        {
+            float padding = 2.5f;
+            float x = colIndex * (boxWidth + padding);
+            float y = rowIndex * (boxHeight + padding);
+            return new Rect(x, y, boxWidth, boxHeight);
+        }
+        #endregion
     }
 }

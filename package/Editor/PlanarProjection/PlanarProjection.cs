@@ -75,7 +75,6 @@ namespace Scenario.Editor
             {
                 directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
                 LoadLastCapture();
-                Debug.Log(directoryInfo.FullName);
             }
         }
 

@@ -840,9 +840,8 @@ namespace Scenario.Editor
                 Debug.Log("MUST HAVE AN UPLOADED IMAGE FOR MASKING");
                 return;
             }
-
-            PromptWindowUI.imageUpload = uploadedImage;
-            PromptWindowUI.imageMask = maskBuffer;
+            PromptWindow.SetDropImageContent(uploadedImage);
+            PromptWindow.SetDropMaskImageContent(maskBuffer);
             inpaintingEditor.Close();
         }
     }

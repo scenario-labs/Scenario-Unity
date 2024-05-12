@@ -1,26 +1,27 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Unity.EditorCoroutines.Editor;
 using UnityEngine;
 
 namespace Scenario.Editor
 {
-    public class PromptFetcher
+    /// <summary>
+    /// InferenceManager Class manage all API request about image generation (post inference generation, get inferences generated)
+    /// </summary>
+    public class InferenceManager
     {
         public static List<string> cancelledInferences = new();
         
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
-            float guidancesliderValue, string seedinputText)
+            float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
         {
             Debug.Log("Requesting image generation please wait..");
             
             string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
             string modelId = DataCache.instance.SelectedModelId;
-            
+
             ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
             {
                 PromptWindow.InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<PromptWindow.InferenceRoot>(response.Content);
@@ -34,12 +35,13 @@ namespace Scenario.Editor
                     widthSliderValue, 
                     heightSliderValue,
                     guidancesliderValue,
-                    "Default",
+                    _schedulerText,
                     seedinputText,
                     modelId);
 
                 GetInferenceStatus(inferenceId, modelId);
                 Images.ShowWindow();
+                _onInferenceRequested?.Invoke(inferenceId);
             });
         }
         

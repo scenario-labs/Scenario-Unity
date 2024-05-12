@@ -12,6 +12,8 @@ namespace Scenario.Editor
     public class InferenceManager
     {
         public static List<string> cancelledInferences = new();
+
+        public static bool SilenceMode = false;
         
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,

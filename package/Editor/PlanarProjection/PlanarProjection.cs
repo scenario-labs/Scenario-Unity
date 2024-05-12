@@ -27,30 +27,80 @@ namespace Scenario.Editor
 
         #region Private Fields
 
+        /// <summary>
+        /// 
+        /// </summary>
         private PlanarProjectionView planarProjectionView = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private int flagWindow = 0;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private GameObject referenceObject = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private Camera mainCamera = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private GameObject volumePP = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private Request request = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private bool callRecorderInstall = false;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private bool callPPInstall = false;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private RecorderWindow recorderWindow = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
         private RecorderControllerSettings recorderSettings = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
         private RecorderController recorderController = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
         private ImageRecorderSettings imageRecorderSettings = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private DirectoryInfo directoryInfo = null;
 
+        /// <summary>
+        /// 
+        /// </summary>
         private Texture2D captureImage = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private PromptWindow promptWindow = null;
 
         #endregion
 
@@ -87,11 +137,17 @@ namespace Scenario.Editor
 
         #region Public Methods
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void CreateReferenceObject()
         {
             referenceObject = new GameObject("LEVEL");
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void AutoConfigureScene()
         {
             if (mainCamera == null)
@@ -132,18 +188,27 @@ namespace Scenario.Editor
             volume.runInEditMode = true;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void CheckUnityRecorder()
         {
             request = Client.Add("com.unity.recorder");
             EditorApplication.update += Progress;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void CheckPostProcessing()
         {
             request = Client.Add("com.unity.postprocessing");
             EditorApplication.update += Progress;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void LaunchUnityRecorder()
         {
             recorderWindow = GetWindow<RecorderWindow>();
@@ -152,15 +217,39 @@ namespace Scenario.Editor
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public void OpenPromptWindow()
+        { 
+            promptWindow = GetWindow<PromptWindow>();
+            if (PromptPusher.Instance != null)
+            {
+                promptWindow.SetActiveModeUI(ECreationMode.ControlNet);
+                PromptWindow.SetDropImageContent(captureImage);
+                promptWindow.ActiveAdvanceSettings(true);
+                SetControlNetOptions();
+                InferenceManager.SilenceMode = true;
+                promptWindow.SetImageSettingWidth(1824);
+                promptWindow.SetImageSettingHeight(1024);
+            }
+        }
+
         #endregion
 
         #region Private Methods
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void GetMainCamera()
         { 
             mainCamera = Camera.main;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void PrepareRecorderSettings()
         {
             recorderSettings = CreateInstance<RecorderControllerSettings>();
@@ -199,6 +288,9 @@ namespace Scenario.Editor
             EditorCoroutineUtility.StartCoroutine(Start(), this);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void LoadLastCapture()
         {
             if (directoryInfo != null && directoryInfo.GetFileSystemInfos().Length > 0)
@@ -228,6 +320,21 @@ namespace Scenario.Editor
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetControlNetOptions()
+        {
+            if (promptWindow != null)
+            {
+                promptWindow.SetAdvancedModality(6);
+                promptWindow.SetAdvancedModalityValue(75);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void Progress()
         {
             if (request.IsCompleted)
@@ -245,6 +352,10 @@ namespace Scenario.Editor
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         IEnumerator Start()
         {
             yield return new EditorWaitForSeconds(1f);
@@ -252,6 +363,10 @@ namespace Scenario.Editor
             recorderWindow.StartRecording();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         IEnumerator CloseRecorder()
         {
             yield return new EditorWaitForSeconds(1f);

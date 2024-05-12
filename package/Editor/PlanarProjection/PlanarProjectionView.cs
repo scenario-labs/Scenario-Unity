@@ -49,6 +49,7 @@ namespace Scenario.Editor
                     break;
 
                 case 3:
+                    RenderPromptView();
                     break;
 
                 default:
@@ -166,18 +167,25 @@ namespace Scenario.Editor
                     planarProjection.CheckUnityRecorder();
                 }
 #endif
+                EditorGUILayout.BeginHorizontal();
+                { 
+                    if (GUILayout.Button("Capture Scene", button))
+                    {
+                        planarProjection.LaunchUnityRecorder();
+                    }
 
-                if (GUILayout.Button("Capture Scene", button))
-                {
-                    planarProjection.LaunchUnityRecorder();
+
+                    if (planarProjection.CaptureImage != null)
+                    {
+                        GUIStyle imageStyle = new GUIStyle(GUI.skin.box);
+
+                        imageStyle.fixedWidth = planarProjection.CaptureImage.width / 6;
+                        imageStyle.fixedHeight = planarProjection.CaptureImage.height / 6;
+
+                        GUILayout.Box(planarProjection.CaptureImage, imageStyle);
+                    }
                 }
-
-                Rect boxRect = CalculateBoxRect(75, 75, 2, 1);
-
-                if (planarProjection.CaptureImage != null)
-                {
-                    GUI.DrawTexture(boxRect, planarProjection.CaptureImage, ScaleMode.ScaleToFit);
-                }
+                EditorGUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
                 {
@@ -188,6 +196,8 @@ namespace Scenario.Editor
                     if (GUILayout.Button("Next", button))
                     {
                         planarProjection.FlagWindow = 3;
+
+                        planarProjection.OpenPromptWindow();
                     }
                 }
                 GUILayout.EndHorizontal();
@@ -195,22 +205,45 @@ namespace Scenario.Editor
             GUILayout.EndVertical();   
         }
 
-
-        /// <summary>
-        /// Calculates the position and dimensions of each texture box within the grid based on the specified box width, box height, row index, and column index.
-        /// </summary>
-        /// <param name="boxWidth">The width of each texture box.</param>
-        /// <param name="boxHeight">The height of each texture box.</param>
-        /// <param name="rowIndex">The row index of the texture box.</param>
-        /// <param name="colIndex">The column index of the texture box.</param>
-        /// <returns>A Rect representing the position and dimensions of the texture box.</returns>
-        private Rect CalculateBoxRect(float boxWidth, float boxHeight, int rowIndex, int colIndex)
+        private void RenderPromptView()
         {
-            float padding = 2.5f;
-            float x = colIndex * (boxWidth + padding);
-            float y = rowIndex * (boxHeight + padding);
-            return new Rect(x, y, boxWidth, boxHeight);
+            GUILayout.BeginVertical();
+            {
+                GUIStyle title = new GUIStyle(GUI.skin.label);
+                title.fontSize = 18;
+                title.fontStyle = FontStyle.Bold;
+
+                GUIStyle infoLabel = new GUIStyle(GUI.skin.label);
+                infoLabel.fontSize = 14;
+                infoLabel.alignment = TextAnchor.MiddleLeft;
+
+                GUIStyle button = new GUIStyle(GUI.skin.button);
+                button.fontSize = 14;
+                button.fixedWidth = 250;
+                button.fixedHeight = 50;
+                button.alignment = TextAnchor.MiddleCenter;
+                button.fontStyle = FontStyle.Bold;
+
+                GUILayout.Label("Create your scene !", title);
+                GUILayout.Label("Prompt your projection ideas into the prompt window.", infoLabel);
+
+
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Previous", button))
+                    {
+                        planarProjection.FlagWindow = 2;
+                    }
+                    if (GUILayout.Button("Next", button))
+                    {
+                        planarProjection.FlagWindow = 3;
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
         }
+
         #endregion
     }
 }

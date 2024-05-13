@@ -52,6 +52,10 @@ namespace Scenario.Editor
                     RenderPromptView();
                     break;
 
+                case 4:
+                    RenderResult();
+                    break;
+
                 default:
                     MainView();
                     break;
@@ -236,7 +240,64 @@ namespace Scenario.Editor
                     }
                     if (GUILayout.Button("Next", button))
                     {
+                        planarProjection.FlagWindow = 4;
+                    }
+                }
+                GUILayout.EndHorizontal();
+            }
+            GUILayout.EndVertical();
+        }
+
+        private void RenderResult()
+        {
+            GUILayout.BeginVertical();
+            {
+                GUIStyle title = new GUIStyle(GUI.skin.label);
+                title.fontSize = 18;
+                title.fontStyle = FontStyle.Bold;
+
+                GUIStyle infoLabel = new GUIStyle(GUI.skin.label);
+                infoLabel.fontSize = 14;
+                infoLabel.alignment = TextAnchor.MiddleLeft;
+
+                GUIStyle button = new GUIStyle(GUI.skin.button);
+                button.fontSize = 14;
+                button.fixedWidth = 250;
+                button.fixedHeight = 50;
+                button.alignment = TextAnchor.MiddleCenter;
+                button.fontStyle = FontStyle.Bold;
+
+                GUILayout.Label("Projection Menu", title);
+                GUILayout.Label("Project the result", infoLabel);
+
+                if (planarProjection.RenderResultSelected != null)
+                {
+                    GUIStyle imageStyle = new GUIStyle(GUI.skin.box);
+
+                    imageStyle.fixedWidth = planarProjection.RenderResultSelected.width / 2;
+                    imageStyle.fixedHeight = planarProjection.RenderResultSelected.height / 2;
+
+                    GUILayout.Box(planarProjection.RenderResultSelected, imageStyle);
+                }
+
+                GUILayout.Space(25);
+
+                if (GUILayout.Button("Render Projection", button))
+                {
+                    planarProjection.RenderProjectionWork();
+                }
+
+                GUILayout.Space(25);
+
+                GUILayout.BeginHorizontal();
+                {
+                    if (GUILayout.Button("Previous", button))
+                    {
                         planarProjection.FlagWindow = 3;
+                    }
+                    if (GUILayout.Button("Next", button))
+                    {
+                        planarProjection.FlagWindow = 4;
                     }
                 }
                 GUILayout.EndHorizontal();

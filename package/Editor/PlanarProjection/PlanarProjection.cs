@@ -10,6 +10,7 @@ using UnityEditor.Recorder;
 using UnityEditor.Recorder.Input;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
+using Scenario.Editor;
 
 namespace Scenario.Editor
 {
@@ -17,11 +18,14 @@ namespace Scenario.Editor
     {
         #region Public Fields
 
+        public static PlanarProjection Instance = null;
+
         public int FlagWindow { get { return flagWindow; } set { flagWindow = value; } }
         public GameObject ReferenceObject { get { return referenceObject; } set { referenceObject = value; } }
         public bool CallRecorderInstall { get { return callRecorderInstall; } set { callRecorderInstall = value; } }
         public bool CallPPInstall { get { return callPPInstall; } set { callPPInstall = value; } }
         public Texture2D CaptureImage { get { return captureImage; } set { captureImage = value; } }
+        public Texture2D RenderResultSelected { get { return renderResultSelected; } set { renderResultSelected = value; } }
 
         #endregion
 
@@ -100,7 +104,17 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
+        private Texture2D renderResultSelected = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
         private PromptWindow promptWindow = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Projector projector = null;
 
         #endregion
 
@@ -115,6 +129,11 @@ namespace Scenario.Editor
         private void OnEnable()
         {
             planarProjectionView = new PlanarProjectionView(this);
+
+            if (Instance == null)
+            {
+                Instance = this;
+            }
 
             if (recorderWindow != null)
             {
@@ -235,6 +254,38 @@ namespace Scenario.Editor
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_renderResult"></param>
+        public void OpenPlanarProjection(Texture2D _renderResult)
+        {
+            ShowWindow();
+            flagWindow = 4;
+
+            renderResultSelected = new Texture2D(2,2);
+            renderResultSelected = _renderResult;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void RenderProjectionWork()
+        {
+            if (projector == null)
+            {
+                if (mainCamera != null)
+                {
+                    GameObject projectorObject = new GameObject("Projector");
+                    projectorObject.transform.parent = mainCamera.transform;
+                    projector = projectorObject.AddComponent<Projector>();
+
+                }
+            }
+
+            CreateProjectedLayer();
+        }
+
         #endregion
 
         #region Private Methods
@@ -330,6 +381,27 @@ namespace Scenario.Editor
                 promptWindow.SetAdvancedModality(6);
                 promptWindow.SetAdvancedModalityValue(75);
             }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CreateProjectedLayer()
+        {
+            SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+
+            SerializedProperty it = tagManager.GetIterator();
+            bool showChildren = true;
+            while (it.NextVisible(showChildren))
+            {
+                //set your tags here
+                if (it.name == "User Layer 30")
+                {
+                    Debug.Log(it.ToString());
+                    it.stringValue = "My New Layer Name";
+                }
+            }
+            tagManager.ApplyModifiedProperties();
         }
 
         /// <summary>

@@ -193,6 +193,18 @@ namespace Scenario.Editor
                     }
                 }
             };
+
+            if (InferenceManager.SilenceMode)
+            {
+                buttonActions.Add("Projection Planar",()=> 
+                {
+                    if (PlanarProjection.Instance != null)
+                    {
+                        PlanarProjection.Instance.OpenPlanarProjection(selectedTexture);
+                    }
+                } 
+                );
+            }
         }
 
         /// <summary>

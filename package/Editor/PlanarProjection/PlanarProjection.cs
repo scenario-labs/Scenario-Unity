@@ -283,7 +283,7 @@ namespace Scenario.Editor
                 }
             }
 
-            CreateProjectedLayer();
+            CreateProjectedLayer("Projected");
         }
 
         #endregion
@@ -386,22 +386,50 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
-        private void CreateProjectedLayer()
+        private bool CreateProjectedLayer(string _layerName)
         {
+            // Open tag manager
             SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
-
-            SerializedProperty it = tagManager.GetIterator();
-            bool showChildren = true;
-            while (it.NextVisible(showChildren))
+            // Layers Property
+            SerializedProperty layersProp = tagManager.FindProperty("layers");
+            if (!PropertyExists(layersProp, 0, 31, _layerName))
             {
-                //set your tags here
-                if (it.name == "User Layer 30")
+                SerializedProperty sp;
+                // Start at layer 9th index -> 8 (zero based) => first 8 reserved for unity / greyed out
+                for (int i = 8, j = 31; i < j; i++)
                 {
-                    Debug.Log(it.ToString());
-                    it.stringValue = "My New Layer Name";
+                    sp = layersProp.GetArrayElementAtIndex(i);
+                    if (sp.stringValue == "")
+                    {
+                        // Assign string value to layer
+                        sp.stringValue = _layerName;
+                        Debug.Log("Layer: " + _layerName + " has been added");
+                        // Save settings
+                        tagManager.ApplyModifiedProperties();
+                        return true;
+                    }
+                    if (i == j)
+                        Debug.Log("All allowed layers have been filled");
                 }
             }
-            tagManager.ApplyModifiedProperties();
+            else
+            {
+                //Debug.Log ("Layer: " + layerName + " already exists");
+            }
+            return false;
+        }
+
+        private bool PropertyExists(SerializedProperty property, int start, int end, string value)
+        {
+            for (int i = start; i < end; i++)
+            {
+                SerializedProperty t = property.GetArrayElementAtIndex(i);
+                if (t.stringValue.Equals(value))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

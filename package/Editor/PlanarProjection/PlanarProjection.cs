@@ -11,9 +11,51 @@ using UnityEditor.Recorder.Input;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using Scenario.Editor;
+using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
+using System.Runtime.CompilerServices;
+using Codice.Utils;
 
 namespace Scenario.Editor
 {
+    [Serializable]
+    public struct TargetBundle
+    {
+        #region Public Fields
+
+        public GameObject Target { get { return target; } set { target = value; } }
+        public MeshFilter MeshTarget { get { return meshTarget; } set { meshTarget = value; } }
+        public MeshRenderer MeshRenderer { get { return meshRenderer; } set { meshRenderer = value; } }
+        //public EOrientation EOrientation { get { return eOrientation; } set { eOrientation = value; } }
+        public List<Texture2D> TexturesGenerated { get { return texturesGenerated; } set { texturesGenerated = value; } }
+
+        #endregion
+
+        #region Private Fields
+
+        [SerializeField]
+        private GameObject target;
+
+        [SerializeField]
+        private MeshFilter meshTarget;
+
+        [SerializeField]
+        private MeshRenderer meshRenderer;
+
+        /*[SerializeField]
+        private EOrientation eOrientation;*/
+
+        [SerializeField]
+        private List<Texture2D> texturesGenerated;
+
+        #endregion
+
+        #region Public Methods
+        #endregion
+
+        #region Private Methods
+        #endregion
+    }
+
     public class PlanarProjection : EditorWindow
     {
         #region Public Fields
@@ -109,12 +151,68 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
+        private Texture2D projectedTexture = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
         private PromptWindow promptWindow = null;
 
         /// <summary>
         /// 
         /// </summary>
         private Projector projector = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Material globalProjector = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Shader projectionShader = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Shader renderShader = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Camera renderCamera = null;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private RenderTexture renderTexture = null;
+
+        private int flag = -1;
+
+        private List<TargetBundle> targetBundles = new List<TargetBundle>();
+
+        private TargetBundle selectedTargetBundle;
+
+        private string destinationPath = string.Empty;
+
+        private float scaleFlat = 2f;
+
+        private float xOffset = 1f;
+
+        private float yOffset = 1f;
+
+        private Vector2[] meshUVs = new Vector2[0];
+
+        private Vector2 textureSize = new Vector2(1024, 1024);
+
+        private int textureWidth = 1024;
+
+        private int textureHeight = 1024;
+
+        private bool activeSelectFolderSave = true;
+
+        private bool processing = false;
 
         #endregion
 
@@ -274,16 +372,57 @@ namespace Scenario.Editor
         {
             if (projector == null)
             {
-                if (mainCamera != null)
-                {
-                    GameObject projectorObject = new GameObject("Projector");
-                    projectorObject.transform.parent = mainCamera.transform;
-                    projector = projectorObject.AddComponent<Projector>();
-
-                }
+                SetProjector();
             }
 
             CreateProjectedLayer("Projected");
+
+            globalProjector = CommonGraphics.GetMaterial("Scenario_Projector Global");
+
+            if (globalProjector != null)
+            {
+                if (globalProjector.HasTexture("_Decals"))
+                {
+                    if (renderResultSelected != null)
+                    {
+                        globalProjector.SetTexture("_Decals", renderResultSelected);
+                    }
+                    else
+                    {
+                        throw new Exception("Result selected texture is empty");
+                    }
+                }
+
+                projector.material = globalProjector;
+            }
+
+            renderShader = null;
+            if (renderShader == null)
+            {
+                renderShader = CommonGraphics.GetShader("Scenario/Unlit/Scenario 2UV");
+            }
+
+            if (referenceObject != null)
+            {
+                referenceObject.layer = LayerMask.NameToLayer("Projected");
+
+                if (referenceObject.GetComponent<MeshRenderer>())
+                { 
+                    MeshRenderer renderer = referenceObject.GetComponent<MeshRenderer>();
+                    renderer.material = globalProjector;
+                }
+
+                SetLevel();
+            }
+
+            if (renderCamera == null)
+            {
+                CreateRenderCamera();
+            }
+
+            SearchTargets();
+
+            RenderProjection();
         }
 
         #endregion
@@ -293,9 +432,246 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
+        private void SearchTargets()
+        {
+            if (targetBundles != null && targetBundles.Count > 0)
+            {
+                targetBundles.Clear();
+            }
+
+            if (referenceObject != null)
+            {
+                SearchTarget(referenceObject.transform);
+            }
+            else
+            {
+                throw new Exception("Reference Object not filled, go back to previous step.");
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void RenderProjection()
+        {
+            flag = -1;
+            EditorCoroutineUtility.StartCoroutine(RenderAll(), this);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_searchTarget"></param>
+        private void SearchTarget(Transform _searchTarget)
+        {
+            if (_searchTarget != null)
+            {
+                foreach (Transform child in _searchTarget.transform)
+                {
+                    if (child.childCount > 0)
+                    {
+                        SearchTarget(child);
+                    }
+
+                    TargetBundle bundleObject = new TargetBundle();
+                    bundleObject.Target = child.gameObject;
+                    if (child.GetComponent<MeshFilter>())
+                    {
+                        bundleObject.MeshTarget = child.GetComponent<MeshFilter>();
+                    }
+                    else
+                    {
+                        Debug.LogError($"{bundleObject.Target} does not have a Mesh Filter Component", bundleObject.Target);
+                    }
+
+                    if (child.GetComponent<MeshRenderer>())
+                    {
+                        bundleObject.MeshRenderer = child.GetComponent<MeshRenderer>();
+                    }
+                    else
+                    {
+                        Debug.LogError($"{bundleObject.Target} does not have a Mesh Renderer Component", bundleObject.Target);
+                    }
+
+                    //bundleObject.EOrientation = facingOrientation;
+
+                    targetBundles.Add(bundleObject);
+
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        private bool SelectTarget()
+        {
+            if (targetBundles != null && targetBundles.Count > 0)
+            {
+                if (flag + 1 < targetBundles.Count)
+                {
+                    flag++;
+                    selectedTargetBundle = targetBundles[flag];
+                    return true;
+                }
+                else
+                {
+                    flag = -1;
+                    return false;
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         private void GetMainCamera()
         { 
             mainCamera = Camera.main;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void CreateRenderCamera()
+        {
+            // Calculate the orthographic size of the camera to fit the mesh
+            //Bounds bounds = selectedTargetBundle.MeshRenderer.bounds;
+            //float maxDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+            float maxDimension = 20;
+            float orthographicSize = maxDimension / 2f;
+
+            GameObject tempCameraObject = new GameObject("RenderCamera");
+            renderCamera = tempCameraObject.AddComponent<Camera>();
+            renderCamera.orthographic = true;
+            renderCamera.farClipPlane = 50;
+            renderCamera.clearFlags = CameraClearFlags.Color;
+            renderCamera.backgroundColor = Color.white;
+            renderCamera.orthographicSize = orthographicSize;
+            renderCamera.cullingMask = 1 << LayerMask.NameToLayer("Projected");
+
+            /*float sizeA, sizeB;
+
+            sizeB = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
+
+            if (sizeB == bounds.size.x)
+            {
+                sizeA = Mathf.Max(bounds.size.y, bounds.size.z);
+            }
+            else if (sizeB == bounds.size.y)
+            {
+                sizeA = Mathf.Max(bounds.size.x, bounds.size.z);
+            }
+            else
+            {
+                sizeA = Mathf.Max(bounds.size.x, bounds.size.y);
+            }
+
+            if ((sizeA / sizeB) > 1.0f)
+            {
+                renderCamera.aspect = sizeB / sizeA;
+            }
+            else
+            {
+                renderCamera.aspect = sizeA / sizeB;
+            }
+            Debug.Log("Vector3 bounds: " + bounds.size + " calcul: " + sizeA + " / " + sizeB + " = " + renderCamera.aspect, renderCamera.gameObject);
+            //tempCamera.aspect = 0.9f;
+            */
+
+            renderCamera.transform.position = referenceObject.transform.position + referenceObject.transform.forward * (maxDimension * 2f);
+            //renderCamera.transform.parent = selectedTargetBundle.Target.transform;
+            renderCamera.transform.LookAt(referenceObject.transform.position);
+
+            /*Quaternion tempCameraRotation = renderCamera.transform.localRotation;
+            tempCameraRotation.eulerAngles = new Vector3(renderCamera.transform.localRotation.eulerAngles.x, 0, 0);
+            renderCamera.transform.localRotation = tempCameraRotation;*/
+
+            //Create a render texture for rendering
+            if (renderResultSelected != null)
+            {
+                renderTexture = new RenderTexture(renderResultSelected.width, renderResultSelected.height, 0);
+            }
+            else
+            {
+                renderTexture = new RenderTexture(1824, 1024, 0);
+            }
+            renderCamera.targetTexture = renderTexture;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetProjector()
+        {
+            if (mainCamera != null)
+            {
+                GameObject projectorObject = new GameObject("Projector");
+                projectorObject.transform.parent = mainCamera.transform;
+                projector = projectorObject.AddComponent<Projector>();
+                
+                projector.aspectRatio = captureImage.width / captureImage.height;
+                projector.orthographicSize = 5;
+                Debug.Log(LayerMask.NameToLayer("Projected"));
+                projector.ignoreLayers = LayerMask.NameToLayer("Everything") - ( 1 << LayerMask.NameToLayer("Projected"));
+            }
+            else
+            {
+                GetMainCamera();
+                SetProjector();
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetLevel()
+        {
+            if (referenceObject != null)
+            {
+                if (referenceObject.transform.childCount > 0)
+                {
+                    foreach (Transform child in referenceObject.transform)
+                    {
+                        SetPart(child);
+                    }
+                }
+                else
+                {
+                    SetPart(referenceObject.transform);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_part"></param>
+        private void SetPart(Transform _part)
+        {
+            if (_part != null)
+            {
+                _part.gameObject.layer = LayerMask.NameToLayer("Projected");
+
+                if (_part.GetComponent<MeshRenderer>())
+                {
+                    MeshRenderer childRenderer = _part.GetComponent<MeshRenderer>();
+                    if (globalProjector != null)
+                    {
+                        childRenderer.material = globalProjector;
+                    }
+                }
+
+                if (_part.childCount > 0)
+                {
+                    foreach (Transform child in _part)
+                    {
+                        SetPart(child);
+                    }
+                }
+            }
         }
 
         /// <summary>
@@ -380,6 +756,246 @@ namespace Scenario.Editor
             {
                 promptWindow.SetAdvancedModality(6);
                 promptWindow.SetAdvancedModalityValue(75);
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SetPropertiesToRender()
+        {
+            Material projectorMaterial = selectedTargetBundle.MeshRenderer.material;
+
+            if (projectorMaterial.HasFloat("_Slider"))
+            {
+                projectorMaterial.SetFloat("_Slider", 0.0f);
+                projectorMaterial.SetFloat("_ScaleFlat", scaleFlat);
+                projectorMaterial.SetFloat("_OffsetXFlat", xOffset);
+                projectorMaterial.SetFloat("_OffsetYFlat", yOffset);
+            }
+        }
+
+        [ContextMenu("Reset properties")]
+        public void ResetPropertiesToRender()
+        {
+            Material projectorMaterial = selectedTargetBundle.MeshRenderer.material;
+
+            if (projectorMaterial.HasFloat("_Slider"))
+            {
+                projectorMaterial.SetFloat("_Slider", 1.0f);
+                /*projectorMaterial.SetFloat("_ScaleFlat", scaleFlat);
+                projectorMaterial.SetFloat("_OffsetXFlat", xOffset);
+                projectorMaterial.SetFloat("_OffsetYFlat", yOffset);*/
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void PrepareBundleProperties()
+        {
+            if (selectedTargetBundle.Target != null)
+            {
+                if (selectedTargetBundle.TexturesGenerated == null)
+                {
+                    selectedTargetBundle.TexturesGenerated = new List<Texture2D>();
+                }
+                else if (selectedTargetBundle.TexturesGenerated.Count > 0)
+                {
+                    selectedTargetBundle.TexturesGenerated.Clear();
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void RenderCamera()
+        {
+            // Render the scene from the camera's perspective
+            renderCamera.Render();
+
+            // Read pixels from the render texture
+            RenderTexture.active = renderTexture;
+            projectedTexture.ReadPixels(new Rect(0, 0, textureWidth, textureHeight), 0, 0);
+            projectedTexture.Apply();
+            RenderTexture.active = null;
+
+            // TODO Check if it's usefull
+            // Map the projected texture onto the UV coordinates
+            Color[] pixels = projectedTexture.GetPixels();
+            for (int i = 0; i < meshUVs.Length; i++)
+            {
+                // Scale UV coordinates based on mesh scale to prevent texture deformation
+                Vector2 scaledUV = new Vector2(meshUVs[i].x * selectedTargetBundle.MeshRenderer.transform.localScale.x, meshUVs[i].y * selectedTargetBundle.MeshRenderer.transform.localScale.y);
+                int x = Mathf.FloorToInt(scaledUV.x * renderCamera.aspect);
+                int y = Mathf.FloorToInt(scaledUV.y * renderCamera.aspect);
+                projectedTexture.SetPixel(x, y, pixels[i]);
+            }
+
+            projectedTexture.Apply();
+
+            if (selectedTargetBundle.Target != null)
+            {
+                Texture2D toAdd = projectedTexture;
+                if (selectedTargetBundle.TexturesGenerated != null)
+                {
+                    selectedTargetBundle.TexturesGenerated.Add(toAdd);
+                }
+                else
+                {
+                    selectedTargetBundle.TexturesGenerated = new List<Texture2D>();
+                    selectedTargetBundle.TexturesGenerated.Add(toAdd);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void SetTexture()
+        {
+            // Get the texture size
+            textureWidth = (int)textureSize.x; // Adjust as needed
+            textureHeight = (int)textureSize.y; // Adjust as needed
+
+            // Create a new texture to store the projected result
+            projectedTexture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGB24, false);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        [ContextMenu("Isolate Target")]
+        public void IsolateTarget()
+        {
+            if (selectedTargetBundle.MeshRenderer != null)
+            {
+                if (selectedTargetBundle.MeshRenderer.transform.parent != null)
+                {
+                    Transform parent = selectedTargetBundle.MeshRenderer.transform.parent;
+
+                    if (parent.childCount > 0)
+                    {
+                        foreach (Transform child in parent)
+                        {
+                            if (child != selectedTargetBundle.MeshRenderer.transform)
+                            {
+                                child.gameObject.SetActive(false);
+                            }
+                            else
+                            {
+                                child.gameObject.SetActive(true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void GetBackOthers()
+        {
+            if (selectedTargetBundle.MeshRenderer != null)
+            {
+                if (selectedTargetBundle.MeshRenderer.transform.parent != null)
+                {
+                    Transform parent = selectedTargetBundle.MeshRenderer.transform.parent;
+
+                    if (parent.childCount > 0)
+                    {
+                        foreach (Transform child in parent)
+                        {
+                            if (child != selectedTargetBundle.MeshRenderer.transform)
+                            {
+                                child.gameObject.SetActive(true);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void SaveRender(/*int _index*/)
+        {
+            if (activeSelectFolderSave)
+            {
+                // Save the texture
+
+                if (string.IsNullOrEmpty(destinationPath))
+                {
+                    destinationPath = EditorUtility.SaveFolderPanel("Save Projected Texture", "", $@"ProjectedTexture_{flag}.png");
+                    Debug.Log(destinationPath);
+                }
+
+                if (destinationPath.Length != 0)
+                {
+                    byte[] bytes = projectedTexture.EncodeToPNG();
+                    System.IO.File.WriteAllBytes($@"{destinationPath}/ProjectedTexture_{flag}_{selectedTargetBundle.Target.gameObject.name}.png", bytes);
+                    Debug.Log("Projected texture saved to: " + $@"{destinationPath}/ProjectedTexture_{flag}_{selectedTargetBundle.Target.gameObject.name}.png");
+
+                    // Apply the texture to the material of the target mesh
+                    //Material material = selectedTargetBundle.MeshRenderer.material;
+                    //material.mainTexture = projectedTexture;
+                }
+            }
+            else
+            {
+                // TODO save by default
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void ApplyProjection()
+        {
+            if (renderShader != null && selectedTargetBundle.TexturesGenerated != null && selectedTargetBundle.TexturesGenerated.Count > 0)
+            {
+                Material resultProjected = new Material(renderShader);
+
+
+                if (resultProjected.HasTexture("_MainTex"))
+                {
+                    resultProjected.SetTexture("_MainTex", selectedTargetBundle.TexturesGenerated[0]);
+                }
+
+                /*if (resultProjected.HasTexture("_MainTexFront"))
+                {
+                    resultProjected.SetTexture("_MainTexFront", selectedTargetBundle.TexturesGenerated[1]);
+                }
+
+                if (resultProjected.HasTexture("_MainTexBack"))
+                {
+                    resultProjected.SetTexture("_MainTexBack", selectedTargetBundle.TexturesGenerated[3]);
+                }
+
+                if (resultProjected.HasTexture("_MainTexLeft"))
+                {
+                    resultProjected.SetTexture("_MainTexLeft", selectedTargetBundle.TexturesGenerated[4]);
+                }
+
+                if (resultProjected.HasTexture("_MainTexRight"))
+                {
+                    resultProjected.SetTexture("_MainTexRight", selectedTargetBundle.TexturesGenerated[5]);
+                }
+
+                if (resultProjected.HasTexture("_MainTexTop"))
+                {
+                    resultProjected.SetTexture("_MainTexTop", selectedTargetBundle.TexturesGenerated[0]);
+                }
+
+                if (resultProjected.HasTexture("_MainTexBottom"))
+                {
+                    resultProjected.SetTexture("_MainTexBottom", selectedTargetBundle.TexturesGenerated[2]);
+                }*/
+
+                selectedTargetBundle.MeshRenderer.material = resultProjected;
             }
         }
 
@@ -472,6 +1088,85 @@ namespace Scenario.Editor
             yield return new EditorWaitForSeconds(1f);
             recorderWindow.Close();
             recorderWindow = null;
+        }
+
+        IEnumerator RenderAll()
+        {
+            EditorCoroutine renderCoroutine = null;
+            while (flag < targetBundles.Count - 1)
+            {
+                SelectTarget();
+
+                if (renderCoroutine == null)
+                {
+                    processing = true;
+                    renderCoroutine = EditorCoroutineUtility.StartCoroutine(RenderOneGeneration(), this);
+                }
+
+                while (processing)
+                {
+                    yield return new WaitForEndOfFrame();
+                }
+
+                renderCoroutine = null;
+            }
+
+            renderCoroutine = null;
+            destinationPath = string.Empty;
+            yield return null;
+        }
+
+        IEnumerator RenderOneGeneration()
+        {
+            // Ensure Projector component is assigned
+            if (projector == null)
+            {
+                Debug.LogError("Projector component not assigned.");
+                yield return null;
+            }
+            else if (!projector.enabled)
+            {
+                projector.enabled = true;
+            }
+
+            // Get the mesh
+            if (selectedTargetBundle.Target == null || selectedTargetBundle.MeshTarget.sharedMesh == null)
+            {
+                Debug.LogError("MeshFilter component or mesh not found.");
+                yield return null;
+            }
+
+            processing = true;
+
+            //GetMeshFromMeshFilter();
+            IsolateTarget();
+
+            //ClearMaterialTexture();
+
+            SetTexture();
+
+            //CreateTemporaryRenderCamera();
+
+            SetPropertiesToRender();
+            yield return new WaitForSeconds(1.0f);
+
+            PrepareBundleProperties();
+
+            RenderCamera();
+
+            SaveRender();
+            yield return new WaitForSeconds(1.0f);
+            ResetPropertiesToRender();
+
+            ApplyProjection();
+
+            // Deactivate the projector
+            projector.enabled = false;
+
+            GetBackOthers();
+
+            processing = false;
+            yield return null;
         }
 
         #endregion

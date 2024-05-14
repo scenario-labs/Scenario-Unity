@@ -32,6 +32,10 @@ namespace Scenario.Editor
 
         #region Public Methods
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_position"></param>
         public void Render(Rect _position)
         {
             switch (planarProjection.FlagWindow)
@@ -66,6 +70,9 @@ namespace Scenario.Editor
 
         #region Private Methods
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void MainView()
         {
             GUILayout.BeginVertical();
@@ -89,6 +96,9 @@ namespace Scenario.Editor
             GUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void BasicPrepareView()
         {
             GUILayout.BeginVertical();
@@ -134,6 +144,9 @@ namespace Scenario.Editor
             GUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void RenderSceneView()
         {
             GUILayout.BeginVertical();
@@ -209,6 +222,9 @@ namespace Scenario.Editor
             GUILayout.EndVertical();   
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void RenderPromptView()
         {
             GUILayout.BeginVertical();
@@ -248,6 +264,9 @@ namespace Scenario.Editor
             GUILayout.EndVertical();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         private void RenderResult()
         {
             GUILayout.BeginVertical();

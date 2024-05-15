@@ -123,6 +123,8 @@ namespace Scenario.Editor
 
                 planarProjection.ReferenceObject = (GameObject)EditorGUILayout.ObjectField(planarProjection.ReferenceObject, typeof(GameObject), true);
 
+
+
                 if (GUILayout.Button("Auto configure scene", button))
                 {
                     planarProjection.AutoConfigureScene();

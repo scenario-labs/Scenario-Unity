@@ -6,8 +6,10 @@ using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
+#if UNITY_RECORDER
 using UnityEditor.Recorder;
 using UnityEditor.Recorder.Input;
+#endif
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -109,6 +111,8 @@ namespace Scenario.Editor
         /// </summary>
         private bool callPPInstall = false;
 
+#if UNITY_RECORDER
+
         /// <summary>
         /// 
         /// </summary>
@@ -128,6 +132,8 @@ namespace Scenario.Editor
         /// 
         /// </summary>
         private ImageRecorderSettings imageRecorderSettings = null;
+
+#endif
 
         /// <summary>
         /// 
@@ -208,7 +214,7 @@ namespace Scenario.Editor
 
         private bool processing = false;
 
-        #endregion
+#endregion
 
         #region MonoBehaviour Callbacks
 
@@ -226,7 +232,7 @@ namespace Scenario.Editor
             {
                 Instance = this;
             }
-
+#if UNITY_RECORDER
             if (recorderWindow != null)
             {
                 EditorCoroutineUtility.StartCoroutine(CloseRecorder(), this);
@@ -236,6 +242,7 @@ namespace Scenario.Editor
                 directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
                 LoadLastCapture();
             }
+#endif
         }
 
         private void OnGUI()
@@ -243,7 +250,7 @@ namespace Scenario.Editor
             planarProjectionView.Render(this.position);
         }
 
-        #endregion
+#endregion
 
         #region Public Methods
 
@@ -321,12 +328,14 @@ namespace Scenario.Editor
         /// </summary>
         public void LaunchUnityRecorder()
         {
+            #if UNITY_RECORDER
             recorderWindow = GetWindow<RecorderWindow>();
 
             var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
 
             recorderWindow.ApplyPreset( preset );
             PrepareRecorderSettings(true);
+#endif
 
         }
 
@@ -431,7 +440,7 @@ namespace Scenario.Editor
             RenderProjection();
         }
 
-        #endregion
+#endregion
 
         #region Private Methods
 
@@ -546,13 +555,13 @@ namespace Scenario.Editor
             // Calculate the orthographic size of the camera to fit the mesh
             //Bounds bounds = selectedTargetBundle.MeshRenderer.bounds;
             //float maxDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            float maxDimension = 10;
+            float maxDimension = 100;
             float orthographicSize = maxDimension / 2f;
 
             GameObject tempCameraObject = new GameObject("RenderCamera");
             renderCamera = tempCameraObject.AddComponent<Camera>();
             renderCamera.orthographic = true;
-            renderCamera.farClipPlane = 50;
+            renderCamera.farClipPlane = 150;
             renderCamera.clearFlags = CameraClearFlags.Skybox;
             //renderCamera.backgroundColor = Color.white;
             renderCamera.orthographicSize = orthographicSize;
@@ -587,7 +596,7 @@ namespace Scenario.Editor
             //tempCamera.aspect = 0.9f;
             */
 
-            renderCamera.transform.position = referenceObject.transform.position + referenceObject.transform.forward * (maxDimension * 2f);
+            renderCamera.transform.position = referenceObject.transform.position - referenceObject.transform.forward * 10f;
             //renderCamera.transform.parent = selectedTargetBundle.Target.transform;
             renderCamera.transform.LookAt(referenceObject.transform.position);
 
@@ -1045,7 +1054,9 @@ namespace Scenario.Editor
         {
             yield return new EditorWaitForSeconds(1f);
             // TODO Trouble on register the first capture from the recorder inside assets folder
+#if UNITY_RECORDER
             recorderWindow.StartRecording();
+#endif
         }
 
         /// <summary>
@@ -1056,6 +1067,7 @@ namespace Scenario.Editor
         {
             yield return new EditorWaitForSeconds(2f);
 
+#if UNITY_RECORDER
             var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
 
             recorderWindow.ApplyPreset(preset);
@@ -1067,6 +1079,7 @@ namespace Scenario.Editor
             
             directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
             LoadLastCapture();
+#endif
         }
 
         IEnumerator RenderAll()
@@ -1148,6 +1161,6 @@ namespace Scenario.Editor
             yield return null;
         }
 
-        #endregion
+#endregion
     }
 }

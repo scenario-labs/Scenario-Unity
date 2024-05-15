@@ -247,6 +247,14 @@ namespace Scenario.Editor
                 GUILayout.Label("Create your scene !", title);
                 GUILayout.Label("Prompt your projection ideas into the prompt window.", infoLabel);
 
+                GUILayout.Space(25);
+
+                if (GUILayout.Button("Select existing images", button))
+                {
+                    planarProjection.OpenImageWindow();
+                }
+
+                GUILayout.Space(25);
 
                 GUILayout.BeginHorizontal();
                 {
@@ -293,8 +301,8 @@ namespace Scenario.Editor
                 {
                     GUIStyle imageStyle = new GUIStyle(GUI.skin.box);
 
-                    imageStyle.fixedWidth = planarProjection.RenderResultSelected.width / 2;
-                    imageStyle.fixedHeight = planarProjection.RenderResultSelected.height / 2;
+                    imageStyle.fixedWidth = planarProjection.RenderResultSelected.width / 6;
+                    imageStyle.fixedHeight = planarProjection.RenderResultSelected.height / 6;
 
                     GUILayout.Box(planarProjection.RenderResultSelected, imageStyle);
                 }

@@ -198,10 +198,23 @@ namespace Scenario.Editor
             {
                 buttonActions.Add("Projection Planar",()=> 
                 {
-                    if (PlanarProjection.Instance != null)
+                    Action<string> successToProjection = (filePath) =>
                     {
-                        PlanarProjection.Instance.OpenPlanarProjection(selectedTexture);
-                    }
+                        if (PlanarProjection.Instance != null)
+                        {
+                            PlanarProjection.Instance.OpenPlanarProjection(filePath);
+                        }
+                    };
+
+                    CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => {
+                        CommonUtils.SaveTextureAsPNG(response, null, importPreset: PluginSettings.TexturePreset, successToProjection);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                        };
+                    });
+
+                    
                 } 
                 );
             }

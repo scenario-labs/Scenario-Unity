@@ -10,10 +10,6 @@ using UnityEditor.Recorder;
 using UnityEditor.Recorder.Input;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
-using Scenario.Editor;
-using static Unity.IO.LowLevel.Unsafe.AsyncReadManagerMetrics;
-using System.Runtime.CompilerServices;
-using Codice.Utils;
 
 namespace Scenario.Editor
 {
@@ -202,8 +198,6 @@ namespace Scenario.Editor
 
         private float yOffset = 1f;
 
-        private Vector2[] meshUVs = new Vector2[0];
-
         private Vector2 textureSize = new Vector2(1024, 1024);
 
         private int textureWidth = 1024;
@@ -237,8 +231,7 @@ namespace Scenario.Editor
             {
                 EditorCoroutineUtility.StartCoroutine(CloseRecorder(), this);
             }
-
-            if (directoryInfo == null)
+            else
             {
                 directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
                 LoadLastCapture();
@@ -330,7 +323,10 @@ namespace Scenario.Editor
         {
             recorderWindow = GetWindow<RecorderWindow>();
 
-            PrepareRecorderSettings();
+            var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
+
+            recorderWindow.ApplyPreset( preset );
+            PrepareRecorderSettings(true);
 
         }
 
@@ -355,14 +351,24 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
+        public void OpenImageWindow()
+        {
+            InferenceManager.SilenceMode = true;
+            GetWindow<Images>();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="_renderResult"></param>
-        public void OpenPlanarProjection(Texture2D _renderResult)
+        public void OpenPlanarProjection(string _filePath)
         {
             ShowWindow();
             flagWindow = 4;
 
+            byte[] imageData = File.ReadAllBytes(_filePath);
             renderResultSelected = new Texture2D(2,2);
-            renderResultSelected = _renderResult;
+            renderResultSelected.LoadImage(imageData);
         }
 
         /// <summary>
@@ -381,11 +387,11 @@ namespace Scenario.Editor
 
             if (globalProjector != null)
             {
-                if (globalProjector.HasTexture("_Decals"))
+                if (globalProjector.HasTexture("_Decal"))
                 {
                     if (renderResultSelected != null)
                     {
-                        globalProjector.SetTexture("_Decals", renderResultSelected);
+                        globalProjector.SetTexture("_Decal", renderResultSelected);
                     }
                     else
                     {
@@ -395,7 +401,7 @@ namespace Scenario.Editor
 
                 projector.material = globalProjector;
             }
-
+            
             renderShader = null;
             if (renderShader == null)
             {
@@ -540,15 +546,15 @@ namespace Scenario.Editor
             // Calculate the orthographic size of the camera to fit the mesh
             //Bounds bounds = selectedTargetBundle.MeshRenderer.bounds;
             //float maxDimension = Mathf.Max(bounds.size.x, bounds.size.y, bounds.size.z);
-            float maxDimension = 20;
+            float maxDimension = 10;
             float orthographicSize = maxDimension / 2f;
 
             GameObject tempCameraObject = new GameObject("RenderCamera");
             renderCamera = tempCameraObject.AddComponent<Camera>();
             renderCamera.orthographic = true;
             renderCamera.farClipPlane = 50;
-            renderCamera.clearFlags = CameraClearFlags.Color;
-            renderCamera.backgroundColor = Color.white;
+            renderCamera.clearFlags = CameraClearFlags.Skybox;
+            //renderCamera.backgroundColor = Color.white;
             renderCamera.orthographicSize = orthographicSize;
             renderCamera.cullingMask = 1 << LayerMask.NameToLayer("Projected");
 
@@ -592,11 +598,11 @@ namespace Scenario.Editor
             //Create a render texture for rendering
             if (renderResultSelected != null)
             {
-                renderTexture = new RenderTexture(renderResultSelected.width, renderResultSelected.height, 0);
+                renderTexture = new RenderTexture(1024, 1024, 0);
             }
             else
             {
-                renderTexture = new RenderTexture(1824, 1024, 0);
+                renderTexture = new RenderTexture(1024, 1024, 0);
             }
             renderCamera.targetTexture = renderTexture;
         }
@@ -610,11 +616,15 @@ namespace Scenario.Editor
             {
                 GameObject projectorObject = new GameObject("Projector");
                 projectorObject.transform.parent = mainCamera.transform;
+                projectorObject.transform.position = mainCamera.transform.position;
+                projectorObject.transform.rotation = mainCamera.transform.rotation;
+
                 projector = projectorObject.AddComponent<Projector>();
-                
-                projector.aspectRatio = captureImage.width / captureImage.height;
+
+                projector.aspectRatio = ((float)renderResultSelected.width / (float)renderResultSelected.height);
+
                 projector.orthographicSize = 5;
-                Debug.Log(LayerMask.NameToLayer("Projected"));
+
                 projector.ignoreLayers = LayerMask.NameToLayer("Everything") - ( 1 << LayerMask.NameToLayer("Projected"));
             }
             else
@@ -677,42 +687,12 @@ namespace Scenario.Editor
         /// <summary>
         /// 
         /// </summary>
-        private void PrepareRecorderSettings()
+        private void PrepareRecorderSettings(bool _record)
         {
-            recorderSettings = CreateInstance<RecorderControllerSettings>();
-            recorderSettings.ExitPlayMode = true;
-            recorderSettings.SetRecordModeToSingleFrame(1);
-
-            imageRecorderSettings = CreateInstance<ImageRecorderSettings>();
-            imageRecorderSettings.Enabled = true;
-            imageRecorderSettings.RecordMode = RecordMode.Manual;
-            imageRecorderSettings.name = "Scenario Sequence";
-
-            imageRecorderSettings.imageInputSettings = new GameViewInputSettings
-            {
-                OutputWidth = 1824,
-                OutputHeight = 1024,
-            };
-
-            imageRecorderSettings.Enabled = true;
-            imageRecorderSettings.FileNameGenerator.ForceAssetsFolder = true;
-            imageRecorderSettings.FileNameGenerator.FileName = "<Recorder>_<Take>";
-
-            if (!Directory.Exists($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}"))
-            {
-                directoryInfo = Directory.CreateDirectory($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}");
+            if (_record)
+            { 
+                EditorCoroutineUtility.StartCoroutine(StartRecorder(), this);
             }
-            else
-            {
-                directoryInfo = new DirectoryInfo($"{Application.dataPath}/{imageRecorderSettings.FileNameGenerator.Leaf}");
-                Debug.Log(directoryInfo.FullName);
-            }
-
-            recorderSettings.AddRecorderSettings(imageRecorderSettings);
-            recorderController = new RecorderController(recorderSettings);
-            recorderWindow.SetRecorderControllerSettings(recorderSettings);
-
-            EditorCoroutineUtility.StartCoroutine(Start(), this);
         }
 
         /// <summary>
@@ -726,20 +706,24 @@ namespace Scenario.Editor
                 FileSystemInfo fileSystemInfo = null;
                 foreach (FileSystemInfo fsi in directoryInfo.EnumerateFileSystemInfos())
                 {
-                    if (fileSystemInfo == null)
+                    if (!fsi.Extension.Equals(".meta"))
                     { 
-                        fileSystemInfo = fsi;
-                        continue;
-                    }
+                        if (fileSystemInfo == null)
+                        { 
+                            fileSystemInfo = fsi;
+                            continue;
+                        }
 
-                    if (fsi.CreationTimeUtc < fileSystemInfo.CreationTimeUtc)
-                    {
-                        fileSystemInfo = fsi;
-                        continue;
+                        if (fsi.CreationTimeUtc > fileSystemInfo.CreationTimeUtc)
+                        {
+                            fileSystemInfo = fsi;
+                            continue;
+                        }
                     }
                 }
-                Debug.Log(fileSystemInfo.FullName);
                 pathFile = fileSystemInfo.FullName;
+
+                Debug.Log(pathFile);
 
                 captureImage = new Texture2D(2, 2);
                 byte[] imageData = File.ReadAllBytes(pathFile);
@@ -821,20 +805,6 @@ namespace Scenario.Editor
             projectedTexture.Apply();
             RenderTexture.active = null;
 
-            // TODO Check if it's usefull
-            // Map the projected texture onto the UV coordinates
-            Color[] pixels = projectedTexture.GetPixels();
-            for (int i = 0; i < meshUVs.Length; i++)
-            {
-                // Scale UV coordinates based on mesh scale to prevent texture deformation
-                Vector2 scaledUV = new Vector2(meshUVs[i].x * selectedTargetBundle.MeshRenderer.transform.localScale.x, meshUVs[i].y * selectedTargetBundle.MeshRenderer.transform.localScale.y);
-                int x = Mathf.FloorToInt(scaledUV.x * renderCamera.aspect);
-                int y = Mathf.FloorToInt(scaledUV.y * renderCamera.aspect);
-                projectedTexture.SetPixel(x, y, pixels[i]);
-            }
-
-            projectedTexture.Apply();
-
             if (selectedTargetBundle.Target != null)
             {
                 Texture2D toAdd = projectedTexture;
@@ -845,7 +815,6 @@ namespace Scenario.Editor
                 else
                 {
                     selectedTargetBundle.TexturesGenerated = new List<Texture2D>();
-                    selectedTargetBundle.TexturesGenerated.Add(toAdd);
                 }
             }
         }
@@ -1072,7 +1041,7 @@ namespace Scenario.Editor
         /// 
         /// </summary>
         /// <returns></returns>
-        IEnumerator Start()
+        IEnumerator StartRecorder()
         {
             yield return new EditorWaitForSeconds(1f);
             // TODO Trouble on register the first capture from the recorder inside assets folder
@@ -1085,9 +1054,19 @@ namespace Scenario.Editor
         /// <returns></returns>
         IEnumerator CloseRecorder()
         {
-            yield return new EditorWaitForSeconds(1f);
+            yield return new EditorWaitForSeconds(2f);
+
+            var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
+
+            recorderWindow.ApplyPreset(preset);
+
             recorderWindow.Close();
             recorderWindow = null;
+
+            yield return new EditorWaitForSeconds(2f);
+            
+            directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
+            LoadLastCapture();
         }
 
         IEnumerator RenderAll()

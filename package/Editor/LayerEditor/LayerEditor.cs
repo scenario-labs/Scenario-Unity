@@ -211,12 +211,12 @@ namespace Scenario.Editor
             Vector2 imageSize = imageSizes[i];
             bool isDragging = isDraggingList[i];
 
-            float imageSizeXHalf = (imageSize.x / 2.0f);
-            float imageSizeYHalf = (imageSize.y / 2.0f);
-            var halfSize = new Vector2(imageSizeXHalf, imageSizeYHalf);
+            // Calculate the center point of the image
+            Vector2 imageCenterPoint = imagePosition + imageSize / 2f;
 
-            // Calculate the transformed position with the center as anchor
-            Vector2 transformedPosition = canvasCenter + (imagePosition - halfSize) * zoomFactor;
+            // Calculate the transformed position with the center point as anchor
+            Vector2 transformedCenterPoint = canvasCenter + (imageCenterPoint - canvasCenter) * zoomFactor;
+            Vector2 transformedPosition = transformedCenterPoint - imageSize * zoomFactor / 2f;
             Vector2 transformedSize = imageSize * zoomFactor;
 
             Rect imageRect = new Rect(transformedPosition, transformedSize);
@@ -231,7 +231,7 @@ namespace Scenario.Editor
 
             if (Event.current.type == EventType.ScrollWheel)
             {
-                HandleScrollWheel(i, ref imageSize, ref imageRect);
+                HandleScrollWheel(i, ref imageSize, ref imagePosition, ref imageRect);
             }
 
             if (Event.current.type == EventType.MouseDown && imageRect.Contains(Event.current.mousePosition))
@@ -370,221 +370,231 @@ namespace Scenario.Editor
         }
 
         private void HandleIsCropping()
+{
+    if (!isCropping) return;
+
+    float borderThickness = 1f;
+    Color borderColor = Color.white;
+
+    EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
+
+    float lineHeight = cropRect.height / 3f;
+    float columnWidth = cropRect.width / 3f;
+
+    for (int lineIndex = 1; lineIndex <= 2; lineIndex++)
+    {
+        float lineY = cropRect.y + lineIndex * lineHeight;
+        Rect lineRect = new Rect(cropRect.x, lineY, cropRect.width, borderThickness);
+        EditorGUI.DrawRect(lineRect, borderColor);
+    }
+
+    for (int columnIndex = 1; columnIndex <= 2; columnIndex++)
+    {
+        float lineX = cropRect.x + columnIndex * columnWidth;
+        Rect lineRect = new Rect(lineX, cropRect.y, borderThickness, cropRect.height);
+        EditorGUI.DrawRect(lineRect, borderColor);
+    }
+
+    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
+    EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
+    EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
+}
+
+private void HandleIsDragging(int i, bool isDragging, Rect imageRect)
+{
+    if (!isDragging) return;
+
+    if (showPixelAlignment && i < uploadedImages.Count - 1)
+    {
+        Rect nextImageRect = new Rect(imagePositions[i + 1] * zoomFactor, imageSizes[i + 1] * zoomFactor);
+        Rect lineRect = new Rect(imageRect.xMax, imageRect.y, nextImageRect.xMin - imageRect.xMax, imageRect.height);
+        if (lineRect.width > 0 && lineRect.height > 0)
         {
-            if (!isCropping) return;
-        
-            float borderThickness = 1f;
-            Color borderColor = Color.white;
-
-            EditorGUI.DrawRect(cropRect, new Color(1, 1, 1, 0.1f));
-
-            float lineHeight = cropRect.height / 3f;
-            float columnWidth = cropRect.width / 3f;
-
-            for (int lineIndex = 1; lineIndex <= 2; lineIndex++)
-            {
-                float lineY = cropRect.y + lineIndex * lineHeight;
-                Rect lineRect = new Rect(cropRect.x, lineY, cropRect.width, borderThickness);
-                EditorGUI.DrawRect(lineRect, borderColor);
-            }
-
-            for (int columnIndex = 1; columnIndex <= 2; columnIndex++)
-            {
-                float lineX = cropRect.x + columnIndex * columnWidth;
-                Rect lineRect = new Rect(lineX, cropRect.y, borderThickness, cropRect.height);
-                EditorGUI.DrawRect(lineRect, borderColor);
-            }
-
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y - borderThickness, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y + cropRect.height, cropRect.width + 2 * borderThickness, borderThickness), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x - borderThickness, cropRect.y, borderThickness, cropRect.height), borderColor);
-            EditorGUI.DrawRect(new Rect(cropRect.x + cropRect.width, cropRect.y, borderThickness, cropRect.height), borderColor);
+            EditorGUI.DrawRect(lineRect, Color.red);
         }
+    }
 
-        private void HandleIsDragging(int i, bool isDragging, Rect imageRect)
+    if (showHorizontalAlignment && i < uploadedImages.Count - 1 && Mathf.Approximately(imagePositions[i].y, imagePositions[i + 1].y))
+    {
+        Rect nextImageRect = new Rect(imagePositions[i + 1] * zoomFactor, imageSizes[i + 1] * zoomFactor);
+        Rect lineRect = new Rect(imageRect.xMin, imageRect.y, Mathf.Max(imageRect.width, nextImageRect.width), 1f);
+        if (lineRect.width > 0 && lineRect.height > 0)
         {
-            if (!isDragging) return;
-        
-            if (showPixelAlignment && i < uploadedImages.Count - 1)
-            {
-                Rect nextImageRect = new Rect(imagePositions[i + 1] * zoomFactor, imageSizes[i + 1] * zoomFactor);
-                Rect lineRect = new Rect(imageRect.xMax, imageRect.y, nextImageRect.xMin - imageRect.xMax, imageRect.height);
-                if (lineRect.width > 0 && lineRect.height > 0)
-                {
-                    EditorGUI.DrawRect(lineRect, Color.red);
-                }
-            }
-
-            if (showHorizontalAlignment && i < uploadedImages.Count - 1 && Mathf.Approximately(imagePositions[i].y, imagePositions[i + 1].y))
-            {
-                Rect nextImageRect = new Rect(imagePositions[i + 1] * zoomFactor, imageSizes[i + 1] * zoomFactor);
-                Rect lineRect = new Rect(imageRect.xMin, imageRect.y, Mathf.Max(imageRect.width, nextImageRect.width), 1f);
-                if (lineRect.width > 0 && lineRect.height > 0)
-                {
-                    EditorGUI.DrawRect(lineRect, Color.red);
-                }
-            }
+            EditorGUI.DrawRect(lineRect, Color.red);
         }
+    }
+}
 
-        private void HandleScrollWheel(int i, ref Vector2 imageSize, ref Rect imageRect)
+private void HandleScrollWheel(int i, ref Vector2 imageSize, ref Vector2 imagePosition, ref Rect imageRect)
+{
+    if (Event.current.control)
+    {
+        if (imageRect.Contains(Event.current.mousePosition))
         {
-            if (Event.current.control)
+            float scaleFactor = ScaleImage(ref imageSize, ref imagePosition, Event.current.delta.y > 0 ? 0.9f : 1.1f);
+            imageSizes[i] = imageSize;
+            imagePositions[i] = imagePosition;
+
+            // Scale the corresponding GameObject as well
+            GameObject spriteObj = spriteObjects[i];
+            spriteObj.transform.localScale *= scaleFactor;
+        }
+        Event.current.Use();
+    }
+    else
+    {
+        Vector2 mousePositionBeforeZoom = (Event.current.mousePosition + canvasScrollPosition) / zoomFactor;
+        zoomFactor -= Event.current.delta.y * 0.01f;
+        zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 1f);
+        Vector2 mousePositionAfterZoom = (Event.current.mousePosition + canvasScrollPosition) / zoomFactor;
+        canvasScrollPosition += (mousePositionAfterZoom - mousePositionBeforeZoom) * zoomFactor;
+        Event.current.Use();
+    }
+}
+
+private static float ScaleImage(ref Vector2 imageSize, ref Vector2 imagePosition, float scaleFactor)
+{
+    Vector2 oldCenter = imagePosition + imageSize / 2f;
+    imageSize *= scaleFactor;
+    imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
+    imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
+    Vector2 newCenter = imagePosition + imageSize / 2f;
+    imagePosition += oldCenter - newCenter;
+    return scaleFactor;
+}
+
+private void CreateContextMenu(int index)
+{
+    contextMenuActions.CreateContextMenu(index);
+}
+
+private Texture2D LoadImageFromPath(string path)
+{
+    Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+    byte[] imageData = File.ReadAllBytes(path);
+    texture.LoadImage(imageData);
+    return texture;
+}
+
+private string[] FilterImagePaths(string[] paths)
+{
+    List<string> filteredPaths = new List<string>();
+    foreach (string path in paths)
+    {
+        if (IsImagePath(path))
+        {
+            filteredPaths.Add(path);
+        }
+    }
+    return filteredPaths.ToArray();
+}
+
+private bool IsImagePath(string path)
+{
+    string extension = Path.GetExtension(path).ToLower();
+    return extension is ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp";
+}
+
+private void DeletePixelsHorizontal(int index, int prevWidth, int newWidth)
+{
+    Texture2D image = uploadedImages[index];
+    int startX = Mathf.Min(prevWidth, newWidth);
+    int endX = Mathf.Max(prevWidth, newWidth);
+
+    if (newWidth < prevWidth)
+    {
+        for (int x = startX; x < endX; x++)
+        {
+            for (int y = 0; y < image.height; y++)
             {
-                if (imageRect.Contains(Event.current.mousePosition))
-                {
-                    float scaleFactor = ScaleImage(ref imageSize);
-                    imageSizes[i] = imageSize;
-
-                    // Scale the corresponding GameObject as well
-                    GameObject spriteObj = spriteObjects[i];
-                    spriteObj.transform.localScale *= scaleFactor;
-                }
-                Event.current.Use();
+                image.SetPixel(x, y, Color.clear);
             }
-            else
+        }
+    }
+    else
+    {
+        for (int x = startX; x < endX; x++)
+        {
+            for (int y = 0; y < image.height; y++)
             {
-                Vector2 mousePositionBeforeZoom = (Event.current.mousePosition + canvasScrollPosition) / zoomFactor;
-                zoomFactor -= Event.current.delta.y * 0.01f;
-                zoomFactor = Mathf.Clamp(zoomFactor, 0.1f, 1f);
-                Vector2 mousePositionAfterZoom = (Event.current.mousePosition + canvasScrollPosition) / zoomFactor;
-                canvasScrollPosition += (mousePositionAfterZoom - mousePositionBeforeZoom) * zoomFactor;
-                Event.current.Use();
+                int reversedX = image.width - 1 - x;
+                image.SetPixel(reversedX, y, Color.clear);
             }
         }
+    }
 
-        private static float ScaleImage(ref Vector2 imageSize)
-        {
-            float scaleFactor = Event.current.delta.y > 0 ? 0.9f : 1.1f;
-            imageSize *= scaleFactor;
-            imageSize = Vector2.Max(imageSize, new Vector2(10, 10));
-            imageSize = Vector2.Min(imageSize, new Vector2(1000, 1000));
-            return scaleFactor;
-        }
+    image.Apply();
+}
 
-        private void CreateContextMenu(int index)
-        {
-            contextMenuActions.CreateContextMenu(index);
-        }
+private void DeletePixelsVertical(int index, int prevHeight, int newHeight)
+{
+    Texture2D image = uploadedImages[index];
+    int startY = Mathf.Min(prevHeight, newHeight);
+    int endY = Mathf.Max(prevHeight, newHeight);
 
-        private Texture2D LoadImageFromPath(string path)
+    if (newHeight < prevHeight)
+    {
+        for (int y = startY; y < endY; y++)
         {
-            Texture2D texture = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            byte[] imageData = File.ReadAllBytes(path);
-            texture.LoadImage(imageData);
-            return texture;
-        }
-
-        private string[] FilterImagePaths(string[] paths)
-        {
-            List<string> filteredPaths = new List<string>();
-            foreach (string path in paths)
+            for (int x = 0; x < image.width; x++)
             {
-                if (IsImagePath(path))
-                {
-                    filteredPaths.Add(path);
-                }
+                int reversedY = image.height - 1 - y;
+                image.SetPixel(x, reversedY, Color.clear);
             }
-            return filteredPaths.ToArray();
         }
-
-        private bool IsImagePath(string path)
+    }
+    else
+    {
+        for (int y = startY; y < endY; y++)
         {
-            string extension = Path.GetExtension(path).ToLower();
-            return extension is ".png" or ".jpg" or ".jpeg" or ".gif" or ".bmp";
-        }
-
-        private void DeletePixelsHorizontal(int index, int prevWidth, int newWidth)
-        {
-            Texture2D image = uploadedImages[index];
-            int startX = Mathf.Min(prevWidth, newWidth);
-            int endX = Mathf.Max(prevWidth, newWidth);
-
-            if (newWidth < prevWidth)
+            for (int x = 0; x < image.width; x++)
             {
-                for (int x = startX; x < endX; x++)
-                {
-                    for (int y = 0; y < image.height; y++)
-                    {
-                        image.SetPixel(x, y, Color.clear);
-                    }
-                }
+                image.SetPixel(x, y, Color.clear);
             }
-            else
-            {
-                for (int x = startX; x < endX; x++)
-                {
-                    for (int y = 0; y < image.height; y++)
-                    {
-                        int reversedX = image.width - 1 - x;
-                        image.SetPixel(reversedX, y, Color.clear);
-                    }
-                }
-            }
-
-            image.Apply();
         }
+    }
 
-        private void DeletePixelsVertical(int index, int prevHeight, int newHeight)
-        {
-            Texture2D image = uploadedImages[index];
-            int startY = Mathf.Min(prevHeight, newHeight);
-            int endY = Mathf.Max(prevHeight, newHeight);
+    image.Apply();
+}
 
-            if (newHeight < prevHeight)
-            {
-                for (int y = startY; y < endY; y++)
-                {
-                    for (int x = 0; x < image.width; x++)
-                    {
-                        int reversedY = image.height - 1 - y;
-                        image.SetPixel(x, reversedY, Color.clear);
-                    }
-                }
-            }
-            else
-            {
-                for (int y = startY; y < endY; y++)
-                {
-                    for (int x = 0; x < image.width; x++)
-                    {
-                        image.SetPixel(x, y, Color.clear);
-                    }
-                }
-            }
+private void CropImage(int index, Rect rectCrop)
+{
+    Texture2D originalImage = uploadedImages[index];
 
-            image.Apply();
-        }
+    int x = Mathf.RoundToInt(rectCrop.x - imagePositions[index].x);
+    int y = Mathf.RoundToInt((imagePositions[index].y + imageSizes[index].y) - (rectCrop.y + rectCrop.height));
+    int width = Mathf.RoundToInt(rectCrop.width);
+    int height = Mathf.RoundToInt(rectCrop.height);
 
-        private void CropImage(int index, Rect rectCrop)
-        {
-            Texture2D originalImage = uploadedImages[index];
+    x = Mathf.Clamp(x, 0, originalImage.width);
+    y = Mathf.Clamp(y, 0, originalImage.height);
+    width = Mathf.Clamp(width, 0, originalImage.width - x);
+    height = Mathf.Clamp(height, 0, originalImage.height - y);
 
-            int x = Mathf.RoundToInt(rectCrop.x - imagePositions[index].x);
-            int y = Mathf.RoundToInt((imagePositions[index].y + imageSizes[index].y) - (rectCrop.y + rectCrop.height));
-            int width = Mathf.RoundToInt(rectCrop.width);
-            int height = Mathf.RoundToInt(rectCrop.height);
+    Texture2D croppedImage = new Texture2D(width, height);
+    Color[] pixels = originalImage.GetPixels(x, y, width, height);
+    croppedImage.SetPixels(pixels);
+    croppedImage.Apply();
 
-            x = Mathf.Clamp(x, 0, originalImage.width);
-            y = Mathf.Clamp(y, 0, originalImage.height);
-            width = Mathf.Clamp(width, 0, originalImage.width - x);
-            height = Mathf.Clamp(height, 0, originalImage.height - y);
+    Vector2 croppedImageCenter = new Vector2(x + width / 2f, y + height / 2f);
+    Vector2 originalImageCenter = imagePositions[index] + imageSizes[index] / 2f;
+    Vector2 positionOffset = croppedImageCenter - originalImageCenter;
 
-            Texture2D croppedImage = new Texture2D(width, height);
-            Color[] pixels = originalImage.GetPixels(x, y, width, height);
-            croppedImage.SetPixels(pixels);
-            croppedImage.Apply();
+    uploadedImages[index] = croppedImage;
+    imagePositions[index] += positionOffset;
+    imageSizes[index] = new Vector2(width, height);
 
-            uploadedImages[index] = croppedImage;
-            imagePositions[index] = new Vector2(imagePositions[index].x + x, imagePositions[index].y + imageSizes[index].y - (y + height));
-            imageSizes[index] = new Vector2(width, height);
+    Rect spriteRect = new Rect(0, 0, croppedImage.width, croppedImage.height);
+    Vector2 pivot = new Vector2(0.5f, 0.5f);
+    Sprite newSprite = Sprite.Create(croppedImage, spriteRect, pivot);
 
-            Rect spriteRect = new Rect(0, 0, croppedImage.width, croppedImage.height);
-            Vector2 pivot = new Vector2(0.5f, 0.5f);
-            Sprite newSprite = Sprite.Create(croppedImage, spriteRect, pivot);
+    GameObject spriteObj = spriteObjects[index];
+    SpriteRenderer renderer = spriteObj.GetComponent<SpriteRenderer>();
+    renderer.sprite = newSprite;
 
-            GameObject spriteObj = spriteObjects[index];
-            SpriteRenderer renderer = spriteObj.GetComponent<SpriteRenderer>();
-            renderer.sprite = newSprite;
-        }
+    // Update the sprite object's position
+    spriteObj.transform.position = new Vector3(imagePositions[index].x, imagePositions[index].y, 0);
+}
     }
 }

@@ -25,7 +25,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _Decal:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 8da06c97000bd3f4fb2de7f0fbec4993, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _FalloffTex:

@@ -54,6 +54,10 @@ namespace Scenario.Editor
         #endregion
     }
 
+    /// <summary>
+    /// Planar Projection Window Class, manage all the planar projection workflow.
+    /// All models (MVC pattern like) are used inside this class
+    /// </summary>
     public class PlanarProjection : EditorWindow
     {
         #region Public Fields
@@ -72,146 +76,167 @@ namespace Scenario.Editor
         #region Private Fields
 
         /// <summary>
-        /// 
+        /// Reference of the planar projection View.
         /// </summary>
         private PlanarProjectionView planarProjectionView = null;
 
         /// <summary>
-        /// 
+        /// Use the flag to display a specific screen in the view.
         /// </summary>
         private int flagWindow = 0;
 
         /// <summary>
-        /// 
+        /// Reference of the gameObject where all the projection workflow will happen.
         /// </summary>
         private GameObject referenceObject = null;
 
         /// <summary>
-        /// 
+        /// The Main Camera of the scene.
         /// </summary>
         private Camera mainCamera = null;
 
         /// <summary>
-        /// 
+        /// Reference of the post processing volume.
         /// </summary>
         private GameObject volumePP = null;
 
         /// <summary>
-        /// 
+        /// Request used to make a request to the unity package manager, to install unity recorder.
         /// </summary>
         private Request request = null;
 
         /// <summary>
-        /// 
+        /// Check if the installation of the recorder is already done.
         /// </summary>
         private bool callRecorderInstall = false;
 
         /// <summary>
-        /// 
+        /// Check if the installation of the post processing is already done.
         /// </summary>
         private bool callPPInstall = false;
 
 #if UNITY_RECORDER
 
         /// <summary>
-        /// 
+        /// Get a reference of the recorder window.
         /// </summary>
         private RecorderWindow recorderWindow = null;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private RecorderControllerSettings recorderSettings = null;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private RecorderController recorderController = null;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private ImageRecorderSettings imageRecorderSettings = null;
 
 #endif
 
         /// <summary>
-        /// 
+        /// Allow to manipulate directories' project.
         /// </summary>
         private DirectoryInfo directoryInfo = null;
 
         /// <summary>
-        /// 
+        /// The image captured from the unity recorder
         /// </summary>
         private Texture2D captureImage = null;
 
         /// <summary>
-        /// 
+        /// The image selected from the scenario generations.
         /// </summary>
         private Texture2D renderResultSelected = null;
 
         /// <summary>
-        /// 
+        /// The result of the projection register in one texture
         /// </summary>
         private Texture2D projectedTexture = null;
 
         /// <summary>
-        /// 
+        /// Reference of the prompt window
         /// </summary>
         private PromptWindow promptWindow = null;
 
         /// <summary>
-        /// 
+        /// Projector to project a texture into the scene.
         /// </summary>
         private Projector projector = null;
 
         /// <summary>
-        /// 
+        /// The material to apply on the projector.
         /// </summary>
         private Material globalProjector = null;
 
         /// <summary>
-        /// 
+        /// A specific shader to create a material to apply on the projector.
         /// </summary>
         private Shader projectionShader = null;
 
         /// <summary>
-        /// 
+        /// A specific shader to create a material to apply on the target object.
         /// </summary>
         private Shader renderShader = null;
 
         /// <summary>
-        /// 
+        /// A temporary camera to register the result of the projection.
         /// </summary>
         private Camera renderCamera = null;
 
         /// <summary>
-        /// 
+        /// A temporary render texture to take a picture of the result before rendering it into a texture.
         /// </summary>
         private RenderTexture renderTexture = null;
 
+        /// <summary>
+        /// Navigate into all target objects available inside the referenceObject.
+        /// </summary>
         private int flag = -1;
 
+        /// <summary>
+        /// List all object to apply the projection on.
+        /// </summary>
         private List<TargetBundle> targetBundles = new List<TargetBundle>();
 
+        /// <summary>
+        /// The selected target object to treat.
+        /// </summary>
         private TargetBundle selectedTargetBundle;
 
+        /// <summary>
+        /// Path file to save the texture unwrapped of the projection.
+        /// </summary>
         private string destinationPath = string.Empty;
 
+        /// <summary>
+        /// Variable to manipulate scale on the projection shader.
+        /// </summary>
         private float scaleFlat = 2f;
 
+        /// <summary>
+        /// Correctly placed the unwrapped texture to the render texture on X axis.
+        /// </summary>
         private float xOffset = 1f;
 
+        /// <summary>
+        /// Correctly placed the unwrapped texture to the render texture on Y axis.
+        /// </summary>
         private float yOffset = 1f;
 
+        /// <summary>
+        /// Default size of the texture.
+        /// </summary>
         private Vector2 textureSize = new Vector2(1024, 1024);
 
+        /// <summary>
+        /// Get the width size of the texture and reused it.
+        /// </summary>
         private int textureWidth = 1024;
 
+        /// <summary>
+        /// Get the height size of the texture and reused it.
+        /// </summary>
         private int textureHeight = 1024;
 
+        /// <summary>
+        /// Option to make appear the project folder window to select a path and register the destination folder path.
+        /// </summary>
         private bool activeSelectFolderSave = true;
 
+        /// <summary>
+        /// The workflow is processing.
+        /// </summary>
         private bool processing = false;
 
 #endregion
@@ -255,7 +280,7 @@ namespace Scenario.Editor
         #region Public Methods
 
         /// <summary>
-        /// 
+        /// Create a reference object directly into the current scene.
         /// </summary>
         public void CreateReferenceObject()
         {
@@ -263,7 +288,10 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Prepare the scene to use correctly the workflow.
+        /// Get the main camera once.
+        /// Add a post process layer component to the camera.
+        /// Create the post process volume and automaticaly set it to use ambient occlusion.
         /// </summary>
         public void AutoConfigureScene()
         {

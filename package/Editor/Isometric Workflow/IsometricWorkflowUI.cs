@@ -258,6 +258,8 @@ namespace Scenario.Editor
 
                     int selected = (int)isometricWorkflow.selectedModel.style;
 
+                    int countModel = 0;
+
                     GUILayout.BeginHorizontal(); // Organize in rows
                     {
                         GUILayout.FlexibleSpace();
@@ -294,8 +296,8 @@ namespace Scenario.Editor
 
                             }
                             GUILayout.EndHorizontal();
-
-                            if ((int)modelStyle.style % numberItemPerRow == numberItemPerRow - 1) // Assuming you want a specific number of items per row
+                            countModel++;
+                            if (countModel == numberItemPerRow) // Assuming you want a specific number of items per row
                             {
                                 GUILayout.FlexibleSpace(); //flexible space at the right side
                                 GUILayout.EndHorizontal();
@@ -304,6 +306,7 @@ namespace Scenario.Editor
 
                                 GUILayout.BeginHorizontal(); // Start a new row after every a specific number of items items
                                 GUILayout.FlexibleSpace(); //flexible space at the left side
+                                countModel = 0;
                             }
                         }
                     }
@@ -482,23 +485,91 @@ namespace Scenario.Editor
             GUILayout.EndHorizontal();
             CustomStyle.Space();
 
-            if (isometricWorkflow.sampleList != null && isometricWorkflow.sampleList.Count > 0)
+            switch (isometricWorkflow.selectedTheme)
             {
-                CustomStyle.Space();
-                GUILayout.BeginHorizontal();
-                {
-                    GUILayout.FlexibleSpace();
-                    foreach (string sample in isometricWorkflow.sampleList)
+                case Theme.Medieval:
+                    if (isometricWorkflow.medievalSample != null && isometricWorkflow.medievalSample.Count > 0)
                     {
-                        CustomStyle.ButtonPrimary(sample, 30, 0, () =>
+                        CustomStyle.Space();
+                        GUILayout.BeginHorizontal();
                         {
-                            isometricWorkflow.FillAssetSample(sample);
-                        });
+                            GUILayout.FlexibleSpace();
+                            foreach (string sample in isometricWorkflow.medievalSample)
+                            {
+                                CustomStyle.ButtonPrimary(sample, 30, 0, () =>
+                                {
+                                    isometricWorkflow.FillAssetSample(sample);
+                                });
+                            }
+                            GUILayout.FlexibleSpace();
+                        }
+                        GUILayout.EndHorizontal();
+                        CustomStyle.Space();
                     }
-                    GUILayout.FlexibleSpace();
-                }
-                GUILayout.EndHorizontal();
-                CustomStyle.Space();
+                    break;
+
+                case Theme.Contemporary:
+                    if (isometricWorkflow.contemporarySample != null && isometricWorkflow.contemporarySample.Count > 0)
+                    {
+                        CustomStyle.Space();
+                        GUILayout.BeginHorizontal();
+                        {
+                            GUILayout.FlexibleSpace();
+                            foreach (string sample in isometricWorkflow.contemporarySample)
+                            {
+                                CustomStyle.ButtonPrimary(sample, 30, 0, () =>
+                                {
+                                    isometricWorkflow.FillAssetSample(sample);
+                                });
+                            }
+                            GUILayout.FlexibleSpace();
+                        }
+                        GUILayout.EndHorizontal();
+                        CustomStyle.Space();
+                    }
+                    break;
+
+                case Theme.Post_Apocalyptic:
+                    if (isometricWorkflow.postApoSample != null && isometricWorkflow.postApoSample.Count > 0)
+                    {
+                        CustomStyle.Space();
+                        GUILayout.BeginHorizontal();
+                        {
+                            GUILayout.FlexibleSpace();
+                            foreach (string sample in isometricWorkflow.postApoSample)
+                            {
+                                CustomStyle.ButtonPrimary(sample, 30, 0, () =>
+                                {
+                                    isometricWorkflow.FillAssetSample(sample);
+                                });
+                            }
+                            GUILayout.FlexibleSpace();
+                        }
+                        GUILayout.EndHorizontal();
+                        CustomStyle.Space();
+                    }
+                    break;
+
+                default:
+                    if (isometricWorkflow.sampleList != null && isometricWorkflow.sampleList.Count > 0)
+                    {
+                        CustomStyle.Space();
+                        GUILayout.BeginHorizontal();
+                        {
+                            GUILayout.FlexibleSpace();
+                            foreach (string sample in isometricWorkflow.sampleList)
+                            {
+                                CustomStyle.ButtonPrimary(sample, 30, 0, () =>
+                                {
+                                    isometricWorkflow.FillAssetSample(sample);
+                                });
+                            }
+                            GUILayout.FlexibleSpace();
+                        }
+                        GUILayout.EndHorizontal();
+                        CustomStyle.Space();
+                    }
+                    break;
             }
 
             //Bottom

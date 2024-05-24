@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
-using static Scenario.Editor.Models;
 
 namespace Scenario.Editor
 {

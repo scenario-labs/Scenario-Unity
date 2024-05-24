@@ -71,6 +71,9 @@ namespace Scenario.Editor
         /// </summary>
         internal ImageDataStorage.ImageData imageDataSelected = null;
 
+        /// <summary>
+        /// Default sample asset to offer to the user
+        /// </summary>
         internal List<string> sampleList = new List<string>() 
         {
             "Tavern",
@@ -83,6 +86,57 @@ namespace Scenario.Editor
             "Temple",
             "Church",
             "Building Block"
+        };
+
+        /// <summary>
+        /// Medieval sample assets to offer to the user.
+        /// </summary>
+        internal List<string> medievalSample = new List<string>()
+        {
+            "Tavern",
+            "Castle",
+            "Market",
+            "Guard Tower",
+            "Blacksmith",
+            "Church",
+            "Farm",
+            "Horse Stable",
+            "Small House",
+            "Village"
+        };
+
+        /// <summary>
+        /// Contemporary sample assets to offer to the user.
+        /// </summary>
+        internal List<string> contemporarySample = new List<string>()
+        {
+            "Office Building",
+            "Hospital",
+            "Police Station",
+            "Shopping Mall",
+            "Residential Building",
+            "Nuclear Plant",
+            "Factory",
+            "Mayor's House",
+            "Communications Station",
+            "Fire Station"
+        };
+
+        /// <summary>
+        /// Post Apocalyptic sample assets to offer to the user.
+        /// </summary>
+        internal List<string> postApoSample = new List<string>()
+        {
+            "Crumbling Building",
+            "Destroyed House",
+            "Rusty Guard Tower",
+            "Abandoned Store",
+            "Survivor Campsite",
+            "Broken down Factory",
+            "Airplane Shelter",
+            "Military Base",
+            "Abandoned Gas Station",
+            "Destroyed Nuclear Power Plant"
         };
 
         /// <summary>
@@ -171,25 +225,26 @@ namespace Scenario.Editor
                 string modelName = settings.isometricModels.Find(x => x.style == selectedModel.style).modelData.name;
 
                 string prompt = string.Empty;
-                if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
-                {
-                    prompt = $"{basePromptText}, ";
-                }
-                else
-                {
-                    prompt = $"{selectedModel.DefaultPrompt}, ";
-                }
 
                 if (selectedTheme == Theme.Other)
                 {
-                    prompt += $"{customTheme}, ";
+                    prompt = $"{customTheme}, ";
                 }
-                else 
+                else
                 {
-                    prompt += $"{selectedTheme}, ";
+                    prompt = $"{selectedTheme}, ";
                 }
 
-                prompt += assetName;
+                prompt += $"{assetName}, ";
+
+                if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
+                {
+                    prompt += $"{basePromptText} ";
+                }
+                else
+                {
+                    prompt += $"{selectedModel.DefaultPrompt} ";
+                }
 
                 if (PromptPusher.Instance != null)
                 {
@@ -328,15 +383,16 @@ namespace Scenario.Editor
 
         public enum ModelStyle
         {
-            lora1,
-            lora2,
-            lora3,
-            lora4,
-            lora5,
-            lora6,
+            Isometric_2,
+            Illustrated_Isometric_2,
+            Isometric_05,
+            Isometric_Vignette_Constructor,
+            Isometric_Blend_All,
+            Classic_Isometric_Models,
             Fairytale_Isometric_Buildings,
-            Isometric_Buildings,
-            Isometric_Buildings_FairyTale
+            Iso_Cute_3,
+            New_Isometric_3,
+            Illustrative_Isometric_Buildings
         }
 
 
@@ -346,6 +402,7 @@ namespace Scenario.Editor
             Medieval,
             Futuristic,
             Contemporary,
+            Post_Apocalyptic,
             Ancient,
             Magical_Forest,
             World_War,

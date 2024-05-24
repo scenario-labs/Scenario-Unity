@@ -5,6 +5,9 @@ using UnityEngine;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// Class view of the planar projection process.
+    /// </summary>
     public class PlanarProjectionView 
     {
         #region Public Fields
@@ -12,6 +15,9 @@ namespace Scenario.Editor
 
         #region Private Fields
 
+        /// <summary>
+        /// Reference to the planar projection controller
+        /// </summary>
         private PlanarProjection planarProjection = null;
 
         #endregion
@@ -33,7 +39,7 @@ namespace Scenario.Editor
         #region Public Methods
 
         /// <summary>
-        /// 
+        /// Manage all display from this method, to each step.
         /// </summary>
         /// <param name="_position"></param>
         public void Render(Rect _position)
@@ -71,7 +77,7 @@ namespace Scenario.Editor
         #region Private Methods
 
         /// <summary>
-        /// 
+        /// The First and starting display.
         /// </summary>
         private void MainView()
         {
@@ -97,7 +103,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Second step to create the reference gameObject and prepare the scene with post processing.
         /// </summary>
         private void BasicPrepareView()
         {
@@ -147,7 +153,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Third step to launch the Unity Recorder and save, load the capture.
         /// </summary>
         private void RenderSceneView()
         {
@@ -225,7 +231,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Fourth step call the prompt window with the render capture.
         /// </summary>
         private void RenderPromptView()
         {
@@ -275,7 +281,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Fifth step, Project the result into your scene.
         /// </summary>
         private void RenderResult()
         {

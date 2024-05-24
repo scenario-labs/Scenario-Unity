@@ -15,6 +15,9 @@ using UnityEngine.Rendering.PostProcessing;
 
 namespace Scenario.Editor
 {
+    /// <summary>
+    /// Structure to get the object, to be treat.
+    /// </summary>
     [Serializable]
     public struct TargetBundle
     {
@@ -30,18 +33,30 @@ namespace Scenario.Editor
 
         #region Private Fields
 
+        /// <summary>
+        /// Reference of this gameObject.
+        /// </summary>
         [SerializeField]
         private GameObject target;
 
+        /// <summary>
+        /// Mesh Filter Component of this object.
+        /// </summary>
         [SerializeField]
         private MeshFilter meshTarget;
 
+        /// <summary>
+        /// Mesh Renderer Component of this object.
+        /// </summary>
         [SerializeField]
         private MeshRenderer meshRenderer;
 
         /*[SerializeField]
         private EOrientation eOrientation;*/
 
+        /// <summary>
+        /// List of texture generated on this object.
+        /// </summary>
         [SerializeField]
         private List<Texture2D> texturesGenerated;
 
@@ -303,6 +318,7 @@ namespace Scenario.Editor
             if (!mainCamera.gameObject.GetComponent<PostProcessLayer>())
             { 
                 PostProcessLayer layer = mainCamera.gameObject.AddComponent<PostProcessLayer>();
+                layer.volumeLayer = LayerMask.NameToLayer("Everything");
             }
 
             volumePP = new GameObject("Volume");
@@ -334,7 +350,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Check if the Unity Recorder Package is installed
         /// </summary>
         public void CheckUnityRecorder()
         {
@@ -343,7 +359,8 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Check if the Post Processing Package is installed
+        /// Not already used
         /// </summary>
         public void CheckPostProcessing()
         {
@@ -352,11 +369,12 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Launch the using of Unity Recorder Package
+        /// And also load preset
         /// </summary>
         public void LaunchUnityRecorder()
         {
-            #if UNITY_RECORDER
+#if UNITY_RECORDER
             recorderWindow = GetWindow<RecorderWindow>();
 
             var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
@@ -364,11 +382,10 @@ namespace Scenario.Editor
             recorderWindow.ApplyPreset( preset );
             PrepareRecorderSettings(true);
 #endif
-
         }
 
         /// <summary>
-        /// 
+        /// Open the prompt window from Scenario package
         /// </summary>
         public void OpenPromptWindow()
         { 
@@ -386,7 +403,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Open the image window from the Scenario Package
         /// </summary>
         public void OpenImageWindow()
         {
@@ -395,9 +412,10 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Re Open the Planar Projection window with a specific flag to get back the process
+        /// and a specific file
         /// </summary>
-        /// <param name="_renderResult"></param>
+        /// <param name="_filePath"> A reference of the downloaded asset </param>
         public void OpenPlanarProjection(string _filePath)
         {
             ShowWindow();
@@ -409,7 +427,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Launch all the process to project and apply it to objects
         /// </summary>
         public void RenderProjectionWork()
         {
@@ -473,7 +491,7 @@ namespace Scenario.Editor
         #region Private Methods
 
         /// <summary>
-        /// 
+        /// Search all object into the reference gameObject
         /// </summary>
         private void SearchTargets()
         {
@@ -493,7 +511,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Launch the Editor Coroutine to run all the process on all objects
         /// </summary>
         private void RenderProjection()
         {
@@ -502,9 +520,9 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Get all needed components from each gameObject to be treat by the process
         /// </summary>
-        /// <param name="_searchTarget"></param>
+        /// <param name="_searchTarget"> The transform to inspect </param>
         private void SearchTarget(Transform _searchTarget)
         {
             if (_searchTarget != null)
@@ -545,9 +563,9 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Select the next target to be treat by the process
         /// </summary>
-        /// <returns></returns>
+        /// <returns> True if have one, false if it's the end </returns>
         private bool SelectTarget()
         {
             if (targetBundles != null && targetBundles.Count > 0)
@@ -568,7 +586,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Get the main camera from the scene
         /// </summary>
         private void GetMainCamera()
         { 
@@ -576,7 +594,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Create the render temporary camera
         /// </summary>
         private void CreateRenderCamera()
         {
@@ -645,7 +663,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Create the projector into the main camera gameObject
         /// </summary>
         private void SetProjector()
         {
@@ -672,7 +690,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Prepare all gameObjects into the reference gameobject to be treat by the process
         /// </summary>
         private void SetLevel()
         {
@@ -693,7 +711,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Set the gameObject to a specific layer, apply the material
         /// </summary>
         /// <param name="_part"></param>
         private void SetPart(Transform _part)
@@ -722,7 +740,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Prepare and launch the Unity Recorder
         /// </summary>
         private void PrepareRecorderSettings(bool _record)
         {
@@ -733,7 +751,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// After rendering from the Unity Recorder load the last one
         /// </summary>
         private void LoadLastCapture()
         {
@@ -769,7 +787,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Prepare prompt window with modalities to generate
         /// </summary>
         private void SetControlNetOptions()
         {
@@ -781,7 +799,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Prepare the shader to launch the render process.
         /// </summary>
         public void SetPropertiesToRender()
         {
@@ -796,7 +814,9 @@ namespace Scenario.Editor
             }
         }
 
-        [ContextMenu("Reset properties")]
+        /// <summary>
+        /// Reset shader's properties after rendering
+        /// </summary>
         public void ResetPropertiesToRender()
         {
             Material projectorMaterial = selectedTargetBundle.MeshRenderer.material;
@@ -811,7 +831,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Add the generated texture into the list of each target part.
         /// </summary>
         private void PrepareBundleProperties()
         {
@@ -829,7 +849,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Create a capture from the render camera.
         /// </summary>
         public void RenderCamera()
         {
@@ -857,7 +877,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Prepare the texture where the capture from the camera will be saved.
         /// </summary>
         private void SetTexture()
         {
@@ -870,9 +890,8 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Isolate the target under projection process to only have its texture on the render camera.
         /// </summary>
-        [ContextMenu("Isolate Target")]
         public void IsolateTarget()
         {
             if (selectedTargetBundle.MeshRenderer != null)
@@ -900,7 +919,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Make appear all others targets
         /// </summary>
         private void GetBackOthers()
         {
@@ -925,7 +944,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Save the render capture texture from the unwrapped of the object after the projection.
         /// </summary>
         public void SaveRender(/*int _index*/)
         {
@@ -957,7 +976,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Apply the projection to the new material on the target gameobject.
         /// </summary>
         private void ApplyProjection()
         {
@@ -1006,7 +1025,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Create the specific layer into the Unity Project.
         /// </summary>
         private bool CreateProjectedLayer(string _layerName)
         {
@@ -1041,6 +1060,14 @@ namespace Scenario.Editor
             return false;
         }
 
+        /// <summary>
+        /// Check if the layer already exist.
+        /// </summary>
+        /// <param name="property"></param>
+        /// <param name="start"> Starting index layer</param>
+        /// <param name="end"> Ending index layer</param>
+        /// <param name="value"> Expected index layer </param>
+        /// <returns></returns>
         private bool PropertyExists(SerializedProperty property, int start, int end, string value)
         {
             for (int i = start; i < end; i++)
@@ -1055,7 +1082,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Process to install a unity package from code.
         /// </summary>
         private void Progress()
         {
@@ -1075,7 +1102,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Trigger the Unity Recorder to take a capture.
         /// </summary>
         /// <returns></returns>
         IEnumerator StartRecorder()
@@ -1088,7 +1115,8 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// 
+        /// Close the Recorder after exit play mode and OnEnable function is done.
+        /// Have to get back the preset to allow Unity Recorder to register the capture to the destination folder.
         /// </summary>
         /// <returns></returns>
         IEnumerator CloseRecorder()
@@ -1110,6 +1138,10 @@ namespace Scenario.Editor
 #endif
         }
 
+        /// <summary>
+        /// Render Projection to each target available.
+        /// </summary>
+        /// <returns></returns>
         IEnumerator RenderAll()
         {
             EditorCoroutine renderCoroutine = null;
@@ -1136,6 +1168,10 @@ namespace Scenario.Editor
             yield return null;
         }
 
+        /// <summary>
+        /// Do the projection process to one target
+        /// </summary>
+        /// <returns></returns>
         IEnumerator RenderOneGeneration()
         {
             // Ensure Projector component is assigned

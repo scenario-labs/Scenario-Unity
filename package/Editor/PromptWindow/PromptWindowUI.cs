@@ -48,12 +48,12 @@ namespace Scenario.Editor
         /// <summary>
         /// Reference all dimension values available for SD 1.5 models
         /// </summary>
-        public readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912, 1024 };
+        public readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912 };
 
         /// <summary>
         /// Reference all dimension values available for SDXL models
         /// </summary>
-        public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824, 2048 };
+        public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824 };
 
         public string selectedPreset = "";
 
@@ -98,6 +98,10 @@ namespace Scenario.Editor
         internal string negativepromptinputText = "";
         internal int widthSliderValue = 1024;
         internal int heightSliderValue = 1024;
+        /// <summary>
+        /// Default slide value for the size slider
+        /// </summary>
+        internal float sizeSliderValue = 7;
         internal float imagesliderValue = 4;
         internal int imagesliderIntValue = 4;
         internal int samplesliderValue = 30;
@@ -204,58 +208,66 @@ namespace Scenario.Editor
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, GUIStyle.none);
 
             promptPusher.modelName = selectedModelName;
+            EditorGUILayout.BeginVertical(EditorStyles.inspectorFullWidthMargins);
+            { 
+                CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
+                CustomStyle.Separator();
+                RenderPromptSection();
+                CustomStyle.Space();
+                RenderNegativePromptSection();
+                CustomStyle.Separator();
+            
 
-            CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
-            CustomStyle.Separator();
-            RenderPromptSection();
-            CustomStyle.Space();
-            RenderNegativePromptSection();
-            CustomStyle.Separator();
+                bool shouldAutoGenerateSeed = imagesliderValue > 1;
+                if (shouldAutoGenerateSeed) { seedinputText = "-1"; }
 
-            bool shouldAutoGenerateSeed = imagesliderValue > 1;
-            if (shouldAutoGenerateSeed) { seedinputText = "-1"; }
-
-            CustomStyle.ButtonPrimary("Generate Image", 40, () =>
-            {
-                promptPusher.promptInput = SerializeTags(tags);
-                promptPusher.promptNegativeInput = SerializeTags(negativeTags);
-
-                EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
-
-                if (shouldAutoGenerateSeed)
+                CustomStyle.ButtonPrimary("Generate Image", 40, () =>
                 {
-                    promptPusher.GenerateImage(null);
-                }
-                else
+                    promptPusher.promptInput = SerializeTags(tags);
+                    promptPusher.promptNegativeInput = SerializeTags(negativeTags);
+
+                    EditorPrefs.SetString("postedModelName", DataCache.instance.SelectedModelId);
+
+                    if (shouldAutoGenerateSeed)
+                    {
+                        promptPusher.GenerateImage(null);
+                    }
+                    else
+                    {
+                        string seed = seedinputText;
+                        if (seed == "-1") { seed = null; }
+                        promptPusher.GenerateImage(seed);
+                    }
+                });
+
+                CustomStyle.Space();
+
+                RenderImageSettingsSection(shouldAutoGenerateSeed);
+
+                GUI.enabled = true;
+
+                CustomStyle.Space();
+
+                List<string> tabLabels = new List<string>();
+
+                foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
                 {
-                    string seed = seedinputText;
-                    if (seed == "-1") { seed = null; }
-                    promptPusher.GenerateImage(seed);
+                    string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                    tabLabels.Add(eName);
                 }
-            });
+                EditorGUILayout.BeginHorizontal(EditorStyles.inspectorFullWidthMargins);
+                { 
+                    GUILayout.Label("Mode: ", GUILayout.Width(labelWidth));
+                    selectedMode = (ECreationMode)EditorGUILayout.Popup(imageControlTab, tabLabels.ToArray(), GUILayout.Width(sliderWidth));
+                }
+                EditorGUILayout.EndHorizontal();
 
-            CustomStyle.Space();
+                imageControlTab = (int)selectedMode;
+                promptPusher.ActiveMode(imageControlTab);
 
-            RenderImageSettingsSection(shouldAutoGenerateSeed);
-
-            GUI.enabled = true;
-
-            CustomStyle.Space();
-
-            List<string> tabLabels = new List<string>();
-
-            foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
-            {
-                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
-                tabLabels.Add(eName);
+                ManageDrawMode();
             }
-
-            selectedMode = (ECreationMode)EditorGUILayout.Popup("Mode: ", imageControlTab, tabLabels.ToArray());
-            imageControlTab = (int)selectedMode;
-            promptPusher.ActiveMode(imageControlTab);
-
-            ManageDrawMode();
-
+            EditorGUILayout.EndVertical();
             GUILayout.EndScrollView();
         }
 

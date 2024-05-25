@@ -123,10 +123,9 @@ namespace Scenario.Editor
         private void HandlePositiveInputField()
         {
             GUI.SetNextControlName("inputTextField");
-            inputText = EditorGUILayout.TextField(inputText, GUILayout.ExpandWidth(true), GUILayout.Height(25), GUILayout.MinWidth(400));
+            inputText = EditorGUILayout.TextField(inputText, GUILayout.ExpandWidth(true), GUILayout.Height(25), GUILayout.MinWidth(200));
 
-            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return &&
-                GUI.GetNameOfFocusedControl() == "inputTextField")
+            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "inputTextField")
             {
                 if (!string.IsNullOrWhiteSpace(inputText))
                 {

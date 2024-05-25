@@ -7,7 +7,8 @@ namespace Scenario.Editor
 {
     public class LayerEditor : EditorWindow
     {
-        [SerializeField] private float rightWidthRatio = 1f;
+        [SerializeField] private float rightWidthRatio = 0.1f;
+        [SerializeField] private float leftWidthRatio = 0.9f;
 
         public List<Texture2D> uploadedImages = new();
         public List<Vector2> imagePositions = new();
@@ -21,6 +22,7 @@ namespace Scenario.Editor
         private int selectedImageIndex = -1;
         private const float HandleSize = 5f;
 
+        private bool isRightPanelOpen = true;
         private bool showPixelAlignment = true;
         private bool showHorizontalAlignment = true;
         private Vector2 canvasScrollPosition;
@@ -35,6 +37,7 @@ namespace Scenario.Editor
 
         private float zoomFactor = 1f;
 
+        private LayerEditorRightPanel rightPanel;
         private ContextMenuActions contextMenuActions;
 
         // New variables for click vs drag detection
@@ -60,6 +63,7 @@ namespace Scenario.Editor
             imageSizes = new List<Vector2>();
             spriteObjects = new List<GameObject>();
 
+            rightPanel = new LayerEditorRightPanel(this);
             contextMenuActions = new ContextMenuActions(this);
         }
 
@@ -75,17 +79,36 @@ namespace Scenario.Editor
         private void OnGUI()
         {
             float totalWidth = position.width;
-            float rightWidth = totalWidth;
+            float leftWidth = isRightPanelOpen ? totalWidth * leftWidthRatio : totalWidth;
+            float rightWidth = isRightPanelOpen ? totalWidth * rightWidthRatio : 0f;
 
             EditorGUILayout.BeginHorizontal();
             {
-                EditorGUILayout.BeginVertical(GUILayout.Width(rightWidth));
+                EditorGUILayout.BeginVertical(GUILayout.Width(leftWidth));
                 {
-                    DrawCanvas(rightWidth);
+                    DrawCanvas(leftWidth);
                 }
                 EditorGUILayout.EndVertical();
+
+                if (isRightPanelOpen)
+                {
+                    rightPanel.DrawRightPanel(rightWidth);
+                }
             }
             EditorGUILayout.EndHorizontal();
+
+            var buttonStyle = new GUIStyle(GUI.skin.button)
+            {
+                fontSize = 30
+            };
+
+            float buttonSize = 50;
+            float buttonX = isRightPanelOpen ? position.width - buttonSize - rightWidth : position.width - buttonSize;
+            if (GUI.Button(new Rect(buttonX, 0, buttonSize, buttonSize), "≡", buttonStyle))
+            {
+                isRightPanelOpen = !isRightPanelOpen;
+                Repaint();
+            }
         }
 
         private void DrawCanvas(float canvasWidth)

@@ -126,7 +126,7 @@ namespace Scenario.Editor
             }
         }
 
-        private void DeleteLayer(int index)
+        public void DeleteLayer(int index)
         {
             if (index >= 0 && index < layerEditor.uploadedImages.Count)
             {

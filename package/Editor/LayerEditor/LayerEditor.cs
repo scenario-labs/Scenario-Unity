@@ -98,7 +98,6 @@ namespace Scenario.Editor
             EditorGUILayout.EndHorizontal();
         }
 
-
         private void DrawCanvas(float canvasWidth)
         {
             Color backgroundColor = new Color32(18, 18, 18, 255);
@@ -113,8 +112,30 @@ namespace Scenario.Editor
             {
                 canvasRect = DrawImageList(canvasWidth, canvasRect, canvasContentSize);
                 DrawImageView(canvasRect);
+
+                // Add grid to left section
+                DrawGrid(canvasWidth);
             }
             GUI.EndScrollView();
+        }
+
+        private void DrawGrid(float canvasWidth)
+        {
+            float gridSpacing = 50f; // Adjust the spacing of the grid lines
+            Color gridColor = new Color(0.5f, 0.5f, 0.5f, 0.2f); // Adjust the color and transparency of the grid lines
+
+            Handles.color = gridColor;
+            Handles.DrawSolidRectangleWithOutline(new Rect(0, 0, canvasWidth, position.height), gridColor, Color.clear);
+
+            for (float x = gridSpacing; x < canvasWidth; x += gridSpacing)
+            {
+                Handles.DrawLine(new Vector2(x, 0), new Vector2(x, position.height));
+            }
+
+            for (float y = gridSpacing; y < position.height; y += gridSpacing)
+            {
+                Handles.DrawLine(new Vector2(0, y), new Vector2(canvasWidth, y));
+            }
         }
 
         private Rect DrawImageList(float canvasWidth, Rect canvasRect, Vector2 canvasContentSize)
@@ -245,7 +266,6 @@ namespace Scenario.Editor
                 case EventType.MouseDrag:
                     if (isDragging && !isCropping)
                     {
-                        // Check if the mouse has moved significantly to consider it as a drag
                         if (Vector2.Distance(initialMousePosition, Event.current.mousePosition) > MouseMovementThreshold)
                         {
                             HandleMouseDrag(ref imagePosition, i);
@@ -272,7 +292,6 @@ namespace Scenario.Editor
                     }
                     else if (Vector2.Distance(initialMousePosition, Event.current.mousePosition) <= MouseMovementThreshold)
                     {
-                        // Handle single click selection
                         HandleSingleClickSelection(i, ref isDragging);
                         Event.current.Use();
                     }

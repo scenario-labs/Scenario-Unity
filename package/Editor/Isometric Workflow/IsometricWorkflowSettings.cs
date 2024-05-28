@@ -191,13 +191,13 @@ namespace Scenario.Editor
             //modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_2, "model_cpBBUtyovdNYnmLo7FS1idVg", "2D Pencil Style", defaultPrompt, 0.50f));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Fairytale_Isometric_Buildings, "model_BadrJ8rQCJiHji9j83Xo1TMN", "2D Cartoon Style", defaultPrompt, 0.50f));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Illustrated_Isometric_2, "model_BxqG76YQ1W5y2dyCjTig4p98", "2D Detailed Style", defaultPrompt, 0.50f));
-            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_05, "model_f48WwPk6k1Rd6MwkS6KwjkuW", "3D Cartoon Style", defaultPrompt, 0.50f));
+            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Illustrative_Isometric_Buildings, "model_bCvToHu9Thf7JTPfH9tKLBgd", "2D Vivid Style", defaultPrompt, 0.50f));
             //modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Vignette_Constructor, "model_wK5soMR3RzpVf8KSYdFnAXwz", "3D Realistic Style", defaultPrompt, 0.50f));
             //modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_Blend_All, "B7SV_qMLR12Sy0Sp07oyaw", "2D Realistic Style", defaultPrompt, 0.50f));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Classic_Isometric_Models, "model_r7pp9bdUccQmTxw3Jg1yqkV3", "3D Pastel Style", defaultPrompt, 0.50f));
             //modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Iso_Cute_3, "model_amJuxh8Zchzs96ZVvVw767EJ", "2D Outlined Style", defaultPrompt, 0.50f));
             modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.New_Isometric_3, "model_nrEFVerqgGp76yeC2vKBiQs5", "3D Realistic Style", defaultPrompt, 0.50f));
-            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Illustrative_Isometric_Buildings, "model_bCvToHu9Thf7JTPfH9tKLBgd", "2D Vivid Style", defaultPrompt, 0.50f));
+            modelsIdByStyle.Add(new ModelIdByStyle(IsometricWorkflow.ModelStyle.Isometric_05, "model_f48WwPk6k1Rd6MwkS6KwjkuW", "3D Cartoon Style", defaultPrompt, 0.50f));
 
             
             try

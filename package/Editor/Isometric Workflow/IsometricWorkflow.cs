@@ -101,8 +101,7 @@ namespace Scenario.Editor
             "Church",
             "Farm",
             "Horse Stable",
-            "Small House",
-            "Village"
+            "Small House"
         };
 
         /// <summary>

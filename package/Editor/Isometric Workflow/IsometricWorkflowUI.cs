@@ -91,13 +91,14 @@ namespace Scenario.Editor
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 1. Choose a Base", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label($"A base is crucial for aligning the asset with the isometric grid. You can use the default base or select an image of your choice. If you do not select a base, the images may have slight variations in alignment with the grid.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(50);
             GUILayout.BeginHorizontal();
             {
                 GUILayout.FlexibleSpace();
 
                 //None
-                GUILayout.BeginVertical();
+                /*GUILayout.BeginVertical();
                 {
                     if (!baseNone)
                     { 
@@ -126,7 +127,7 @@ namespace Scenario.Editor
                 GUILayout.EndVertical();
 
                 //Space
-                GUILayout.FlexibleSpace();
+                GUILayout.FlexibleSpace();*/
 
                 //Square
                 GUILayout.BeginVertical();
@@ -165,49 +166,56 @@ namespace Scenario.Editor
                 //Custom
                 GUILayout.BeginVertical();
                 {
-                    if (customTexture == null)
+                    GUILayout.BeginHorizontal();
                     {
-                        GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
-                        baseCustom = false;
-                    }
-                    else
-                    {
-                        if (!baseCustom)
-                        { 
-                            CustomStyle.Space(45);
-                            baseCustom = GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
-                            CustomStyle.Space(45);
-                        }
-                    }
-
-                    if (baseCustom)
-                    {
-                        CustomStyle.Space(45);
-                        GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
-                        CustomStyle.Space(45);
-
-                        isometricWorkflow.selectedBase = IsometricWorkflow.Base.Custom;
-                        baseNone = false;
-                        baseSquare = false;
-                    }
-
-                }
-                GUILayout.EndVertical();
-                CustomStyle.Space(-25);
-                GUILayout.BeginVertical();
-                {
-                    customTexture = (Texture2D)EditorGUILayout.ObjectField(customTexture, typeof(Texture2D), false, GUILayout.Width(100), GUILayout.Height(100));
-                    TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(customTexture));
-                    if (customTexture != null)
-                    {
-                        importer.isReadable = true;
-                        importer.textureCompression = TextureImporterCompression.Uncompressed;
-                        EditorUtility.SetDirty(importer);
-                        if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+                        GUILayout.BeginVertical();
                         {
-                            importer.SaveAndReimport();
+                            if (customTexture == null)
+                            {
+                                CustomStyle.Space(45);
+                                GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
+                                CustomStyle.Space(45);
+                                baseCustom = false;
+                            }
+                            else
+                            {
+                                if (!baseCustom)
+                                { 
+                                    CustomStyle.Space(45);
+                                    baseCustom = GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
+                                    CustomStyle.Space(45);
+                                }
+                            }
+
+                            if (baseCustom)
+                            {
+                                CustomStyle.Space(45);
+                                GUILayout.Toggle(baseCustom, "", GUILayout.Height(10));
+                                CustomStyle.Space(45);
+
+                                isometricWorkflow.selectedBase = IsometricWorkflow.Base.Custom;
+                                baseNone = false;
+                                baseSquare = false;
+                            }
+                        }
+                        GUILayout.EndVertical();
+
+                        CustomStyle.Space(-25);
+                
+                        customTexture = (Texture2D)EditorGUILayout.ObjectField(customTexture, typeof(Texture2D), false, GUILayout.Width(100), GUILayout.Height(100));
+                        TextureImporter importer = (TextureImporter)TextureImporter.GetAtPath(AssetDatabase.GetAssetPath(customTexture));
+                        if (customTexture != null)
+                        {
+                            importer.isReadable = true;
+                            importer.textureCompression = TextureImporterCompression.Uncompressed;
+                            EditorUtility.SetDirty(importer);
+                            if (AssetDatabase.WriteImportSettingsIfDirty(importer.assetPath))
+                            {
+                                importer.SaveAndReimport();
+                            }
                         }
                     }
+                    GUILayout.EndHorizontal();
                     CustomStyle.Label("Custom Isometric Base", alignment: TextAnchor.MiddleCenter);
                 }
                 GUILayout.EndVertical();
@@ -240,6 +248,7 @@ namespace Scenario.Editor
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 2. Choose a Style", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label($"Choose from a variety of 2D and 3D styles, with building shapes that vary according to each style.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(50);
             //isometricWorkflow.selectedModel = (IsometricWorkflow.ModelStyle)GUILayout.SelectionGrid((int)isometricWorkflow.selectedBase, Enum.GetNames(typeof(IsometricWorkflow.ModelStyle)), 2, GUI.skin.GetStyle("toggle"));
 
@@ -345,6 +354,7 @@ namespace Scenario.Editor
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 3. Choose a Theme", 18, TextAnchor.UpperLeft, bold: true);
+            CustomStyle.Label($"Themes define the era and help create more detail and context for the images. Choose a theme or add a custom one.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(25);
 
             GUILayout.BeginHorizontal();
@@ -412,7 +422,7 @@ namespace Scenario.Editor
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 4. Select any number of assets you wish to create.", 18, TextAnchor.UpperLeft, bold: true);
-            CustomStyle.Label($"Type the kind of asset you'd like, such as 'Temple', and then click the '+' button to add it to your list.", 12, TextAnchor.UpperLeft, bold: false);
+            CustomStyle.Label($"Add the assets you want to create and click the + button to add them to the list. Besides naming the building, you can also add more details to the prompt at this step.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(25);
 
             GUILayout.BeginHorizontal();

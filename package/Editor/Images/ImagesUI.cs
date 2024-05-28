@@ -75,9 +75,26 @@ namespace Scenario.Editor
         /// </summary>
         private void InitializeButtons()
         {
+
             // Dictionary containing button labels and associated actions
             buttonActions = new Dictionary<string, Action>()
             {
+                {
+                    "Customize (webapp)", () =>
+                    {
+                        if (!string.IsNullOrEmpty(PluginSettings.TeamIdKey))
+                        {
+                            Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={selectedTextureId}");
+                        }
+                        else
+                        {
+                            if (EditorUtility.DisplayDialog("WorkspaceID key not filled !", "Impossible to open the webApp withtout the WorkspaceID key filled inside Settings.", "Open Settings", "Stay on page"))
+                            {
+                                PluginSettings.ShowWindow();
+                            }
+                        }
+                    }
+                },
                 {
                     "Set Image as Reference", () =>
                     {

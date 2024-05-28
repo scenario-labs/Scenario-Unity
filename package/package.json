@@ -9,7 +9,8 @@
     "unity": "2022.3",
     "dependencies": {
         "com.unity.editorcoroutines": "1.0.0",
-        "com.unity.nuget.newtonsoft-json": "2.0.0"
+        "com.unity.nuget.newtonsoft-json": "2.0.0",
+        "com.needle.deeplink": "1.2.1"
     },
     "samples": [
         {

@@ -82,17 +82,7 @@ namespace Scenario.Editor
                 {
                     "Customize (webapp)", () =>
                     {
-                        if (!string.IsNullOrEmpty(PluginSettings.TeamIdKey))
-                        {
-                            Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={selectedTextureId}");
-                        }
-                        else
-                        {
-                            if (EditorUtility.DisplayDialog("WorkspaceID key not filled !", "Impossible to open the webApp withtout the WorkspaceID key filled inside Settings.", "Open Settings", "Stay on page"))
-                            {
-                                PluginSettings.ShowWindow();
-                            }
-                        }
+                        Application.OpenURL($"{PluginSettings.WebAppUrl}/images?openAssetId={selectedTextureId}");
                     }
                 },
                 {

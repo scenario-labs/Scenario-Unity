@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -196,7 +197,8 @@ namespace Scenario.Editor
 
             if (InferenceManager.SilenceMode)
             {
-                buttonActions.Add("Projection Planar",()=> 
+                Dictionary<string, Action> silenceAction = new Dictionary<string, Action>();
+                silenceAction.Add("Projection Planar",()=> 
                 {
                     Action<string> successToProjection = (filePath) =>
                     {
@@ -214,9 +216,11 @@ namespace Scenario.Editor
                         };
                     });
 
-                    
                 } 
                 );
+                Dictionary<string, Action> merged = new Dictionary<string, Action>();
+                merged = (Dictionary<string, Action>)silenceAction.Concat(buttonActions).ToDictionary(x => x.Key, x => x.Value);
+                buttonActions = merged;
             }
         }
 

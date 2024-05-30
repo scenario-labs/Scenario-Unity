@@ -3,6 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using UnityEditor.Presets;
+using static Scenario.Editor.InferenceManager;
 
 namespace Scenario.Editor
 {
@@ -12,6 +13,14 @@ namespace Scenario.Editor
         #region Public Properties
 
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
+        [MenuItem("Window/Scenario/API", false, 100)]
+        public static void Open()
+        {
+            ApiClient.RestGet($"teams", null);
+
+            ApiClient.RestGet($"models/model_SEFPw4NhpjzSxs736nBDCNYW/inferences?dryRun=true", null);
+        }
+
         public static string WebAppUrl { get { return webAppUrl; } }
         public static string SaveFolder { 
             get 
@@ -72,8 +81,8 @@ namespace Scenario.Editor
 
         static PluginSettings()
         {
-            GetVersionFromPackageJson();
-            PluginSettings settings = ScriptableObject.CreateInstance<PluginSettings>();
+            /*GetVersionFromPackageJson();
+            PluginSettings settings = ScriptableObject.CreateInstance<PluginSettings>();*/
         }
 
         #region Unity Methods

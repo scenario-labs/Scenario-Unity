@@ -724,7 +724,8 @@ namespace Scenario.Editor
             string inputData = $@"{{
                 ""parameters"": {{
                     ""hideResults"": {hideResults.ToString().ToLower()},
-                    ""type"": ""{type}"",";
+                    ""type"": ""{type}"",
+                    ""dryRun"": true,";
 
             switch (activeMode.EMode)
             {

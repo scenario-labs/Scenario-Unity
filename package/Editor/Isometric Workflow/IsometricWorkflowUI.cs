@@ -15,8 +15,8 @@ namespace Scenario.Editor
         #region Private Fields
 
         private static IsometricWorkflow isometricWorkflow;
-        private bool baseNone = true;
-        private bool baseSquare = false;
+        private bool baseNone = false;
+        private bool baseSquare = true;
         private bool baseCustom = false;
 
         /// <summary>
@@ -784,17 +784,7 @@ namespace Scenario.Editor
 
             CustomStyle.ButtonPrimary("Customize (webapp)", 30, 0, () =>
             {
-                if (!string.IsNullOrEmpty(PluginSettings.TeamIdKey))
-                {
-                    Application.OpenURL($"{PluginSettings.WebAppUrl}/images?teamId={PluginSettings.TeamIdKey}&openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
-                }
-                else
-                {
-                    if (EditorUtility.DisplayDialog("WorkspaceID key not filled !", "Impossible to open the webApp withtout the WorkspaceID key filled inside Settings.", "Open Settings", "Stay on page"))
-                    {
-                        PluginSettings.ShowWindow();
-                    }
-                }
+                Application.OpenURL($"{PluginSettings.WebAppUrl}/images?openAssetId={isometricWorkflow.selectedImages[_assetName].Id}");
             });
 
             CustomStyle.ButtonPrimary("Regenerate 4 images", 30, 0, () =>

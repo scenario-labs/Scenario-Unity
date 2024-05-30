@@ -224,11 +224,7 @@ namespace Scenario.Editor
             }
             catch (Exception e)
             {
-                if (EditorUtility.DisplayDialog("Settings from Scenario Settings are not correctly filled.", "Settings from Scenario Settings are not correctly filled.\n Isometric workflow need to be linked to your Scenario account. (API Key, Secret key, TeamID key)", "Open Settings", "Exit"))
-                {
-                    PluginSettings.ShowWindow();
-                    IsometricWorkflow.CloseWindow();
-                }
+                Debug.Log("Error on downloading isometric model !");
             }
             
         }

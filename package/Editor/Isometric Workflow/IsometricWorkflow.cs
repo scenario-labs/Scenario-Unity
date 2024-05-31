@@ -194,6 +194,68 @@ namespace Scenario.Editor
         /// Call the prompt window to generate one inference (four images) per asset in the assetlist
         /// </summary>
         /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
+        public void AskGenerateImages(Action _onRequestSent)
+        {
+            Texture2D baseTexture = null;
+            switch (selectedBase)
+            {
+                case Base.None:
+                    baseTexture = null;
+                    break;
+                case Base.Square:
+                    baseTexture = settings.squareBaseTexture;
+                    break;
+                case Base.Custom:
+                    baseTexture = isometricWorkflowUI.customTexture;
+                    break;
+                default:
+                    break;
+            }
+
+            inferenceIdByAssetList.Clear();
+
+            int totalRequests = assetList.Count;
+            int completedRequests = 0;
+
+            foreach (string assetName in assetList)
+            {
+                string tempName = assetName;
+                bool useBaseTexture = baseTexture != null;
+                string modelName = settings.isometricModels.Find(x => x.style == selectedModel.style).modelData.name;
+
+                string prompt = string.Empty;
+
+                if (selectedTheme == Theme.Other)
+                {
+                    prompt = $"{customTheme}, ";
+                }
+                else
+                {
+                    prompt = $"{selectedTheme}, ";
+                }
+
+                prompt += $"{assetName}, ";
+
+                if (string.IsNullOrEmpty(selectedModel.DefaultPrompt))
+                {
+                    prompt += $"{basePromptText} ";
+                }
+                else
+                {
+                    prompt += $"{selectedModel.DefaultPrompt} ";
+                }
+
+                if (PromptPusher.Instance != null)
+                {
+                    PromptPusher.Instance.AskGenerateIsometricImage(modelName, ECreationMode.ControlNet, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence, null);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Call the prompt window to generate one inference (four images) per asset in the assetlist
+        /// </summary>
+        /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
         public void GenerateImages(Action _onRequestSent)
         {
             Texture2D baseTexture = null;

@@ -380,6 +380,42 @@ namespace Scenario.Editor
         /// <param name="_seed"></param>
         /// <param name="_useCanny"></param>
         /// <param name="_cannyStrength"></param>
+        public void AskGenerateIsometricImage(string _modelName, ECreationMode _mode, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
+        {
+            modelName = _modelName;
+
+            ActiveMode(_mode);
+
+            ManageOptionMode();
+
+            imageUpload = _texture;
+            numberOfImages = _numberOfImages;
+            promptInput = _promptText;
+            samplesStep = _samples;
+            width = _width;
+            height = _height;
+            guidance = _guidance;
+            seedInput = _seed;
+            modalitySelected = Array.IndexOf(CorrespondingOptionsValue, "canny") + 1;
+            modalityValue = _cannyStrength;
+
+            AskGenerate(_seed == "-1" ? null : _seed, _onInferenceRequested);
+        }
+
+        /// <summary>
+        /// If you want to generate an image through Isometric Workflow
+        /// </summary>
+        /// <param name="_modelName"></param>
+        /// <param name="_texture"></param>
+        /// <param name="_numberOfImages"></param>
+        /// <param name="_promptText"></param>
+        /// <param name="_samples"></param>
+        /// <param name="_width"></param>
+        /// <param name="_height"></param>
+        /// <param name="_guidance"></param>
+        /// <param name="_seed"></param>
+        /// <param name="_useCanny"></param>
+        /// <param name="_cannyStrength"></param>
         public void GenerateIsometricImage(string _modelName, ECreationMode _mode, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
         {
             modelName = _modelName;
@@ -405,6 +441,20 @@ namespace Scenario.Editor
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Verify data input and launch api request
+        /// </summary>
+        /// <param name="_seed"></param>
+        /// <param name="_onInferenceRequested"></param>
+        private void AskGenerate(string _seed, Action<string> _onInferenceRequested = null)
+        {
+            Debug.Log("Generate Image button clicked. Model: " + modelName + ", Seed: " + _seed);
+            if (IsPromptDataValid(out string inputData))
+            {
+                InferenceManager.PostAskInferenceRequest(inputData);
+            }
+        }
 
         /// <summary>
         /// Verify data input and launch api request

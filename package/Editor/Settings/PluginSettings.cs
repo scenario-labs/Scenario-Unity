@@ -3,7 +3,7 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using UnityEditor.Presets;
-using static Scenario.Editor.InferenceManager;
+using RestSharp;
 
 namespace Scenario.Editor
 {
@@ -13,14 +13,6 @@ namespace Scenario.Editor
         #region Public Properties
 
         public static string ApiUrl => "https://api.cloud.scenario.com/v1";
-        [MenuItem("Window/Scenario/API", false, 100)]
-        public static void Open()
-        {
-            ApiClient.RestGet($"teams", null);
-
-            ApiClient.RestGet($"models/model_SEFPw4NhpjzSxs736nBDCNYW/inferences?dryRun=true", null);
-        }
-
         public static string WebAppUrl { get { return webAppUrl; } }
         public static string SaveFolder { 
             get 
@@ -47,6 +39,7 @@ namespace Scenario.Editor
         }
         public static bool AlwaysRemoveBackgroundForSprites { get { return alwaysRemoveBackgroundForSprites; } }
         public static bool UsePixelsUnitsEqualToImage { get { return usePixelUnitsEqualToImage; } }
+
         #endregion
 
         #region Private Properties
@@ -71,6 +64,10 @@ namespace Scenario.Editor
         private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
 
+        public static PluginSettings settings = null;
+
+        public static Action OnStart;
+
         #endregion
 
         [System.Serializable]
@@ -81,8 +78,11 @@ namespace Scenario.Editor
 
         static PluginSettings()
         {
-            /*GetVersionFromPackageJson();
-            PluginSettings settings = ScriptableObject.CreateInstance<PluginSettings>();*/
+            GetVersionFromPackageJson();
+            if (ScenarioSession.Instance == null)
+            { 
+                ScenarioSession.CreateSessions();
+            }
         }
 
         #region Unity Methods
@@ -93,7 +93,6 @@ namespace Scenario.Editor
             LoadSettings();
         }
 
-
         [MenuItem("Window/Scenario/Scenario Settings", false, 100)]
         public static void ShowWindow()
         {
@@ -101,7 +100,6 @@ namespace Scenario.Editor
             PluginSettings window = GetWindow<PluginSettings>("Scenario Settings");
             window.minSize = new Vector2(minimumWidth, window.minSize.y);
         }
-
 
         private void OnGUI()
         {

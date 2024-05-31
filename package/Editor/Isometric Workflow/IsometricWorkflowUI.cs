@@ -610,6 +610,8 @@ namespace Scenario.Editor
 
                         CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                         {
+                            isometricWorkflow.AskGenerateImages(null);
+
                             if (EditorUtility.DisplayDialog($"Are you sure to launch ?", $"Are you sure to launch {isometricWorkflow.assetList.Count} inference(s) so {(isometricWorkflow.assetList.Count * 4)} images.\n\nThis consume credits.", "Launch", "Edit"))
                             {
                                 requestStatus = RequestsStatus.Requesting;

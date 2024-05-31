@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
-using UnityEngine.NVIDIA;
 
 namespace Scenario.Editor
 {
@@ -19,26 +18,42 @@ namespace Scenario.Editor
         /// </summary>
         public static bool SilenceMode = false;
 
-        public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
-            string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
-            float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
+        public static void PostAskInferenceRequest(string inputData)
         {
             Debug.Log("Requesting image generation please wait..");
             
             string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
             string modelId = DataCache.instance.SelectedModelId;
 
-            ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
+            ApiClient.RestPost($"models/{modelId}/inferences?dryRun=true", inputData,response =>
+            {
+                if (response.Content.Contains("creativeUnitsCost"))
+                {
+                    Debug.Log($"test{response.Content}");
+                }
+            });
+        }
+
+        public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
+            string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
+            float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
+        {
+            Debug.Log("Requesting image generation please wait..");
+
+            string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
+            string modelId = DataCache.instance.SelectedModelId;
+
+            ApiClient.RestPost($"models/{modelId}/inferences", inputData, response =>
             {
                 PromptWindow.InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<PromptWindow.InferenceRoot>(response.Content);
-                
+
                 string inferenceId = inferenceRoot.inference.id;
                 int numImages = imagesliderIntValue;
-                
+
                 DataCache.instance.ReserveSpaceForImageDatas(numImages, inferenceId,
                     promptinputText,
                     samplesliderValue,
-                    widthSliderValue, 
+                    widthSliderValue,
                     heightSliderValue,
                     guidancesliderValue,
                     _schedulerText,
@@ -47,13 +62,13 @@ namespace Scenario.Editor
 
                 GetInferenceStatus(inferenceId, modelId);
                 if (!SilenceMode)
-                { 
+                {
                     Images.ShowWindow();
                 }
                 _onInferenceRequested?.Invoke(inferenceId);
             });
         }
-        
+
         private static async void GetInferenceStatus(string inferenceId, string modelId)
         {
             Debug.Log("Requesting status please wait..");

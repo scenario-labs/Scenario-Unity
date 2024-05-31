@@ -31,8 +31,16 @@ namespace Scenario.Editor
             }
             else
             {
-                Debug.Log($"Error: {response.Content}");
-                errorAction?.Invoke(response.ErrorMessage);
+                if (response.Content.Contains("creativeUnitsCost"))
+                {
+                    //Debug.Log($"{response.Content}");
+                    responseAction?.Invoke(response);
+                }
+                else
+                {
+                    Debug.Log($"Error: {response.Content}");
+                    errorAction?.Invoke(response.ErrorMessage);
+                }
             }
         }
     

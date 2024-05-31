@@ -367,7 +367,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// If you want to generate an image through Isometric Workflow
+        /// If you want to generate an image through Isometric Workflow you get the cost before generation
         /// </summary>
         /// <param name="_modelName"></param>
         /// <param name="_texture"></param>
@@ -443,16 +443,16 @@ namespace Scenario.Editor
         #region Private Methods
 
         /// <summary>
-        /// Verify data input and launch api request
+        /// Verify data input and launch api request to get cost
         /// </summary>
         /// <param name="_seed"></param>
         /// <param name="_onInferenceRequested"></param>
         private void AskGenerate(string _seed, Action<string> _onInferenceRequested = null)
         {
-            Debug.Log("Generate Image button clicked. Model: " + modelName + ", Seed: " + _seed);
+            Debug.Log("Ask to generate Image button clicked. Model: " + modelName + ", Seed: " + _seed);
             if (IsPromptDataValid(out string inputData))
             {
-                InferenceManager.PostAskInferenceRequest(inputData);
+                InferenceManager.PostAskInferenceRequest(inputData, _onInferenceRequested);
             }
         }
 
@@ -644,7 +644,7 @@ namespace Scenario.Editor
                 modality = PrepareModality(modalitySettings);
 
                 inputData = PrepareInputData(modality, operationType, dataUrl, dataAdditionalUrl, maskDataUrl);
-                Debug.Log("Input Data: " + inputData);
+                //Debug.Log("Input Data: " + inputData);
                 return true;
             }
             else

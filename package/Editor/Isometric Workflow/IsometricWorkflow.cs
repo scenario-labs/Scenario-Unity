@@ -191,10 +191,10 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Call the prompt window to generate one inference (four images) per asset in the assetlist
+        /// Call the api to get the cost of one inference (four images) per asset in the assetlist
         /// </summary>
-        /// <param name="_onRequestSent">callback when ALL requests has been sent</param>
-        public void AskGenerateImages(Action _onRequestSent)
+        /// <param name="_onRequestSent"> callback when ALL requests has been sent</param>
+        public void AskGenerateImages(Action<string> _onRequestSent)
         {
             Texture2D baseTexture = null;
             switch (selectedBase)
@@ -217,13 +217,18 @@ namespace Scenario.Editor
             int totalRequests = assetList.Count;
             int completedRequests = 0;
 
+            string tempName = string.Empty;
+            bool useBaseTexture = true;
+            string modelName = string.Empty;
+            string prompt = string.Empty;
+
             foreach (string assetName in assetList)
             {
-                string tempName = assetName;
-                bool useBaseTexture = baseTexture != null;
-                string modelName = settings.isometricModels.Find(x => x.style == selectedModel.style).modelData.name;
+                tempName = assetName;
+                useBaseTexture = baseTexture != null;
+                modelName = settings.isometricModels.Find(x => x.style == selectedModel.style).modelData.name;
 
-                string prompt = string.Empty;
+                prompt = string.Empty;
 
                 if (selectedTheme == Theme.Other)
                 {
@@ -244,11 +249,11 @@ namespace Scenario.Editor
                 {
                     prompt += $"{selectedModel.DefaultPrompt} ";
                 }
+            }
 
-                if (PromptPusher.Instance != null)
-                {
-                    PromptPusher.Instance.AskGenerateIsometricImage(modelName, ECreationMode.ControlNet, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence, null);
-                }
+            if (PromptPusher.Instance != null)
+            {
+                PromptPusher.Instance.AskGenerateIsometricImage(modelName, ECreationMode.ControlNet, useBaseTexture ? baseTexture : null, 4, prompt, 30, 1024, 1024, 6, "-1", useBaseTexture, selectedModel.Influence, _onRequestSent);
             }
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -18,9 +19,13 @@ namespace Scenario.Editor
         /// </summary>
         public static bool SilenceMode = false;
 
-        public static void PostAskInferenceRequest(string inputData)
+        /// <summary>
+        /// Ask Scenario API to get the cost and also limitation of the inference request.
+        /// </summary>
+        /// <param name="inputData"></param>
+        /// <param name="_onInferenceRequested"></param>
+        public static void PostAskInferenceRequest(string inputData, Action<string> _onInferenceRequested)
         {
-            Debug.Log("Requesting image generation please wait..");
             
             string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
             string modelId = DataCache.instance.SelectedModelId;
@@ -29,7 +34,8 @@ namespace Scenario.Editor
             {
                 if (response.Content.Contains("creativeUnitsCost"))
                 {
-                    Debug.Log($"test{response.Content}");
+                    string cost = GetPriceCost(response.Content).ToString();
+                    _onInferenceRequested?.Invoke(cost);
                 }
             });
         }
@@ -125,7 +131,41 @@ namespace Scenario.Editor
                 }
             });
         }
-        
+
+        /// <summary>
+        /// Regular expression after api return to extract cost of the result.
+        /// </summary>
+        /// <param name="_data"></param>
+        /// <returns> int cost </returns>
+        private static int GetPriceCost(string _data)
+        {
+            // Define the regular expression pattern to match numbers after colon
+            string pattern = @":(\d+)";
+
+            // Create a regex object
+            Regex regex = new Regex(pattern);
+
+            // Match the pattern against the data
+            Match match = regex.Match(_data);
+
+            int parsedNumber = -1;
+            // Check if there's a match
+            if (match.Success)
+            {
+                // Extract the matched number
+                string number = match.Groups[1].Value;
+
+                // Convert the number to an integer if needed
+                parsedNumber = int.Parse(number);
+
+                return parsedNumber;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
         public class ImageDataAPI
         {
             public string Id { get; set; }

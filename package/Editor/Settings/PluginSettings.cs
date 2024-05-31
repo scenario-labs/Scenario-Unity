@@ -27,16 +27,6 @@ namespace Scenario.Editor
         public static Preset TexturePreset { get { return GetPreset(EditorPrefs.GetString("scenario/texturePreset")); } }
         public static Preset SpritePreset { get { return GetPreset(EditorPrefs.GetString("scenario/spritePreset")); } }
         public static Preset TilePreset { get { return GetPreset(EditorPrefs.GetString("scenario/tilePreset")); } }
-        public static string TeamIdKey { get 
-            {
-                if (string.IsNullOrEmpty(teamIdKey))
-                {
-                    teamIdKey = EditorPrefs.GetString("scenario/TeamIdKey");
-                }
-                return teamIdKey;
-                
-            }
-        }
         public static bool AlwaysRemoveBackgroundForSprites { get { return alwaysRemoveBackgroundForSprites; } }
         public static bool UsePixelsUnitsEqualToImage { get { return usePixelUnitsEqualToImage; } }
 
@@ -47,7 +37,6 @@ namespace Scenario.Editor
         private static string webAppUrl = "https://app.scenario.com";
         private string apiKey;
         private string secretKey;
-        private static string teamIdKey = string.Empty;
         private string saveFolder;
         private static float minimumWidth = 400f;
         private static Preset texturePreset;
@@ -78,7 +67,7 @@ namespace Scenario.Editor
 
         static PluginSettings()
         {
-            GetVersionFromPackageJson();
+            //GetVersionFromPackageJson();
             if (ScenarioSession.Instance == null)
             { 
                 ScenarioSession.CreateSessions();
@@ -91,6 +80,10 @@ namespace Scenario.Editor
         {
             GetVersionFromPackageJson();
             LoadSettings();
+            if (ScenarioSession.Instance == null)
+            {
+                ScenarioSession.CreateSessions();
+            }
         }
 
         [MenuItem("Window/Scenario/Scenario Settings", false, 100)]
@@ -124,6 +117,11 @@ namespace Scenario.Editor
             }
 
             GUILayout.FlexibleSpace();
+
+            if (ScenarioSession.Instance != null)
+            {
+                GUILayout.Label($"Scenario plan: {ScenarioSession.Instance.GetPlan()}", EditorStyles.boldLabel);
+            }
             GUILayout.Label(version, EditorStyles.boldLabel);
         }
 
@@ -137,7 +135,6 @@ namespace Scenario.Editor
 
             apiKey = EditorGUILayout.TextField("API Key:", apiKey);
             secretKey = EditorGUILayout.PasswordField("Secret Key:", secretKey);
-            teamIdKey = EditorGUILayout.TextField("Workspace ID:", teamIdKey);
         }
 
         private void DrawImageSettings()
@@ -246,10 +243,14 @@ namespace Scenario.Editor
             EditorPrefs.SetString("scenario/tilePreset", tilePresetGUID);
             EditorPrefs.SetString("ApiKey", apiKey);
             EditorPrefs.SetString("SecretKey", secretKey);
-            EditorPrefs.SetString("scenario/TeamIdKey", teamIdKey);
             EditorPrefs.SetString("SaveFolder", saveFolder);
             CheckAndCreateFolder(saveFolder);
             PlayerPrefs.SetString("EncodedAuth", EncodedAuth);
+
+            if (ScenarioSession.Instance == null)
+            {
+                ScenarioSession.CreateSessions();
+            }
         }
 
         private void LoadSettings()
@@ -286,7 +287,6 @@ namespace Scenario.Editor
             //load values
             apiKey = EditorPrefs.GetString("ApiKey");
             secretKey = EditorPrefs.GetString("SecretKey");
-            teamIdKey = EditorPrefs.GetString("scenario/TeamIdKey");
             saveFolder = EditorPrefs.GetString("SaveFolder", "Assets");
             CheckAndCreateFolder(saveFolder);
 

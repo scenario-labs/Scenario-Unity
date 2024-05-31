@@ -15,9 +15,26 @@ namespace Scenario.Editor
         #region Private Fields
 
         private static IsometricWorkflow isometricWorkflow;
+        
+        /// <summary>
+        /// Using no base to generate isometric tile 
+        /// </summary>
         private bool baseNone = false;
+
+        /// <summary>
+        /// Using square base to generate isometric tile 
+        /// </summary>
         private bool baseSquare = true;
+
+        /// <summary>
+        /// Using custom base to generate isometric tile 
+        /// </summary>
         private bool baseCustom = false;
+        
+        /// <summary>
+        /// When the workflow use the api to know the cost and also generate.
+        /// </summary>
+        private bool isProcessing = false;
 
         /// <summary>
         /// if the user choose a custom texture as reference at Step 1
@@ -28,7 +45,6 @@ namespace Scenario.Editor
         /// The scrollview at step 4
         /// </summary>
         private Vector2 assetScrollView = Vector2.zero;
-
 
         /// <summary>
         /// The scrollview at step 5
@@ -250,7 +266,6 @@ namespace Scenario.Editor
             CustomStyle.Label("Step 2. Choose a Style", 18, TextAnchor.UpperLeft, bold: true);
             CustomStyle.Label($"Choose from a variety of 2D and 3D styles, with building shapes that vary according to each style.", 12, TextAnchor.UpperLeft, bold: false);
             CustomStyle.Space(50);
-            //isometricWorkflow.selectedModel = (IsometricWorkflow.ModelStyle)GUILayout.SelectionGrid((int)isometricWorkflow.selectedBase, Enum.GetNames(typeof(IsometricWorkflow.ModelStyle)), 2, GUI.skin.GetStyle("toggle"));
 
             GUILayout.BeginVertical(); // Begin vertical grouping
             {
@@ -610,16 +625,36 @@ namespace Scenario.Editor
 
                         CustomStyle.ButtonPrimary("Next", 30, 100, () =>
                         {
-                            isometricWorkflow.AskGenerateImages(null);
-
-                            if (EditorUtility.DisplayDialog($"Are you sure to launch ?", $"Are you sure to launch {isometricWorkflow.assetList.Count} inference(s) so {(isometricWorkflow.assetList.Count * 4)} images.\n\nThis consume credits.", "Launch", "Edit"))
+                            if (ScenarioSession.Instance != null)
                             {
-                                requestStatus = RequestsStatus.Requesting;
-                                InferenceManager.SilenceMode = true;
-                                isometricWorkflow.GenerateImages(() =>
+                                if (ScenarioSession.Instance.GetInferenceBatchSize() >= isometricWorkflow.assetList.Count && !isProcessing)
                                 {
-                                    requestStatus = RequestsStatus.Requested;
-                                });
+                                    isProcessing = true;
+
+                                    isometricWorkflow.AskGenerateImages((string response) => {
+                                        if (EditorUtility.DisplayDialog($"Are you sure to launch ?", $"Are you sure to launch {isometricWorkflow.assetList.Count} inference(s) so {(isometricWorkflow.assetList.Count * 4)} images.\n\nThis consume {int.Parse(response) * isometricWorkflow.assetList.Count} credits.", "Launch", "Edit"))
+                                        {
+                                            requestStatus = RequestsStatus.Requesting;
+                                            InferenceManager.SilenceMode = true;
+                                            isometricWorkflow.GenerateImages(() =>
+                                            {
+                                                requestStatus = RequestsStatus.Requested;
+                                            });
+                                        }
+                                        else
+                                        {
+                                            isProcessing = false;
+                                            requestStatus = RequestsStatus.NotRequested;
+                                        }
+                                    });
+                                }
+                                else if(ScenarioSession.Instance.GetInferenceBatchSize() < isometricWorkflow.assetList.Count && !isProcessing)
+                                {
+                                    if (EditorUtility.DisplayDialog($"Impossible to launch !", $"Number of inference ({isometricWorkflow.assetList.Count}) is greater to your plan.", "Edit"))
+                                    {
+                                        isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
+                                    }
+                                }
                             }
                         });
                         EditorGUI.EndDisabledGroup();
@@ -632,6 +667,7 @@ namespace Scenario.Editor
                         break;
                     //when request is finished, go to next page
                     case RequestsStatus.Requested:
+                        isProcessing = false;
                         isometricWorkflow.currentStep = IsometricWorkflow.Step.Validation;
                         break;
                     default:

@@ -60,10 +60,7 @@ namespace Scenario.Editor
 
         static PluginSettings()
         {
-#if DEEPLINK
-#else
-            CheckNeedleDeeplink();
-#endif
+
         }
 
         private void OnEnable()
@@ -293,35 +290,5 @@ namespace Scenario.Editor
             tilePresetGUID = EditorPrefs.GetString("scenario/tilePreset");
             tilePreset = GetPreset(tilePresetGUID);
         }
-
-        /// <summary>
-        /// Check if the needle deeplink git package is installed.
-        /// </summary>
-        private static void CheckNeedleDeeplink()
-        {
-            request = Client.Add("https://github.com/needle-tools/unity-deeplink.git?path=/package");
-            EditorApplication.update += Progress;
-        }
-
-        /// <summary>
-        /// Process to install a unity package from code.
-        /// </summary>
-        private static void Progress()
-        {
-            if (request.IsCompleted)
-            {
-                if (request.Status == StatusCode.Success)
-                {
-                    Debug.Log("Installed: " + request.ToString());
-                }
-                else if (request.Status >= StatusCode.Failure)
-                {
-                    Debug.Log(request.Error.message);
-                }
-
-                EditorApplication.update -= Progress;
-            }
-        }
-
     }
 }

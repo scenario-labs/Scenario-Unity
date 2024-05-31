@@ -16,11 +16,6 @@
             "displayName": "Unity Editor Layout",
             "description": "Example layout for 2D workflow",
             "path": "Samples/UnityEditorLayout"
-        },
-		{
-            "displayName": "Deeplink",
-            "description": "Example layout for 2D workflow",
-            "path": "https://github.com/needle-tools/unity-deeplink.git?path=/package"
         }
     ]
 }

@@ -19,7 +19,8 @@ namespace Scenario.Editor
         [MenuItem("Window/Scenario/Prompt Window", false, 5)]
         public static void ShowWindow()
         {
-            GetWindow<PromptWindow>("Prompt Window");
+            var promptWindow = GetWindow<PromptWindow>("Prompt Window");
+            promptWindow.minSize = new Vector2(500, 750);
         }
 
         #region Static Methods

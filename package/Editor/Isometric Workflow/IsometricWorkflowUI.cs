@@ -130,6 +130,8 @@ namespace Scenario.Editor
         {
             DrawImageBackground(_dimension);
 
+            isometricWorkflow.maxSize = isometricWorkflow.minSize;
+
             GUILayout.FlexibleSpace();
             //Bottom
             GUILayout.BeginHorizontal();
@@ -150,6 +152,8 @@ namespace Scenario.Editor
         /// <param name="_dimension">The dimensions of the UI element.</param>
         public void DrawBaseGUI(Rect _dimension)
         {
+            isometricWorkflow.maxSize = new Vector2(1680, 920);
+
             DrawBackground(_dimension);
             CustomStyle.Space();
             CustomStyle.Label("Step 1. Choose a Base", 18, TextAnchor.UpperLeft, bold: true);
@@ -555,7 +559,7 @@ namespace Scenario.Editor
             }
             GUILayout.EndHorizontal();
             CustomStyle.Space();
-
+            int averageSize = 0;
             switch (isometricWorkflow.selectedTheme)
             {
                 case Theme.Medieval:
@@ -567,6 +571,17 @@ namespace Scenario.Editor
                             GUILayout.FlexibleSpace();
                             foreach (string sample in isometricWorkflow.medievalSample)
                             {
+                                averageSize += (sample.Length * 7) + 25;
+
+                                if (averageSize >= _dimension.width - 75)
+                                {
+                                    GUILayout.FlexibleSpace();
+                                    GUILayout.EndHorizontal();
+                                    GUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    averageSize = 0;
+                                }
+
                                 CustomStyle.ButtonPrimary(sample, 30, 0, () =>
                                 {
                                     isometricWorkflow.FillAssetSample(sample);
@@ -588,6 +603,17 @@ namespace Scenario.Editor
                             GUILayout.FlexibleSpace();
                             foreach (string sample in isometricWorkflow.contemporarySample)
                             {
+                                averageSize += (sample.Length * 7) + 25;
+
+                                if (averageSize >= _dimension.width - 75)
+                                {
+                                    GUILayout.FlexibleSpace();
+                                    GUILayout.EndHorizontal();
+                                    GUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    averageSize = 0;
+                                }
+
                                 CustomStyle.ButtonPrimary(sample, 30, 0, () =>
                                 {
                                     isometricWorkflow.FillAssetSample(sample);
@@ -604,11 +630,24 @@ namespace Scenario.Editor
                     if (isometricWorkflow.postApoSample != null && isometricWorkflow.postApoSample.Count > 0)
                     {
                         CustomStyle.Space();
+
                         GUILayout.BeginHorizontal();
                         {
                             GUILayout.FlexibleSpace();
+                            
                             foreach (string sample in isometricWorkflow.postApoSample)
                             {
+                                averageSize += (sample.Length * 7) + 25;
+
+                                if (averageSize >= _dimension.width - 75) 
+                                {
+                                    GUILayout.FlexibleSpace();
+                                    GUILayout.EndHorizontal();
+                                    GUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    averageSize = 0;
+                                }
+
                                 CustomStyle.ButtonPrimary(sample, 30, 0, () =>
                                 {
                                     isometricWorkflow.FillAssetSample(sample);
@@ -630,6 +669,17 @@ namespace Scenario.Editor
                             GUILayout.FlexibleSpace();
                             foreach (string sample in isometricWorkflow.sampleList)
                             {
+                                averageSize += (sample.Length * 7) + 25;
+
+                                if (averageSize >= _dimension.width - 75)
+                                {
+                                    GUILayout.FlexibleSpace();
+                                    GUILayout.EndHorizontal();
+                                    GUILayout.BeginHorizontal();
+                                    GUILayout.FlexibleSpace();
+                                    averageSize = 0;
+                                }
+
                                 CustomStyle.ButtonPrimary(sample, 30, 0, () =>
                                 {
                                     isometricWorkflow.FillAssetSample(sample);

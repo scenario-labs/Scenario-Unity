@@ -107,7 +107,7 @@ namespace Scenario.Editor
                     textColor = Color.white
                 },
                 fixedWidth = width,
-                fixedHeight = height,
+                fixedHeight = height
             };
 
             if (GUILayout.Button(text, style))
@@ -115,7 +115,7 @@ namespace Scenario.Editor
                 action?.Invoke();
             }
         }
-    
+
         public static void ButtonSecondary(string text, float height, Action action)
         {
             var style = new GUIStyle(GUI.skin.button)

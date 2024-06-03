@@ -190,6 +190,20 @@ namespace Scenario.Editor
             return texture;
         }
 
+        /// <summary>
+        /// Load Images of the plugin into Resources folder.
+        /// </summary>
+        public static Texture2D LoadResourcesImage(string _imageName)
+        {
+            string path = PluginFolderPath() + "Resources/" + _imageName.ToString() + ".png";
+            if (AssetDatabase.LoadMainAssetAtPath(path))
+            {
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                return tex;
+            }
+            return null;
+        }
+
         public static string GetRandomSeedValue()
         {
             return UnityEngine.Random.Range(ulong.MinValue, ulong.MaxValue).ToString("n", CultureInfo.InvariantCulture).Replace(",", "").Substring(0, 19);

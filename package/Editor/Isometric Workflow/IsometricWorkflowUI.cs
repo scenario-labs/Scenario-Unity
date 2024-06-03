@@ -87,6 +87,30 @@ namespace Scenario.Editor
 
         /// <summary>
         /// Draws the background of the UI element with the specified position.
+        /// This function fills the background of a UI element with the start screen file.
+        /// </summary>
+        /// <param name="position">The position and dimensions of the UI element.</param>
+        private void DrawImageBackground(Rect position)
+        {
+            if (isometricWorkflow != null)
+            {
+                if (isometricWorkflow.IsometricStartScreen != null)
+                {
+                    GUI.DrawTexture(new Rect(0, 0, position.width, position.height), isometricWorkflow.IsometricStartScreen);
+                }
+                else
+                {
+                    DrawBackground(position);
+                }
+            }
+            else
+            { 
+                DrawBackground(position);
+            }
+        }
+
+        /// <summary>
+        /// Draws the background of the UI element with the specified position.
         /// This function fills the background of a UI element with a given color.
         /// </summary>
         /// <param name="position">The position and dimensions of the UI element.</param>
@@ -97,6 +121,28 @@ namespace Scenario.Editor
         }
 
         #region Draw UI
+
+        /// <summary>
+        /// This function is responsible for rendering the interface for the start screen.
+        /// </summary>
+        /// <param name="_dimension">The dimensions of the UI element.</param>
+        public void DrawStartGUI(Rect _dimension)
+        {
+            DrawImageBackground(_dimension);
+
+            GUILayout.FlexibleSpace();
+            //Bottom
+            GUILayout.BeginHorizontal();
+            {
+                GUILayout.FlexibleSpace();
+                CustomStyle.ButtonPrimary("Next", 30, 150, () =>
+                {
+                    isometricWorkflow.currentStep = IsometricWorkflow.Step.Base;
+                });
+            }
+            GUILayout.EndHorizontal();
+            CustomStyle.Space();
+        }
 
         /// <summary>
         /// This function is responsible for rendering the interface for the first step
@@ -113,7 +159,7 @@ namespace Scenario.Editor
             {
                 GUILayout.FlexibleSpace();
 
-                //None
+                //None // When the base non will be available once more.
                 /*GUILayout.BeginVertical();
                 {
                     if (!baseNone)
@@ -650,7 +696,7 @@ namespace Scenario.Editor
                                 }
                                 else if(ScenarioSession.Instance.GetInferenceBatchSize() < isometricWorkflow.assetList.Count && !isProcessing)
                                 {
-                                    if (EditorUtility.DisplayDialog($"Impossible to launch !", $"Number of inference ({isometricWorkflow.assetList.Count}) is greater to your plan.", "Edit"))
+                                    if (EditorUtility.DisplayDialog($"Parallel Inference Limit Reached", $"Your plan allows for a maximum of {ScenarioSession.Instance.GetInferenceBatchSize()} parallel inferences. Please select up to {ScenarioSession.Instance.GetInferenceBatchSize()} assets. Number of inference selected: ({isometricWorkflow.assetList.Count})", "Edit"))
                                     {
                                         isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
                                     }

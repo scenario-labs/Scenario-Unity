@@ -8,6 +8,14 @@ namespace Scenario.Editor
 {
     public class IsometricWorkflow : EditorWindow
     {
+        #region Public Fields
+
+        public Texture2D IsometricStartScreen { get { return isometricStartScreen; } }
+
+        #endregion
+
+        #region Private Fields
+
         /// <summary>
         /// Static field that contains all the UI functions
         /// </summary>
@@ -28,12 +36,10 @@ namespace Scenario.Editor
         /// </summary>
         internal Base selectedBase = Base.None;
 
-
         /// <summary>
         /// The second step of the workflow is to select a Style. This field contains the model that match the style that the user has choosen
         /// </summary>
         internal ModelIdByStyle selectedModel = null;
-
 
         /// <summary>
         /// The third step of the workflow is to select a theme. This field contains the theme that match the theme that the user has choosen
@@ -143,6 +149,13 @@ namespace Scenario.Editor
         /// </summary>
         internal static IsometricWorkflowSettings settings;
 
+        /// <summary>
+        /// Reference of the start screen image.
+        /// </summary>
+        private Texture2D isometricStartScreen = null;
+
+        #endregion
+
         [MenuItem("Window/Scenario/Workflows/1. Isometric Workflow")]
         public static void ShowWindow()
         {
@@ -152,7 +165,12 @@ namespace Scenario.Editor
             InferenceManager.SilenceMode = true;
 
             var isometricWorkflow = GetWindow<IsometricWorkflow>("Isometric Workflow");
-            isometricWorkflow.minSize = new Vector2(1250, 500);
+            isometricWorkflow.minSize = new Vector2(1250, 625);
+
+            if (isometricWorkflow.isometricStartScreen == null)
+            {
+                isometricWorkflow.isometricStartScreen = CommonUtils.LoadResourcesImage("startScreenIso");
+            }
 
             settings = IsometricWorkflowSettings.GetSerializedSettings();
         }
@@ -412,6 +430,9 @@ namespace Scenario.Editor
         {
             switch (currentStep)
             {
+                case Step.Start:
+                    isometricWorkflowUI.DrawStartGUI(this.position);
+                    break;
                 case Step.Base:
                     isometricWorkflowUI.DrawBaseGUI(this.position);
                     break;
@@ -478,11 +499,12 @@ namespace Scenario.Editor
 
         public enum Step
         {
-            Base = 0,
-            Style = 1,
-            Theme = 2,
-            Asset = 3,
-            Validation = 4,
+            Start = 0,
+            Base = 1,
+            Style = 2,
+            Theme = 3,
+            Asset = 4,
+            Validation = 5,
         }
 
         public enum Base

@@ -70,7 +70,7 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Get limit inference allow to this account
+        /// Get limit batch inference allow to this account
         /// </summary>
         /// <returns> Return the inference limit </returns>
         public int GetInferenceBatchSize()
@@ -87,6 +87,26 @@ namespace Scenario.Editor
             }
 
             return -1;
+        }
+
+        /// <summary>
+        /// Return the parallel inference limit
+        /// </summary>
+        /// <returns></returns>
+        public int GetParallelInference()
+        {
+            if (Instance != null)
+            {
+                if (Instance.limitRoot != null)
+                {
+                    if (!string.IsNullOrEmpty(Instance.limitRoot.limits.parallelInferences))
+                    {
+                        return int.Parse(Instance.limitRoot.limits.parallelInferences);
+                    }
+                }
+            }
+
+            return -2;
         }
 
         #endregion
@@ -186,6 +206,7 @@ namespace Scenario.Editor
     {
         public string inferenceBatchSize { get; set; }
         public string creativeUnits { get; set; }
+        public string parallelInferences { get; set; }
     }
 
     #endregion

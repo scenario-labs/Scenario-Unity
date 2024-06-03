@@ -673,7 +673,7 @@ namespace Scenario.Editor
                         {
                             if (ScenarioSession.Instance != null)
                             {
-                                if (ScenarioSession.Instance.GetInferenceBatchSize() >= isometricWorkflow.assetList.Count && !isProcessing)
+                                if ((ScenarioSession.Instance.GetParallelInference() >= isometricWorkflow.assetList.Count || ScenarioSession.Instance.GetParallelInference() == -1) && !isProcessing)
                                 {
                                     isProcessing = true;
 
@@ -694,9 +694,9 @@ namespace Scenario.Editor
                                         }
                                     });
                                 }
-                                else if(ScenarioSession.Instance.GetInferenceBatchSize() < isometricWorkflow.assetList.Count && !isProcessing)
+                                else if(ScenarioSession.Instance.GetParallelInference() < isometricWorkflow.assetList.Count && !isProcessing)
                                 {
-                                    if (EditorUtility.DisplayDialog($"Parallel Inference Limit Reached", $"Your plan allows for a maximum of {ScenarioSession.Instance.GetInferenceBatchSize()} parallel inferences. Please select up to {ScenarioSession.Instance.GetInferenceBatchSize()} assets. Number of inference selected: ({isometricWorkflow.assetList.Count})", "Edit"))
+                                    if (EditorUtility.DisplayDialog($"Parallel Inference Limit Reached", $"Your plan allows for a maximum of {ScenarioSession.Instance.GetParallelInference()} parallel inferences. Please select up to {ScenarioSession.Instance.GetParallelInference()} assets. Number of inference selected: ({isometricWorkflow.assetList.Count})", "Edit"))
                                     {
                                         isometricWorkflow.currentStep = IsometricWorkflow.Step.Asset;
                                     }

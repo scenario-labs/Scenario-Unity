@@ -165,7 +165,7 @@ namespace Scenario.Editor
             InferenceManager.SilenceMode = true;
 
             var isometricWorkflow = GetWindow<IsometricWorkflow>("Isometric Workflow");
-            isometricWorkflow.minSize = new Vector2(1250, 625);
+            isometricWorkflow.minSize = new Vector2(1024, 625);
 
             if (isometricWorkflow.isometricStartScreen == null)
             {

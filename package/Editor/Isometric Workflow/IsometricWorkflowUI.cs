@@ -495,7 +495,8 @@ namespace Scenario.Editor
                 CustomStyle.Space();
                 GUILayout.BeginVertical(GUI.skin.box); // Begin vertical grouping
                 {
-                    assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(true));
+                    Debug.Log(_dimension + " " + (_dimension.width - 25));
+                    assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(false), GUILayout.Width(_dimension.width - 150));
                     {
                         if (isometricWorkflow.assetList != null && isometricWorkflow.assetList.Count > 0)
                         { 
@@ -531,6 +532,7 @@ namespace Scenario.Editor
 
                     GUILayout.BeginHorizontal(); //horizontal group of button + asset name for adding in list 
                     {
+                        GUILayout.FlexibleSpace();
                         CustomStyle.ButtonPrimary("+", 30, 30, () =>
                         {
                             if (!string.IsNullOrEmpty(inputAssetName))
@@ -539,8 +541,8 @@ namespace Scenario.Editor
                                 inputAssetName = string.Empty;
                             }
                         });
-
-                        inputAssetName = GUILayout.TextField(inputAssetName, GUILayout.Height(30));
+                        
+                        inputAssetName = GUILayout.TextField(inputAssetName, GUILayout.Height(30), GUILayout.Width(_dimension.width - 175));
                         if (string.IsNullOrEmpty(inputAssetName))
                         { 
                             var guiColor = GUI.color;
@@ -550,7 +552,7 @@ namespace Scenario.Editor
                             EditorGUI.LabelField(position, "Describe what to generate");
                             GUI.color = guiColor;
                         }
-
+                        GUILayout.FlexibleSpace();
                     }
                     GUILayout.EndHorizontal();
                 }

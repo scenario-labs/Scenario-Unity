@@ -19,24 +19,6 @@ namespace Scenario
         #endregion
 
         #region MonoBehaviour Callbacks
-        static DeepLinkManager()
-        {
-            Debug.Log("do it");
-            string[] args = System.Environment.GetCommandLineArgs();
-            foreach (string arg in args)
-            {
-                    Debug.Log("coucou " + arg);
-                if (arg.StartsWith("com.unity3d.kharma:"))
-                {
-                    Debug.Log("coucou");
-                    // Handle the URL here
-                    string url = arg.Substring("com.unity3d.kharma://".Length);
-                    Debug.Log("Received URL: " + url);
-                    break;
-                }
-            }
-        }
-
         #endregion
 
         #region Public Methods

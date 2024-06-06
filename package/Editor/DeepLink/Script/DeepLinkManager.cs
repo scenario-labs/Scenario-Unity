@@ -36,8 +36,11 @@ namespace Scenario
         private static bool DeepLinkDownloadImage(string _link)
         {
             Debug.Log("[Deep Link] Received deeplink: " + _link);
-            string url = _link.Replace("com.unity3d.kharma:", "");
-
+            string url = _link.Replace("com.unity3d.kharma://", "");
+            if (Application.platform == RuntimePlatform.OSXEditor)
+            {
+                url = url.Replace("https//", "https://");
+            }
             CommonUtils.FetchTextureFromURL(url, response =>
             {
                 CommonUtils.SaveTextureAsPNG(response, importPreset: PluginSettings.TexturePreset);

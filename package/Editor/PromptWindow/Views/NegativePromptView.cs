@@ -134,10 +134,9 @@ namespace Scenario.Editor
         {
             GUI.SetNextControlName("negativeInputTextField");
             negativeInputText =
-                EditorGUILayout.TextField(negativeInputText, GUILayout.ExpandWidth(true), GUILayout.Height(25), GUILayout.MinWidth(400));
+                EditorGUILayout.TextField(negativeInputText, GUILayout.ExpandWidth(true), GUILayout.Height(25), GUILayout.MinWidth(200));
 
-            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return &&
-                GUI.GetNameOfFocusedControl() == "negativeInputTextField")
+            if (Event.current.isKey && Event.current.keyCode == KeyCode.Return && GUI.GetNameOfFocusedControl() == "negativeInputTextField")
             {
                 if (!string.IsNullOrWhiteSpace(negativeInputText))
                 {

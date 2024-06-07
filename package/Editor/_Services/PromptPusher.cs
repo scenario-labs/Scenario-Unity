@@ -122,7 +122,7 @@ namespace Scenario.Editor
         /// <summary>
         /// Reference number of samples expected on generation
         /// </summary>
-        internal int samplesStep = 30;
+        internal int samplesStep = 4;
 
         /// <summary>
         /// 
@@ -367,16 +367,94 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Re launch the generation process, Isometric incoming
+        /// If you want to generate an image through Isometric Workflow you get the cost before generation
         /// </summary>
-        public void ReGenerateImage()
-        { 
-            
+        /// <param name="_modelName"></param>
+        /// <param name="_texture"></param>
+        /// <param name="_numberOfImages"></param>
+        /// <param name="_promptText"></param>
+        /// <param name="_samples"></param>
+        /// <param name="_width"></param>
+        /// <param name="_height"></param>
+        /// <param name="_guidance"></param>
+        /// <param name="_seed"></param>
+        /// <param name="_useCanny"></param>
+        /// <param name="_cannyStrength"></param>
+        public void AskGenerateIsometricImage(string _modelName, ECreationMode _mode, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
+        {
+            modelName = _modelName;
+
+            ActiveMode(_mode);
+
+            ManageOptionMode();
+
+            imageUpload = _texture;
+            numberOfImages = _numberOfImages;
+            promptInput = _promptText;
+            samplesStep = _samples;
+            width = _width;
+            height = _height;
+            guidance = _guidance;
+            seedInput = _seed;
+            modalitySelected = Array.IndexOf(CorrespondingOptionsValue, "canny") + 1;
+            modalityValue = _cannyStrength;
+
+            AskGenerate(_seed == "-1" ? null : _seed, _onInferenceRequested);
+        }
+
+        /// <summary>
+        /// If you want to generate an image through Isometric Workflow
+        /// </summary>
+        /// <param name="_modelName"></param>
+        /// <param name="_texture"></param>
+        /// <param name="_numberOfImages"></param>
+        /// <param name="_promptText"></param>
+        /// <param name="_samples"></param>
+        /// <param name="_width"></param>
+        /// <param name="_height"></param>
+        /// <param name="_guidance"></param>
+        /// <param name="_seed"></param>
+        /// <param name="_useCanny"></param>
+        /// <param name="_cannyStrength"></param>
+        public void GenerateIsometricImage(string _modelName, ECreationMode _mode, Texture2D _texture = null, int _numberOfImages = 4, string _promptText = "", int _samples = 30, int _width = 1024, int _height = 1024, float _guidance = 6.0f, string _seed = "-1", bool _useCanny = false, float _cannyStrength = 0.8f, Action<string> _onInferenceRequested = null)
+        {
+            modelName = _modelName;
+
+            ActiveMode(_mode);
+
+            ManageOptionMode();
+
+            imageUpload = _texture;
+            numberOfImages = _numberOfImages;
+            promptInput = _promptText;
+            samplesStep = _samples;
+            width = _width;
+            height = _height;
+            guidance = _guidance;
+            seedInput = _seed;
+            modalitySelected = Array.IndexOf(CorrespondingOptionsValue, "canny") + 1;
+            modalityValue = _cannyStrength;
+
+            Generate(_seed == "-1" ? null : _seed, _onInferenceRequested);
         }
 
         #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Verify data input and launch api request to get cost
+        /// </summary>
+        /// <param name="_seed"></param>
+        /// <param name="_onInferenceRequested"></param>
+        private void AskGenerate(string _seed, Action<string> _onInferenceRequested = null)
+        {
+            Debug.Log("Ask to generate Image button clicked. Model: " + modelName + ", Seed: " + _seed);
+            if (IsPromptDataValid(out string inputData))
+            {
+                InferenceManager.PostAskInferenceRequest(inputData, _onInferenceRequested);
+            }
+        }
 
         /// <summary>
         /// Verify data input and launch api request
@@ -398,6 +476,22 @@ namespace Scenario.Editor
                     SchedulerOptions[schedulerSelected],
                     seedInput,
                     _onInferenceRequested);
+            }
+        }
+
+        /// <summary>
+        /// Usefull from workflow behaviour. Automatically set mode options 
+        /// Used by Isometric WorkFlow
+        /// </summary>
+        private void ManageOptionMode()
+        {
+            activeMode = GetActiveMode();
+            switch (activeMode.EMode)
+            {
+                case ECreationMode.ControlNet:
+                    activeMode.UseControlNet = true;
+                    activeMode.UseAdvanceSettings = true;
+                    break;
             }
         }
 
@@ -550,7 +644,7 @@ namespace Scenario.Editor
                 modality = PrepareModality(modalitySettings);
 
                 inputData = PrepareInputData(modality, operationType, dataUrl, dataAdditionalUrl, maskDataUrl);
-                Debug.Log("Input Data: " + inputData);
+                //Debug.Log("Input Data: " + inputData);
                 return true;
             }
             else
@@ -680,7 +774,8 @@ namespace Scenario.Editor
             string inputData = $@"{{
                 ""parameters"": {{
                     ""hideResults"": {hideResults.ToString().ToLower()},
-                    ""type"": ""{type}"",";
+                    ""type"": ""{type}"",
+                    ""dryRun"": true,";
 
             switch (activeMode.EMode)
             {

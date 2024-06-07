@@ -16,6 +16,34 @@ namespace Scenario.Editor
     [ExecuteInEditMode]
     public static class CommonUtils
     {
+
+        private static string assemblyDefinitionFileName = "com.scenarioinc.scenario.editor";
+
+        /// <summary>
+        /// Return the path to the root of the folder of the plugin
+        /// </summary>
+        /// <returns></returns>
+        public static string PluginFolderPath()
+        {
+            //Find the assembly Definition which should be at package/Editor/ folder because it's a unique file.
+            string[] guids = AssetDatabase.FindAssets($"{assemblyDefinitionFileName} t:assemblydefinitionasset");
+
+            if (guids.Length > 1)
+            {
+                Debug.LogError($"it seems that you have multiple file '{assemblyDefinitionFileName}.asmdef'. Please delete one");
+                return "0";
+            }
+
+            if (guids.Length == 0)
+            {
+                Debug.LogError($"It seems that you don't have the file '{assemblyDefinitionFileName}.asmdef'. Please redownload the plugin from the asset store.");
+                return "0";
+            }
+
+            //find the folder of that file
+            string folderPath = AssetDatabase.GUIDToAssetPath(guids[0]);
+            return folderPath.Remove(folderPath.IndexOf($"Editor/{assemblyDefinitionFileName}.asmdef"));
+        }
         public static Texture2D CreateColorTexture(Color color)
         {
             Texture2D texture = new Texture2D(1, 1);
@@ -60,7 +88,8 @@ namespace Scenario.Editor
                 importPreset = PluginSettings.TexturePreset;
             }
 
-            string downloadPath = EditorPrefs.GetString("SaveFolder", "Assets");
+            
+            string downloadPath = PluginSettings.SaveFolder;
             string filePath = Path.Combine(downloadPath, fileName);
 
             File.WriteAllBytesAsync(filePath, pngBytes).ContinueWith(task =>
@@ -161,10 +190,25 @@ namespace Scenario.Editor
             return texture;
         }
 
+        /// <summary>
+        /// Load Images of the plugin into Resources folder.
+        /// </summary>
+        public static Texture2D LoadResourcesImage(string _imageName)
+        {
+            string path = PluginFolderPath() + "Resources/" + _imageName.ToString() + ".png";
+            if (AssetDatabase.LoadMainAssetAtPath(path))
+            {
+                Texture2D tex = AssetDatabase.LoadAssetAtPath<Texture2D>(path);
+                return tex;
+            }
+            return null;
+        }
+
         public static string GetRandomSeedValue()
         {
             return UnityEngine.Random.Range(ulong.MinValue, ulong.MaxValue).ToString("n", CultureInfo.InvariantCulture).Replace(",", "").Substring(0, 19);
         }
+
 
         /// <summary>
         /// Use this function to apply a specific Importer Preset to an image. (for example: apply the sprite settings if the user wants to make a sprite out of a generated image)
@@ -210,6 +254,25 @@ namespace Scenario.Editor
                 }
             }
             return ofType;
+        }
+
+        /// <summary>
+        /// Return a specific subObject inside an object
+        /// </summary>
+        /// <typeparam name="T"> Type expected </typeparam>
+        /// <param name="asset"> Reference asset </param>
+        /// <returns></returns>
+        public static T GetSubObjectOfType<T>(Object asset) where T : Object
+        {
+            Object[] objs = AssetDatabase.LoadAllAssetsAtPath(AssetDatabase.GetAssetPath(asset));
+            foreach (Object o in objs)
+            {
+                if (o is T)
+                {
+                    return (T)o;
+                }
+            }
+            return null;
         }
 
         /// <summary>

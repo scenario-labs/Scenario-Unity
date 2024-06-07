@@ -495,7 +495,6 @@ namespace Scenario.Editor
                 CustomStyle.Space();
                 GUILayout.BeginVertical(GUI.skin.box); // Begin vertical grouping
                 {
-                    Debug.Log(_dimension + " " + (_dimension.width - 25));
                     assetScrollView = GUILayout.BeginScrollView(assetScrollView, GUILayout.ExpandWidth(false), GUILayout.Width(_dimension.width - 150));
                     {
                         if (isometricWorkflow.assetList != null && isometricWorkflow.assetList.Count > 0)

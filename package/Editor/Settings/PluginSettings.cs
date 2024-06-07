@@ -3,6 +3,8 @@ using UnityEditor;
 using UnityEngine;
 using System.IO;
 using UnityEditor.Presets;
+using UnityEditor.PackageManager.Requests;
+using UnityEditor.PackageManager;
 
 namespace Scenario.Editor
 {
@@ -40,6 +42,11 @@ namespace Scenario.Editor
 
         private static string vnumber => GetVersionFromPackageJson();
         private static string version => $"Scenario Beta Version {vnumber}";
+
+        /// <summary>
+        /// Request used to make a request to the unity package manager, to install unity recorder.
+        /// </summary>
+        private static Request request = null;
 
         #endregion
 
@@ -93,7 +100,7 @@ namespace Scenario.Editor
             GUILayout.Label(version, EditorStyles.boldLabel);
         }
 
-        #endregion
+#endregion
 
         #region Draw Functions
 
@@ -278,6 +285,5 @@ namespace Scenario.Editor
             tilePresetGUID = EditorPrefs.GetString("scenario/tilePreset");
             tilePreset = GetPreset(tilePresetGUID);
         }
-
     }
 }

@@ -23,12 +23,19 @@ namespace Scenario.Editor
             promptWindow.minSize = new Vector2(500, 750);
         }
 
+        #region Static Methods
+        
+
+        #endregion
+
+        #region Unity Methods
+
         private void OnEnable()
         {
             promptWindowUI = new PromptWindowUI(this);
             UpdateSelectedModel();
         }
-    
+
         private void OnFocus()
         {
             if (promptWindowUI != null)
@@ -36,11 +43,11 @@ namespace Scenario.Editor
                 UpdateSelectedModel();
             }
         }
-        
+
         private void Update()
         {
             if (!processReceivedUploadImage) return;
-        
+
             processReceivedUploadImage = false;
             PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
         }
@@ -64,6 +71,8 @@ namespace Scenario.Editor
         {
             promptWindowUI.Render(this.position);
         }
+
+        #endregion
 
         public void SetSeed(string _seed)
         {

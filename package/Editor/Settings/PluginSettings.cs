@@ -58,11 +58,6 @@ namespace Scenario.Editor
 
         #region Unity Methods
 
-        static PluginSettings()
-        {
-
-        }
-
         private void OnEnable()
         {
             GetVersionFromPackageJson();

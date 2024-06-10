@@ -165,5 +165,11 @@ namespace Scenario.Editor
         {
             return imageDataList.Count(x => x.Id == "-1");
         }
+
+
+        public List<ImageDataStorage.ImageData> GetImageDataByInferenceId(string _inferenceId)
+        {
+            return imageDataList.FindAll(x => x.InferenceId == _inferenceId).ToList();
+        }
     }
 }

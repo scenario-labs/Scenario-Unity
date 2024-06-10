@@ -221,7 +221,7 @@ namespace Scenario.Editor
                 bool shouldAutoGenerateSeed = imagesliderValue > 1;
                 if (shouldAutoGenerateSeed) { seedinputText = "-1"; }
 
-                CustomStyle.ButtonPrimary("Generate Image", 40, () =>
+                CustomStyle.ButtonPrimary("Generate Image", 40, 0, () =>
                 {
                     promptPusher.promptInput = SerializeTags(tags);
                     promptPusher.promptNegativeInput = SerializeTags(negativeTags);

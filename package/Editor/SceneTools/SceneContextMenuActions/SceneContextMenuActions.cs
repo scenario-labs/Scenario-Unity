@@ -137,7 +137,6 @@ namespace Scenario.Editor
             {
                 Texture2D texture2D = spriteRenderer.sprite.texture;
 
-                // Ensure the texture is readable and uncompressed
                 string texturePath = AssetDatabase.GetAssetPath(texture2D);
                 TextureImporter importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
                 if (importer != null)
@@ -147,7 +146,8 @@ namespace Scenario.Editor
                     importer.SaveAndReimport();
                 }
 
-                // Convert texture to uncompressed format
+                texture2D = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
+
                 Texture2D uncompressedTexture = new Texture2D(texture2D.width, texture2D.height, TextureFormat.RGBA32, false);
                 uncompressedTexture.SetPixels(texture2D.GetPixels());
                 uncompressedTexture.Apply();

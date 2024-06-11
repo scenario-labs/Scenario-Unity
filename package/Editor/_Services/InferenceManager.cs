@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -13,28 +14,52 @@ namespace Scenario.Editor
     {
         public static List<string> cancelledInferences = new();
 
+        /// <summary>
+        /// Active this boolean when user use a specific workflow
+        /// </summary>
         public static bool SilenceMode = false;
-        
+
+        /// <summary>
+        /// Ask Scenario API to get the cost and also limitation of the inference request.
+        /// </summary>
+        /// <param name="inputData"></param>
+        /// <param name="_onInferenceRequested"></param>
+        public static void PostAskInferenceRequest(string inputData, Action<string> _onInferenceRequested)
+        {
+            
+            string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
+            string modelId = DataCache.instance.SelectedModelId;
+
+            ApiClient.RestPost($"models/{modelId}/inferences?dryRun=true", inputData,response =>
+            {
+                if (response.Content.Contains("creativeUnitsCost"))
+                {
+                    string cost = GetPriceCost(response.Content).ToString();
+                    _onInferenceRequested?.Invoke(cost);
+                }
+            });
+        }
+
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
             float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
         {
             Debug.Log("Requesting image generation please wait..");
-            
+
             string modelName = UnityEditor.EditorPrefs.GetString("postedModelName");
             string modelId = DataCache.instance.SelectedModelId;
 
-            ApiClient.RestPost($"models/{modelId}/inferences", inputData,response =>
+            ApiClient.RestPost($"models/{modelId}/inferences", inputData, response =>
             {
                 PromptWindow.InferenceRoot inferenceRoot = JsonConvert.DeserializeObject<PromptWindow.InferenceRoot>(response.Content);
-                
+
                 string inferenceId = inferenceRoot.inference.id;
                 int numImages = imagesliderIntValue;
-                
+
                 DataCache.instance.ReserveSpaceForImageDatas(numImages, inferenceId,
                     promptinputText,
                     samplesliderValue,
-                    widthSliderValue, 
+                    widthSliderValue,
                     heightSliderValue,
                     guidancesliderValue,
                     _schedulerText,
@@ -42,11 +67,14 @@ namespace Scenario.Editor
                     modelId);
 
                 GetInferenceStatus(inferenceId, modelId);
-                Images.ShowWindow();
+                if (!SilenceMode)
+                {
+                    Images.ShowWindow();
+                }
                 _onInferenceRequested?.Invoke(inferenceId);
             });
         }
-        
+
         private static async void GetInferenceStatus(string inferenceId, string modelId)
         {
             Debug.Log("Requesting status please wait..");
@@ -96,11 +124,48 @@ namespace Scenario.Editor
                             img.Seed);
                     }
 
-                    Images.ShowWindow();
+                    if (!SilenceMode)
+                    { 
+                        Images.ShowWindow();
+                    }
                 }
             });
         }
-        
+
+        /// <summary>
+        /// Regular expression after api return to extract cost of the result.
+        /// </summary>
+        /// <param name="_data"></param>
+        /// <returns> int cost </returns>
+        private static int GetPriceCost(string _data)
+        {
+            // Define the regular expression pattern to match numbers after colon
+            string pattern = @":(\d+)";
+
+            // Create a regex object
+            Regex regex = new Regex(pattern);
+
+            // Match the pattern against the data
+            Match match = regex.Match(_data);
+
+            int parsedNumber = -1;
+            // Check if there's a match
+            if (match.Success)
+            {
+                // Extract the matched number
+                string number = match.Groups[1].Value;
+
+                // Convert the number to an integer if needed
+                parsedNumber = int.Parse(number);
+
+                return parsedNumber;
+            }
+            else
+            {
+                return -1;
+            }
+        }
+
         public class ImageDataAPI
         {
             public string Id { get; set; }

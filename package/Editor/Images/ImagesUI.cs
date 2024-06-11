@@ -76,9 +76,16 @@ namespace Scenario.Editor
         /// </summary>
         private void InitializeButtons()
         {
+
             // Dictionary containing button labels and associated actions
             buttonActions = new Dictionary<string, Action>()
             {
+                {
+                    "Customize (webapp)", () =>
+                    {
+                        Application.OpenURL($"{PluginSettings.WebAppUrl}/images?openAssetId={selectedTextureId}");
+                    }
+                },
                 {
                     "Set Image as Reference", () =>
                     {

@@ -11,14 +11,9 @@
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "com.unity.postprocessing",
+            "name": "com.needle.deeplink",
             "expression": "",
-            "define": "UNITY_PP"
-        },
-        {
-            "name": "com.unity.recorder",
-            "expression": "",
-            "define": "UNITY_RECORDER"
+            "define": "DEEPLINK"
         }
     ],
     "noEngineReferences": false

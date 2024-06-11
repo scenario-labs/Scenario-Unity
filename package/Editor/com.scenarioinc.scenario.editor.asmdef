@@ -4,9 +4,7 @@
     "references": [
         "Unity.EditorCoroutines.Editor",
         "RestSharp.Unity",
-        "Unity.Recorder",
-        "Unity.Recorder.Editor",
-        "Unity.Postprocessing.Runtime"
+        "Needle.Deeplink"
     ],
     "includePlatforms": [
         "Editor"
@@ -19,14 +17,9 @@
     "defineConstraints": [],
     "versionDefines": [
         {
-            "name": "com.unity.postprocessing",
+            "name": "com.needle.deeplink",
             "expression": "",
-            "define": "POST_PROCESSING"
-        },
-        {
-            "name": "com.unity.recorder",
-            "expression": "",
-            "define": "UNITY_RECORDER"
+            "define": "DEEPLINK"
         }
     ],
     "noEngineReferences": false

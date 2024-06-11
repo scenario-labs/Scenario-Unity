@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -177,6 +178,44 @@ namespace Scenario.Editor
             {
                 return (IsPrivateTab()) ? texturesPrivate : texturesPublic;
             }
+        }
+
+        /// <summary>
+        /// Fetching model by is ID
+        /// </summary>
+        /// <param name="_modelId"> The id of the model </param>
+        /// <returns></returns>
+        public static async Task<ModelData> FetchModelById(string _modelId)
+        {
+            string endpoint = $"models/{_modelId}";
+            string response = await ApiClient.RestGetAsync(endpoint);
+            if (response is null) { return null; }
+
+            ModelData modelResponse = JsonConvert.DeserializeObject<Dictionary<string, ModelData>>(response)["model"];
+            if (modelResponse is null) { return null; }
+            return modelResponse;
+        }
+
+        /// <summary>
+        /// Fetchning Thumbnail for a model
+        /// </summary>
+        /// <param name="_modelData"> The model to fetch </param>
+        /// <returns></returns>
+        public static async Task<Texture2D> FetchThumbnailForModel(ModelData _modelData)
+        {
+            var tcs = new TaskCompletionSource<Texture2D>();
+            try
+            {
+                CommonUtils.FetchTextureFromURL(_modelData.thumbnail.url, texture =>
+                {
+                    tcs.SetResult(texture); // This will complete the task with the result being the texture.
+                });
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+            }
+            return await tcs.Task; // This will asynchronously wait until the task is completed.
         }
 
         public static string CurrentPrivacy
@@ -504,12 +543,14 @@ namespace Scenario.Editor
     
         #region API_DTO
 
+        [Serializable]
         private class ModelsResponse
         {
             public List<ModelData> models { get; set; }
             public string nextPaginationToken { get; set; }
         }
 
+        [Serializable]
         public class ModelData
         {
             public string id { get; set; }
@@ -523,21 +564,25 @@ namespace Scenario.Editor
             public ThumbnailData thumbnail { get; set; } // Assuming you have a ThumbnailData class.
         }
 
+        [Serializable]
         public class ClassData
         {
             public string modelId { get; set; }
         }
 
+        [Serializable]
         public class TrainingImageData
         {
             public string downloadUrl { get; set; }
         }
 
+        [Serializable]
         public class ThumbnailData
         {
             public string url { get; set; }
         }
 
+        [Serializable]
         private class TokenResponse
         {
             public string nextPaginationToken { get; set; }

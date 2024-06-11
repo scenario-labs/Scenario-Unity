@@ -15,6 +15,7 @@ namespace Scenario.Editor
             Action<IRestResponse> responseAction, 
             Action<string> errorAction = null)
         {
+            //Only use API url into request client  https://docs.scenario.com/docs/your-first-images
             var client = new RestClient(APIUrl + "/" + appendUrl);
             var request = new RestRequest(Method.POST);
             request.AddHeader("accept", "application/json");
@@ -30,8 +31,16 @@ namespace Scenario.Editor
             }
             else
             {
-                Debug.Log($"Error: {response.Content}");
-                errorAction?.Invoke(response.ErrorMessage);
+                if (response.Content.Contains("creativeUnitsCost"))
+                {
+                    //Debug.Log($"{response.Content}");
+                    responseAction?.Invoke(response);
+                }
+                else
+                {
+                    Debug.Log($"Error: {response.Content}");
+                    errorAction?.Invoke(response.ErrorMessage);
+                }
             }
         }
     
@@ -105,7 +114,7 @@ namespace Scenario.Editor
                 errorAction?.Invoke(response.ErrorMessage);
             }
         }
-    
+
         public static async Task<string> RestGetAsync( string appendUrl)
         {
             var client = new RestClient(APIUrl + "/" + appendUrl);

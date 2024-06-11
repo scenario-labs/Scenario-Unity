@@ -6,10 +6,8 @@ using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
-#if UNITY_RECORDER
 using UnityEditor.Recorder;
 using UnityEditor.Recorder.Input;
-#endif
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -81,8 +79,6 @@ namespace Scenario.Editor
 
         public int FlagWindow { get { return flagWindow; } set { flagWindow = value; } }
         public GameObject ReferenceObject { get { return referenceObject; } set { referenceObject = value; } }
-        public bool CallRecorderInstall { get { return callRecorderInstall; } set { callRecorderInstall = value; } }
-        public bool CallPPInstall { get { return callPPInstall; } set { callPPInstall = value; } }
         public Texture2D CaptureImage { get { return captureImage; } set { captureImage = value; } }
         public Texture2D RenderResultSelected { get { return renderResultSelected; } set { renderResultSelected = value; } }
 
@@ -121,23 +117,9 @@ namespace Scenario.Editor
         private Request request = null;
 
         /// <summary>
-        /// Check if the installation of the recorder is already done.
-        /// </summary>
-        private bool callRecorderInstall = false;
-
-        /// <summary>
-        /// Check if the installation of the post processing is already done.
-        /// </summary>
-        private bool callPPInstall = false;
-
-#if UNITY_RECORDER
-
-        /// <summary>
         /// Get a reference of the recorder window.
         /// </summary>
         private RecorderWindow recorderWindow = null;
-
-#endif
 
         /// <summary>
         /// Allow to manipulate directories' project.
@@ -272,7 +254,7 @@ namespace Scenario.Editor
             {
                 Instance = this;
             }
-#if UNITY_RECORDER
+
             if (recorderWindow != null)
             {
                 EditorCoroutineUtility.StartCoroutine(CloseRecorder(), this);
@@ -282,7 +264,6 @@ namespace Scenario.Editor
                 directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
                 LoadLastCapture();
             }
-#endif
         }
 
         private void OnGUI()
@@ -350,38 +331,17 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Check if the Unity Recorder Package is installed
-        /// </summary>
-        public void CheckUnityRecorder()
-        {
-            request = Client.Add("com.unity.recorder");
-            EditorApplication.update += Progress;
-        }
-
-        /// <summary>
-        /// Check if the Post Processing Package is installed
-        /// Not already used
-        /// </summary>
-        public void CheckPostProcessing()
-        {
-            request = Client.Add("com.unity.postprocessing");
-            EditorApplication.update += Progress;
-        }
-
-        /// <summary>
         /// Launch the using of Unity Recorder Package
         /// And also load preset
         /// </summary>
         public void LaunchUnityRecorder()
         {
-#if UNITY_RECORDER
             recorderWindow = GetWindow<RecorderWindow>();
 
             var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
 
             recorderWindow.ApplyPreset( preset );
             PrepareRecorderSettings(true);
-#endif
         }
 
         /// <summary>
@@ -824,9 +784,6 @@ namespace Scenario.Editor
             if (projectorMaterial.HasFloat("_Slider"))
             {
                 projectorMaterial.SetFloat("_Slider", 1.0f);
-                /*projectorMaterial.SetFloat("_ScaleFlat", scaleFlat);
-                projectorMaterial.SetFloat("_OffsetXFlat", xOffset);
-                projectorMaterial.SetFloat("_OffsetYFlat", yOffset);*/
             }
         }
 
@@ -1081,25 +1038,6 @@ namespace Scenario.Editor
             return false;
         }
 
-        /// <summary>
-        /// Process to install a unity package from code.
-        /// </summary>
-        private void Progress()
-        {
-            if (request.IsCompleted)
-            {
-                if (request.Status == StatusCode.Success)
-                {
-                    Debug.Log("Installed: " + request.ToString());
-                }
-                else if (request.Status >= StatusCode.Failure)
-                {
-                    Debug.Log(request.Error.message);
-                }
-
-                EditorApplication.update -= Progress;
-            }
-        }
 
         /// <summary>
         /// Trigger the Unity Recorder to take a capture.
@@ -1109,9 +1047,8 @@ namespace Scenario.Editor
         {
             yield return new EditorWaitForSeconds(1f);
             // TODO Trouble on register the first capture from the recorder inside assets folder
-#if UNITY_RECORDER
             recorderWindow.StartRecording();
-#endif
+
         }
 
         /// <summary>
@@ -1123,7 +1060,6 @@ namespace Scenario.Editor
         {
             yield return new EditorWaitForSeconds(2f);
 
-#if UNITY_RECORDER
             var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
 
             recorderWindow.ApplyPreset(preset);
@@ -1135,7 +1071,6 @@ namespace Scenario.Editor
             
             directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
             LoadLastCapture();
-#endif
         }
 
         /// <summary>

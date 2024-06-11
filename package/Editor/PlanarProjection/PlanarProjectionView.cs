@@ -171,27 +171,7 @@ namespace Scenario.Editor
                 button.fontStyle = FontStyle.Bold;
 
                 GUILayout.Label("Render scene", title);
-
-#if UNITY_RECORDER
-#else    
-                if(!planarProjection.CallRecorderInstall)
-                {
-                    if (EditorUtility.DisplayDialog("Unity Recorder required", "Unity Recorder is required for this stage. Would you like to install it?", "Install", "Cancel"))
-                    {
-                        planarProjection.CheckUnityRecorder();
-                        planarProjection.CallRecorderInstall = true;
-                    }
-                    else
-                    {
-                        planarProjection.CallRecorderInstall = true;
-                    }
-                }
-
-                if (GUILayout.Button("Install Recorder", button))
-                {
-                    planarProjection.CheckUnityRecorder();
-                }
-#endif
+   
                 EditorGUILayout.BeginHorizontal();
                 { 
                     if (GUILayout.Button("Capture Scene", button))

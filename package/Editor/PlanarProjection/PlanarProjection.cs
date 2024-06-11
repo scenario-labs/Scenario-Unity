@@ -240,7 +240,7 @@ namespace Scenario.Editor
 
         #region MonoBehaviour Callbacks
 
-        [MenuItem("Window/Scenario/Workflow/Planar Projection", false,2)]
+        [MenuItem("Window/Scenario/Workflows/Planar Projection", false,2)]
         public static void ShowWindow()
         {
             GetWindow<PlanarProjection>("Planar Projection");

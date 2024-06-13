@@ -9,7 +9,7 @@ namespace Scenario.Editor
     /// This class provides custom context menu actions for the Unity editor's Scene view.
     /// When a user right-clicks (with Ctrl key pressed) on a selected GameObject in the Scene view,
     /// a context menu appears, offering various layer manipulation options such as moving,
-    /// cloning, deleting, flipping, and setting background images.
+    /// cloning, deleting, flipping, cropping, and setting background images.
     /// </summary>
     public class SceneContextMenuActions
     {
@@ -53,6 +53,7 @@ namespace Scenario.Editor
             menu.AddItem(new GUIContent("Flip/Vertical"), false, FlipVertical);
             menu.AddItem(new GUIContent("Remove/Background"), false, RemoveBackground);
             menu.AddItem(new GUIContent("Set As Background"), false, SetAsBackground);
+            menu.AddItem(new GUIContent("Crop"), false, CropLayer);
 
             menu.ShowAsContext();
         }
@@ -133,41 +134,70 @@ namespace Scenario.Editor
         {
             GameObject selectedLayer = Selection.activeGameObject;
             SpriteRenderer spriteRenderer = selectedLayer.GetComponent<SpriteRenderer>();
-            if (spriteRenderer != null && spriteRenderer.sprite != null)
+            if (spriteRenderer == null)
             {
-                Texture2D texture2D = spriteRenderer.sprite.texture;
+                Debug.LogError("RemoveBackground: No SpriteRenderer found on the selected GameObject.");
+                return;
+            }
 
-                string texturePath = AssetDatabase.GetAssetPath(texture2D);
-                TextureImporter importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
-                if (importer != null)
-                {
-                    importer.isReadable = true;
-                    importer.textureCompression = TextureImporterCompression.Uncompressed;
-                    importer.SaveAndReimport();
-                }
+            if (spriteRenderer.sprite == null)
+            {
+                Debug.LogError("RemoveBackground: No sprite found on the SpriteRenderer.");
+                return;
+            }
+
+            Texture2D texture2D = spriteRenderer.sprite.texture;
+            if (texture2D == null)
+            {
+                Debug.LogError("RemoveBackground: No texture found on the sprite.");
+                return;
+            }
+
+            string texturePath = AssetDatabase.GetAssetPath(texture2D);
+            TextureImporter importer = AssetImporter.GetAtPath(texturePath) as TextureImporter;
+
+            if (importer != null)
+            {
+                importer.isReadable = true;
+                importer.textureCompression = TextureImporterCompression.Uncompressed;
+                importer.SaveAndReimport();
 
                 texture2D = AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath);
-
-                Texture2D uncompressedTexture = new Texture2D(texture2D.width, texture2D.height, TextureFormat.RGBA32, false);
-                uncompressedTexture.SetPixels(texture2D.GetPixels());
-                uncompressedTexture.Apply();
-
-                string dataUrl = CommonUtils.Texture2DToDataURL(uncompressedTexture);
-                string name = CommonUtils.GetRandomImageFileName();
-                string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"format\":\"png\",\"returnImage\":\"false\"}}";
-                Debug.Log(param);
-
-                ApiClient.RestPut("images/erase-background", param, response =>
+                if (texture2D == null)
                 {
-                    dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
-                    string imageUrl = jsonResponse.asset.url;
-                    CommonUtils.FetchTextureFromURL(imageUrl, texture =>
-                    {
-                        // Update the sprite directly in Unity
-                        CommonUtils.ReplaceSprite(spriteRenderer, texture);
-                    });
-                });
+                    Debug.LogError("RemoveBackground: Could not reload the texture after reimporting.");
+                    return;
+                }
             }
+            else
+            {
+                // Handle runtime-generated textures
+                if (!texture2D.isReadable)
+                {
+                    Debug.LogError("RemoveBackground: The texture is not readable and not an asset texture.");
+                    return;
+                }
+            }
+
+            Texture2D uncompressedTexture = new Texture2D(texture2D.width, texture2D.height, TextureFormat.RGBA32, false);
+            uncompressedTexture.SetPixels(texture2D.GetPixels());
+            uncompressedTexture.Apply();
+
+            string dataUrl = CommonUtils.Texture2DToDataURL(uncompressedTexture);
+            string name = CommonUtils.GetRandomImageFileName();
+            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{name}\",\"format\":\"png\",\"returnImage\":\"false\"}}";
+            Debug.Log(param);
+
+            ApiClient.RestPut("images/erase-background", param, response =>
+            {
+                dynamic jsonResponse = JsonConvert.DeserializeObject(response.Content);
+                string imageUrl = jsonResponse.asset.url;
+                CommonUtils.FetchTextureFromURL(imageUrl, texture =>
+                {
+                    // Update the sprite directly in Unity
+                    CommonUtils.ReplaceSprite(spriteRenderer, texture);
+                });
+            });
         }
 
         /// <summary>
@@ -177,6 +207,64 @@ namespace Scenario.Editor
         {
             GameObject selectedLayer = Selection.activeGameObject;
             selectedLayer.transform.SetAsFirstSibling();
+        }
+
+        /// <summary>
+        /// Crops the selected layer's sprite by removing transparent pixels until the closest non-transparent pixels are reached.
+        /// </summary>
+        private static void CropLayer()
+        {
+            GameObject selectedLayer = Selection.activeGameObject;
+            SpriteRenderer spriteRenderer = selectedLayer.GetComponent<SpriteRenderer>();
+            if (spriteRenderer != null && spriteRenderer.sprite != null)
+            {
+                Texture2D texture = spriteRenderer.sprite.texture;
+                Rect nonTransparentRect = FindNonTransparentRect(texture);
+                
+                Texture2D croppedTexture = new Texture2D((int)nonTransparentRect.width, (int)nonTransparentRect.height);
+                for (int y = (int)nonTransparentRect.y; y < nonTransparentRect.yMax; y++)
+                {
+                    for (int x = (int)nonTransparentRect.x; x < nonTransparentRect.xMax; x++)
+                    {
+                        croppedTexture.SetPixel(x - (int)nonTransparentRect.x, y - (int)nonTransparentRect.y, texture.GetPixel(x, y));
+                    }
+                }
+                croppedTexture.Apply();
+
+                Sprite croppedSprite = Sprite.Create(croppedTexture, new Rect(0, 0, croppedTexture.width, croppedTexture.height), new Vector2(0.5f, 0.5f));
+                spriteRenderer.sprite = croppedSprite;
+            }
+        }
+
+        /// <summary>
+        /// Finds the bounding rectangle of the non-transparent pixels in a texture.
+        /// </summary>
+        /// <param name="texture">The texture to search.</param>
+        /// <returns>A rectangle that bounds all the non-transparent pixels.</returns>
+        private static Rect FindNonTransparentRect(Texture2D texture)
+        {
+            int xMin = texture.width;
+            int xMax = 0;
+            int yMin = texture.height;
+            int yMax = 0;
+
+            for (int y = 0; y < texture.height; y++)
+            {
+                for (int x = 0; x < texture.width; x++)
+                {
+                    if (texture.GetPixel(x, y).a != 0)
+                    {
+                        if (x < xMin) xMin = x;
+                        if (x > xMax) xMax = x;
+                        if (y < yMin) yMin = y;
+                        if (y > yMax) yMax = y;
+                    }
+                }
+            }
+
+            if (xMax < xMin || yMax < yMin) return new Rect(0, 0, 0, 0); // Handle fully transparent case
+
+            return new Rect(xMin, yMin, xMax - xMin + 1, yMax - yMin + 1);
         }
     }
 }

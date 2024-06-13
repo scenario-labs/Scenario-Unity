@@ -13,12 +13,12 @@ namespace Scenario.Editor
 
         private int widthSliderValue = 512;
         private int heightSliderValue = 512;
-        private float distanceOffset = 0.1f;
+        private float distanceOffset = 1f;
         private GameObject compositionCamera = null;
         internal RenderTexture renderTexture;
         private Texture2D screenshot;
 
-        [MenuItem("Window/Scenario/Editors/Composition Editor", false, 0)]
+        [MenuItem("Window/Scenario/Editors/Composition Editor", false,0)]
         public static void ShowWindow()
         {
             var window = GetWindow<CompositionEditor>("Composition Editor");
@@ -43,7 +43,7 @@ namespace Scenario.Editor
         private void DrawScreenshotIfAvailable()
         {
             if (screenshot == null) return;
-
+        
             Rect textureRect = GUILayoutUtility.GetRect(screenshot.width, screenshot.height, GUILayout.ExpandWidth(true), GUILayout.ExpandHeight(true));
             GUI.DrawTexture(textureRect, screenshot, ScaleMode.ScaleToFit);
         }
@@ -71,15 +71,16 @@ namespace Scenario.Editor
         private int DrawDimensionControl(string label, int currentValue, int[] allowedValues)
         {
             int index = 0;
-
+        
             EditorGUILayout.BeginVertical();
             {
                 EditorGUILayout.LabelField(label, EditorStyles.label, GUILayout.Width(55), GUILayout.Height(20));
                 index = NearestValueIndex(currentValue, allowedValues);
-                index = GUILayout.SelectionGrid(index, Array.ConvertAll(allowedValues, x => x.ToString()), allowedValues.Length);
+                index = GUILayout.SelectionGrid(index, Array.ConvertAll(allowedValues, x => x.ToString()),
+                    allowedValues.Length);
             }
             EditorGUILayout.EndVertical();
-
+        
             return allowedValues[index];
         }
 
@@ -119,39 +120,21 @@ namespace Scenario.Editor
 
         private void PlaceCamera()
         {
-            if (compositionCamera != null)
-            {
-                Debug.LogWarning("A composition camera already exists. Remove the existing one before placing a new one.");
-                return;
-            }
-
             compositionCamera = new GameObject("CompositionCamera");
             Camera camera = compositionCamera.AddComponent<Camera>();
             SceneView sceneView = SceneView.lastActiveSceneView;
 
-            if (sceneView == null)
-            {
-                Debug.LogError("No active SceneView found. Cannot place the camera.");
-                return;
-            }
-
-            if (Mathf.Approximately(distanceOffset, 0.1f))
-            {
-                compositionCamera.transform.position = sceneView.camera.transform.position;
-                compositionCamera.transform.rotation = sceneView.camera.transform.rotation;
-            }
-            else
-            {
-                Vector3 cameraPosition = sceneView.camera.transform.position + sceneView.camera.transform.forward * distanceOffset;
-                compositionCamera.transform.position = cameraPosition;
-                compositionCamera.transform.rotation = sceneView.camera.transform.rotation;
-            }
+            if (sceneView == null) return;
+        
+            Vector3 cameraPosition = sceneView.pivot + sceneView.rotation * Vector3.forward * distanceOffset;
+            compositionCamera.transform.position = cameraPosition;
+            compositionCamera.transform.rotation = sceneView.rotation;
         }
 
         private void RemoveCamera()
         {
             if (compositionCamera == null) return;
-
+        
             DestroyImmediate(compositionCamera);
             compositionCamera = null;
         }

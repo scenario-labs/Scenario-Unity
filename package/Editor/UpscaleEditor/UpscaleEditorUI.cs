@@ -1,7 +1,7 @@
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,26 +10,65 @@ namespace Scenario.Editor
     public class UpscaleEditorUI
     {
         public static Texture2D currentImage = null;
+        
         public static ImageDataStorage.ImageData imageData = null;
-    
+
+        #region Private Fields
         private static List<ImageDataStorage.ImageData> imageDataList = new();
 
         private List<Texture2D> upscaledImages = new();
+        
         private Texture2D selectedTexture = null;
+        
         private Vector2 scrollPosition = Vector2.zero;
     
         private string imageDataUrl = "";
+        
         private string assetId = "";
 
         private bool returnImage = true;
-        private bool forceFaceRestoration = false;
-        private bool usePhotorealisticModel = false;
-    
+
+        /// <summary>
+        /// 
+        /// </summary>
         private int scalingFactor = 2;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private string styleSelected = "Standard";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private string presetSelected = "Balanced";
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private string[] styleChoices = new string[]
+        {
+            "Standard",
+            "Cartoon",
+            "Anime",
+            "Comic",
+            "Minimalist",
+            "Photography",
+            "3D Rendered"
+        };
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private int styleFlag = 0;
+
         private int itemsPerRow = 1;
 
         private readonly float padding = 10f;
+        
         private readonly float leftSectionWidth = 150;
+
+        #endregion
 
         public void OnGUI(Rect position)
         {
@@ -70,30 +109,66 @@ namespace Scenario.Editor
 
             EditorStyle.Label("Upscale Image Options", bold: true);
 
+            styleFlag = EditorGUILayout.Popup("Style: ", styleFlag, styleChoices);
+            styleSelected = styleChoices[styleFlag];
+
+            EditorStyle.Label("Scaling Factor:");
             GUILayout.BeginHorizontal();
             {
-                EditorStyle.Label("Scaling Factor:");
             
-                if (GUILayout.Toggle(scalingFactor == 2, "2", EditorStyles.miniButtonLeft))
+                if (GUILayout.Toggle(scalingFactor == 2, "2x", EditorStyles.miniButtonLeft))
                 {
                     scalingFactor = 2;
                 }
 
-                if (GUILayout.Toggle(scalingFactor == 4, "4", EditorStyles.miniButtonRight))
+                if (GUILayout.Toggle(scalingFactor == 4, "4x", EditorStyles.miniButtonRight))
                 {
                     scalingFactor = 4;
+                }
+
+                if (GUILayout.Toggle(scalingFactor == 8, "8x", EditorStyles.miniButtonRight))
+                {
+                    scalingFactor = 8;
+                }
+
+                if (GUILayout.Toggle(scalingFactor == 16, "16x", EditorStyles.miniButtonRight))
+                {
+                    scalingFactor = 16;
                 }
             }
             GUILayout.EndHorizontal();
 
-            forceFaceRestoration = EditorGUILayout.Toggle("Force Face Restoration", forceFaceRestoration);
-            usePhotorealisticModel = EditorGUILayout.Toggle("Use Photorealistic Model", usePhotorealisticModel);
+            CustomStyle.Space(25);
+
+            EditorStyle.Label("Preset:");
+            GUILayout.BeginHorizontal();
+            {
+
+                if (GUILayout.Toggle(presetSelected.Equals("Precise"), "Precise", EditorStyles.miniButtonLeft))
+                {
+                    presetSelected = "Precise";
+                }
+
+                if (GUILayout.Toggle(presetSelected.Equals("Balanced"), "Balanced", EditorStyles.miniButtonRight))
+                {
+                    presetSelected = "Balanced";
+                }
+
+                if (GUILayout.Toggle(presetSelected.Equals("Creative"), "Creative", EditorStyles.miniButtonRight))
+                {
+                    presetSelected = "Creative";
+                }
+            }
+            GUILayout.EndHorizontal();
 
             EditorStyle.Button("Upscale Image", () =>
             {
                 if (currentImage == null) return;
                 imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
-                assetId = imageData.Id;
+                if (imageData != null)
+                {
+                    assetId = imageData.Id;
+                }
                 FetchUpscaledImage(imageDataUrl);
             });
         
@@ -223,12 +298,14 @@ namespace Scenario.Editor
                 var payload = new
                 {
                     image = imgUrl,
-                    forceFaceRestoration = forceFaceRestoration,
-                    photorealist = usePhotorealisticModel,
-                    scalingFactor = scalingFactor,
-                    returnImage = returnImage,
-                    name = ""
+                    preset = presetSelected.ToLower(),
+                    style = styleSelected.ToLower(),
+                    scalingFactor = scalingFactor
+                    /*returnImage = returnImage,
+                    name = "",
+                    jobId = ""*/
                 };
+
                 json = JsonConvert.SerializeObject(payload);
             }
             else
@@ -237,8 +314,8 @@ namespace Scenario.Editor
                 {
                     image = imgUrl,
                     assetId = assetId,
-                    forceFaceRestoration = forceFaceRestoration,
-                    photorealist = usePhotorealisticModel,
+                    preset = presetSelected.ToLower(),
+                    style = styleSelected.ToLower(),
                     scalingFactor = scalingFactor,
                     returnImage = returnImage,
                     name = CommonUtils.GetRandomImageFileName()

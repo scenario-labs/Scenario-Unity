@@ -65,7 +65,7 @@ namespace Scenario.Editor.UpscaleEditor
             "Anime",
             "Comic",
             "Minimalist",
-            "Photography",
+            "Photorealistic",
             "3D Rendered"
         };
 
@@ -304,7 +304,7 @@ namespace Scenario.Editor.UpscaleEditor
                     assetId = jsonResponse.asset.id;
 
                     json = GetJsonPayload(imgUrl);
-                    
+
                     ApiClient.RestPost("generate/upscale", json, response =>
                     {
                         var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);

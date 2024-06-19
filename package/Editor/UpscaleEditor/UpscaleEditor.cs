@@ -15,7 +15,6 @@ namespace Scenario.Editor.UpscaleEditor
 
         #region Private Fields
         
-        private static readonly float MinimumWidth = 1650f;
         private static readonly UpscaleEditorUI UpscaleEditorUI = new();
 
         #endregion
@@ -26,7 +25,7 @@ namespace Scenario.Editor.UpscaleEditor
         public static void ShowWindow()
         {
             var window = EditorWindow.GetWindow(typeof(UpscaleEditor), false, "Upscale Editor") as UpscaleEditor;
-            window.minSize = new Vector2(MinimumWidth, window.minSize.y);
+            window.minSize = new Vector2(720, 540);
         }
 
         public static void ShowWindow(Texture2D selectedTexture, ImageDataStorage.ImageData imageData)

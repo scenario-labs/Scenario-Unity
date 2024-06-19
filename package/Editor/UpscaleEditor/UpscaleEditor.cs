@@ -51,6 +51,11 @@ namespace Scenario.Editor.UpscaleEditor
 
         #region Public Methods
 
+        /// <summary>
+        /// Trigger the coroutine to get the upscale result.
+        /// </summary>
+        /// <param name="_jobId"></param>
+        /// <param name="_answer"></param>
         public void LaunchProgressUpscale(string _jobId, Action<string> _answer)
         {
             if (!string.IsNullOrEmpty(_jobId))
@@ -63,6 +68,13 @@ namespace Scenario.Editor.UpscaleEditor
 
         #region Private Methods
 
+        /// <summary>
+        /// Editor Coroutine to processing upscale.
+        /// Get the progress of the job id and wait the success status.
+        /// </summary>
+        /// <param name="_jobId"> JobId to listen </param>
+        /// <param name="_response"> Return the result of the content at the end of the process </param>
+        /// <returns></returns>
         IEnumerator GetProgressUpscale(string _jobId, Action<string> _response)
         {
             bool inProgress = true;
@@ -128,6 +140,9 @@ namespace Scenario.Editor.UpscaleEditor
 
     #region API_DTO
 
+    /// <summary>
+    /// Asset result object
+    /// </summary>
     public class Asset
     {
         public string id { get; set; }
@@ -143,6 +158,9 @@ namespace Scenario.Editor.UpscaleEditor
         public List<object> collectionIds { get; set; }
     }
 
+    /// <summary>
+    /// Job result object
+    /// </summary>
     public class Job
     {
         public string jobId { get; set; }
@@ -152,6 +170,9 @@ namespace Scenario.Editor.UpscaleEditor
         public Metadata metadata { get; set; }
     }
 
+    /// <summary>
+    /// Metadata result object
+    /// </summary>
     public class Metadata
     {
         public string type { get; set; }
@@ -166,6 +187,9 @@ namespace Scenario.Editor.UpscaleEditor
         public bool photorealist { get; set; }
     }
 
+    /// <summary>
+    /// Root object to be deserialized from json.
+    /// </summary>
     public class Root
     {
         public Asset asset { get; set; }

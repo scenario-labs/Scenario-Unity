@@ -23,6 +23,9 @@ namespace Scenario.Editor.UpscaleEditor
 
         private static List<ImageDataStorage.ImageData> imageDataList = new();
 
+        /// <summary>
+        /// Reference object to the upscale editor parent class.
+        /// </summary>
         private UpscaleEditor upscaleEditor = null;
 
         private List<Texture2D> upscaledImages = new();
@@ -33,27 +36,27 @@ namespace Scenario.Editor.UpscaleEditor
     
         private string imageDataUrl = "";
         
-        private string assetId = "";
+        private string assetId = string.Empty;
 
         private bool returnImage = true;
 
         /// <summary>
-        /// 
+        /// Default scaling factor
         /// </summary>
         private int scalingFactor = 2;
 
         /// <summary>
-        /// 
+        /// Style selected on the upscale
         /// </summary>
         private string styleSelected = "Standard";
 
         /// <summary>
-        /// 
+        /// Preset selected on the upscale
         /// </summary>
         private string presetSelected = "Balanced";
 
         /// <summary>
-        /// 
+        /// All style available in upscale
         /// </summary>
         private string[] styleChoices = new string[]
         {
@@ -67,7 +70,7 @@ namespace Scenario.Editor.UpscaleEditor
         };
 
         /// <summary>
-        /// 
+        /// Flag of the style selected
         /// </summary>
         private int styleFlag = 0;
 
@@ -283,6 +286,12 @@ namespace Scenario.Editor.UpscaleEditor
             }
         }
 
+        /// <summary>
+        /// Try to get asset of reference to upscale.
+        /// Then launch the upscale into a job.
+        /// Get back the result to an asset and download the image resulting of the process.
+        /// </summary>
+        /// <param name="imgUrl"></param>
         private void FetchUpscaledImage(string imgUrl)
         {
             string json = GetJsonPayload(imgUrl);
@@ -354,7 +363,7 @@ namespace Scenario.Editor.UpscaleEditor
         }
 
         /// <summary>
-        /// 
+        /// Prepare the json payload to the upscale.
         /// </summary>
         /// <param name="imgUrl"></param>
         /// <returns></returns>

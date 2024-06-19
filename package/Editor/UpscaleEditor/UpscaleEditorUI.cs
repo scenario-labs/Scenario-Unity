@@ -5,16 +5,25 @@ using System.IO;
 using UnityEditor;
 using UnityEngine;
 
-namespace Scenario.Editor
+namespace Scenario.Editor.UpscaleEditor
 {
     public class UpscaleEditorUI
     {
+        #region Public Fields
+        
         public static Texture2D currentImage = null;
         
         public static ImageDataStorage.ImageData imageData = null;
 
+        public UpscaleEditor UpscaleEditor { get { return upscaleEditor; } set { upscaleEditor = value; } }
+
+        #endregion
+
         #region Private Fields
+
         private static List<ImageDataStorage.ImageData> imageDataList = new();
+
+        private UpscaleEditor upscaleEditor = null;
 
         private List<Texture2D> upscaledImages = new();
         
@@ -104,7 +113,11 @@ namespace Scenario.Editor
                 Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
                 GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
 
-                EditorStyle.Button("Clear Image", ()=>currentImage = null);
+                EditorStyle.Button("Clear Image", ()=> 
+                {
+                    currentImage = null;
+                    assetId = string.Empty;
+                });
             }
 
             EditorStyle.Label("Upscale Image Options", bold: true);
@@ -273,37 +286,91 @@ namespace Scenario.Editor
         private void FetchUpscaledImage(string imgUrl)
         {
             string json = GetJsonPayload(imgUrl);
-            Debug.Log(json);
-            
-            ApiClient.RestPut("images/upscale",json, response =>
+
+            if (string.IsNullOrEmpty(assetId))
             {
-                var pixelatedResponse = JsonConvert.DeserializeObject<Root>(response.Content);
-                Texture2D texture = CommonUtils.DataURLToTexture2D(pixelatedResponse.image);
-                ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
+                ApiClient.RestPost("assets", json, response =>
                 {
-                    Id = pixelatedResponse.asset.id,
-                    Url = pixelatedResponse.image, 
-                    InferenceId = pixelatedResponse.asset.ownerId,
-                };
-                upscaledImages.Insert(0, texture);
-                imageDataList.Insert(0, newImageData);
-            });
+                    var jsonResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+                    assetId = jsonResponse.asset.id;
+
+                    json = GetJsonPayload(imgUrl);
+                    
+                    ApiClient.RestPost("generate/upscale", json, response =>
+                    {
+                        var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+
+                        var jobId = upscaleResponse.job.jobId;
+
+                        upscaleEditor.LaunchProgressUpscale(jobId, _answer => {
+                            var assetAnswer = JsonConvert.DeserializeObject<Root>(_answer);
+                            ApiClient.RestGet($"assets/{assetAnswer.job.metadata.assetIds[0]}", response =>
+                            {
+                                var asset = JsonConvert.DeserializeObject<Root>(response.Content);
+                                Texture2D texture = new Texture2D(2, 2);
+                                CommonUtils.FetchTextureFromURL(asset.asset.url, response => {
+                                    texture = response;
+                                    ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
+                                    {
+                                        Id = asset.asset.id,
+                                        Url = asset.asset.url,
+                                    };
+                                    upscaledImages.Insert(0, texture);
+                                    imageDataList.Insert(0, newImageData);
+                                });
+                            });
+                        });
+                    });
+                });
+            }
+            else
+            {
+                ApiClient.RestPost("generate/upscale", json, response =>
+                {
+                    var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+
+                    var jobId = upscaleResponse.job.jobId;
+
+                    upscaleEditor.LaunchProgressUpscale(jobId, _answer => {
+                        var assetAnswer = JsonConvert.DeserializeObject<Root>(_answer);
+                        ApiClient.RestGet($"assets/{assetAnswer.job.metadata.assetIds[0]}", response =>
+                        {
+                            var asset = JsonConvert.DeserializeObject<Root>(response.Content);
+                            Texture2D texture = new Texture2D(2, 2);
+                            CommonUtils.FetchTextureFromURL(asset.asset.url, response => {
+                                texture = response;
+                                ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
+                                {
+                                    Id = asset.asset.id,
+                                    Url = asset.asset.url,
+                                };
+                                upscaledImages.Insert(0, texture);
+                                imageDataList.Insert(0, newImageData);
+                            });
+                        });
+                    });
+                });
+            }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="imgUrl"></param>
+        /// <returns></returns>
         private string GetJsonPayload(string imgUrl)
         {
             string json;
-            if (assetId == "")
+            if (string.IsNullOrEmpty(assetId))
             {
                 var payload = new
                 {
                     image = imgUrl,
                     preset = presetSelected.ToLower(),
                     style = styleSelected.ToLower(),
-                    scalingFactor = scalingFactor
-                    /*returnImage = returnImage,
-                    name = "",
-                    jobId = ""*/
+                    scalingFactor = scalingFactor,
+                    returnImage = returnImage,
+                    name = ""
                 };
 
                 json = JsonConvert.SerializeObject(payload);
@@ -312,7 +379,7 @@ namespace Scenario.Editor
             {
                 var payload = new
                 {
-                    image = imgUrl,
+                    image = assetId,
                     assetId = assetId,
                     preset = presetSelected.ToLower(),
                     style = styleSelected.ToLower(),
@@ -325,42 +392,6 @@ namespace Scenario.Editor
 
             return json;
         }
-
-        #region API_DTO
-
-        public class Asset
-        {
-            public string id { get; set; }
-            public string url { get; set; }
-            public string mimeType { get; set; }
-            public Metadata metadata { get; set; }
-            public string ownerId { get; set; }
-            public string authorId { get; set; }
-            public DateTime createdAt { get; set; }
-            public DateTime updatedAt { get; set; }
-            public string privacy { get; set; }
-            public List<object> tags { get; set; }
-            public List<object> collectionIds { get; set; }
-        }
-
-        public class Metadata
-        {
-            public string type { get; set; }
-            public string parentId { get; set; }
-            public string rootParentId { get; set; }
-            public string kind { get; set; }
-            public bool magic { get; set; }
-            public bool forceFaceRestoration { get; set; }
-            public bool photorealist { get; set; }
-        }
-
-        public class Root
-        {
-            public Asset asset { get; set; }
-            public string image { get; set; }
-        }
-
-        #endregion
     }
 }
 

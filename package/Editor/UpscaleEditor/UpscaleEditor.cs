@@ -98,7 +98,7 @@ namespace Scenario.Editor.UpscaleEditor
                                             Debug.Log("Upscale in preparation... wait...");
                                             break;
 
-                                        case "queue":
+                                        case "queued":
                                             Debug.Log("Upscale in queue... wait ...");
                                             break;
 

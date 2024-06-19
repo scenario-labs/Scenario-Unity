@@ -370,6 +370,18 @@ namespace Scenario.Editor.UpscaleEditor
         private string GetJsonPayload(string imgUrl)
         {
             string json;
+
+            switch (styleSelected)
+            {
+                case "3D Rendered":
+                    styleSelected = "3d-rendered";
+                    break;
+
+                case "Photorealistic":
+                    styleSelected = "photography";
+                    break;
+            }
+
             if (string.IsNullOrEmpty(assetId))
             {
                 var payload = new

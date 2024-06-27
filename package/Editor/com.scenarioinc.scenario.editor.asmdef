@@ -4,7 +4,11 @@
     "references": [
         "Unity.EditorCoroutines.Editor",
         "RestSharp.Unity",
-        "Needle.Deeplink"
+        "Needle.Deeplink",
+        "Unity.Postprocessing.Runtime",
+        "Unity.Postprocessing.Editor",
+        "Unity.Recorder",
+        "Unity.Recorder.Editor"
     ],
     "includePlatforms": [
         "Editor"

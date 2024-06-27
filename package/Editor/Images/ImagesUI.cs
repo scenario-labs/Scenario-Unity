@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -200,6 +201,34 @@ namespace Scenario.Editor
                     }
                 }
             };
+
+            if (InferenceManager.SilenceMode)
+            {
+                Dictionary<string, Action> silenceAction = new Dictionary<string, Action>();
+                silenceAction.Add("Projection Planar",()=> 
+                {
+                    Action<string> successToProjection = (filePath) =>
+                    {
+                        if (PlanarProjection.Instance != null)
+                        {
+                            PlanarProjection.Instance.OpenPlanarProjection(filePath);
+                        }
+                    };
+
+                    CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => {
+                        CommonUtils.SaveTextureAsPNG(response, null, importPreset: PluginSettings.TexturePreset, successToProjection);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                        };
+                    });
+
+                } 
+                );
+                Dictionary<string, Action> merged = new Dictionary<string, Action>();
+                merged = (Dictionary<string, Action>)silenceAction.Concat(buttonActions).ToDictionary(x => x.Key, x => x.Value);
+                buttonActions = merged;
+            }
         }
 
         /// <summary>

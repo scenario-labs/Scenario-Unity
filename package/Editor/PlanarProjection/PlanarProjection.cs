@@ -386,7 +386,7 @@ namespace Scenario.Editor
                 SetControlNetOptions();
                 InferenceManager.SilenceMode = true;
                 promptWindow.SetImageSettingWidth(1824);
-                promptWindow.SetImageSettingHeight(1024);
+                //promptWindow.SetImageSettingHeight(1024);
             }
         }
 
@@ -513,9 +513,9 @@ namespace Scenario.Editor
                                 break;
                         }
 
-                        if (tagged[i].transform.childCount > 0)
-                        { 
-                            
+                        if (tagged[i].transform.childCount > 0 && referenceObject == null)
+                        {
+                            referenceObject = tagged[i];
                         }
                     }
                 }
@@ -1206,7 +1206,7 @@ namespace Scenario.Editor
             recorderWindow.Close();
             recorderWindow = null;
 
-            yield return new EditorWaitForSeconds(2f);
+            yield return new EditorWaitForSeconds(1f);
             
             directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
             LoadLastCapture();

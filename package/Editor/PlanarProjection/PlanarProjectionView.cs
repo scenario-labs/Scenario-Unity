@@ -128,7 +128,11 @@ namespace Scenario.Editor
                 }
 
                 planarProjection.ReferenceObject = (GameObject)EditorGUILayout.ObjectField(planarProjection.ReferenceObject, typeof(GameObject), true);
-
+                if (planarProjection.ReferenceObject != null)
+                { 
+                    if(!planarProjection.ReferenceObject.tag.Equals("Scenario Object Projection"))
+                        planarProjection.ReferenceObject.tag = "Scenario Object Projection"; 
+                }
 
 
                 if (GUILayout.Button("Auto configure scene", button))

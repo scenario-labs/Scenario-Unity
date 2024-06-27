@@ -144,6 +144,27 @@ namespace Scenario.Editor
         public void SetImageSettingWidth(int _indexValue)
         { 
             promptWindowUI.WidthSliderValue = _indexValue;
+
+            if (_indexValue >= 1024)
+            {
+                for (int i = 0; i < promptWindowUI.allowedSDXLDimensionValues.Length; i++)
+                {
+                    if (_indexValue == promptWindowUI.allowedSDXLDimensionValues[i])
+                    {
+                        promptWindowUI.sizeSliderValue = 7 - i;
+                    }
+                }
+            }
+            else if(_indexValue <= 912)
+            {
+                for (int i = 0; i < promptWindowUI.allowed1_5DimensionValues.Length; i++)
+                {
+                    if (_indexValue == promptWindowUI.allowed1_5DimensionValues[i])
+                    {
+                        promptWindowUI.sizeSliderValue = 7 - i;
+                    }
+                }
+            }
         }
 
         /// <summary>

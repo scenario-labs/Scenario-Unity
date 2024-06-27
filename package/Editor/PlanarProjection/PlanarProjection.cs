@@ -253,6 +253,11 @@ namespace Scenario.Editor
             if (Instance == null)
             {
                 Instance = this;
+
+                CreateProjectedLayer("Scenario Object Projection");
+                CreateProjectTag("Scenario Object Projection");
+
+                GetAllScenarioTagObject();
             }
 
             if (recorderWindow != null)
@@ -262,6 +267,12 @@ namespace Scenario.Editor
             else
             {
                 directoryInfo = new DirectoryInfo($"{Application.dataPath}/Recordings");
+
+                if (!directoryInfo.Exists)
+                { 
+                    directoryInfo.Create();
+                }
+
                 LoadLastCapture();
             }
         }
@@ -271,7 +282,7 @@ namespace Scenario.Editor
             planarProjectionView.Render(this.position);
         }
 
-#endregion
+        #endregion
 
         #region Public Methods
 
@@ -280,7 +291,11 @@ namespace Scenario.Editor
         /// </summary>
         public void CreateReferenceObject()
         {
-            referenceObject = new GameObject("LEVEL");
+            if (referenceObject == null)
+            { 
+                referenceObject = new GameObject("LEVEL");
+                referenceObject.tag = "Scenario Object Projection";
+            }
         }
 
         /// <summary>
@@ -301,10 +316,23 @@ namespace Scenario.Editor
                 PostProcessLayer layer = mainCamera.gameObject.AddComponent<PostProcessLayer>();
                 layer.volumeLayer = LayerMask.NameToLayer("Everything");
             }
+            if (volumePP == null)
+            { 
+                volumePP = new GameObject("Volume");
+                volumePP.tag = "Scenario Object Projection";
+            }
 
-            volumePP = new GameObject("Volume");
+            PostProcessVolume volume;
             
-            PostProcessVolume volume = volumePP.AddComponent<PostProcessVolume>();
+            if (!volumePP.GetComponent<PostProcessVolume>())
+            {
+                volume = volumePP.AddComponent<PostProcessVolume>();
+            }
+            else
+            {
+                volume = volumePP.GetComponent<PostProcessVolume>();
+            }
+
 
             volume.isGlobal = true;
             PostProcessProfile profile = new PostProcessProfile();
@@ -436,19 +464,63 @@ namespace Scenario.Editor
                 SetLevel();
             }
 
-            if (renderCamera == null)
-            {
-                CreateRenderCamera();
-            }
+            CreateRenderCamera();
 
             SearchTargets();
 
             RenderProjection();
         }
 
-#endregion
+        #endregion
 
         #region Private Methods
+
+        /// <summary>
+        /// Find all gameobject specific to the process of planar projection
+        /// </summary>
+        private void GetAllScenarioTagObject()
+        {
+            GameObject[] tagged = GameObject.FindGameObjectsWithTag("Scenario Object Projection");
+
+            if (tagged != null)
+            {
+                if (tagged.Length > 0)
+                {
+                    for (int i = 0; i < tagged.Length; i++)
+                    {
+                        switch (tagged[i].name)
+                        {
+                            case "LEVEL":
+                                referenceObject = tagged[i];
+                                break;
+
+                            case "Volume":
+                                volumePP = tagged[i];
+                                break;
+
+                            case "Render Camera":
+                                if (tagged[i].GetComponent<Camera>())
+                                { 
+                                    renderCamera = tagged[i].GetComponent<Camera>();
+                                }
+                                break;
+
+                            case "Projector":
+                                if (tagged[i].GetComponent<Projector>())
+                                { 
+                                    projector = tagged[i].GetComponent<Projector>();
+                                }
+                                break;
+                        }
+
+                        if (tagged[i].transform.childCount > 0)
+                        { 
+                            
+                        }
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Search all object into the reference gameObject
@@ -564,8 +636,12 @@ namespace Scenario.Editor
             float maxDimension = 100;
             float orthographicSize = maxDimension / 2f;
 
-            GameObject tempCameraObject = new GameObject("RenderCamera");
-            renderCamera = tempCameraObject.AddComponent<Camera>();
+            if (renderCamera == null)
+            { 
+                GameObject tempCameraObject = new GameObject("Render Camera");
+                renderCamera = tempCameraObject.AddComponent<Camera>();
+                tempCameraObject.tag = "Scenario Object Projection";
+            }
             renderCamera.orthographic = true;
             renderCamera.farClipPlane = 150;
             renderCamera.clearFlags = CameraClearFlags.Skybox;
@@ -633,6 +709,8 @@ namespace Scenario.Editor
                 projectorObject.transform.parent = mainCamera.transform;
                 projectorObject.transform.position = mainCamera.transform.position;
                 projectorObject.transform.rotation = mainCamera.transform.rotation;
+
+                projectorObject.tag = "Scenario Object Projection";
 
                 projector = projectorObject.AddComponent<Projector>();
 
@@ -715,34 +793,37 @@ namespace Scenario.Editor
         /// </summary>
         private void LoadLastCapture()
         {
-            if (directoryInfo != null && directoryInfo.GetFileSystemInfos().Length > 0)
-            { 
-                string pathFile = string.Empty;
-                FileSystemInfo fileSystemInfo = null;
-                foreach (FileSystemInfo fsi in directoryInfo.EnumerateFileSystemInfos())
-                {
-                    if (!fsi.Extension.Equals(".meta"))
-                    { 
-                        if (fileSystemInfo == null)
+            if (directoryInfo != null )
+            {
+                if (directoryInfo.GetFileSystemInfos() != null && directoryInfo.GetFileSystemInfos().Length > 0)
+                { 
+                    string pathFile = string.Empty;
+                    FileSystemInfo fileSystemInfo = null;
+                    foreach (FileSystemInfo fsi in directoryInfo.EnumerateFileSystemInfos())
+                    {
+                        if (!fsi.Extension.Equals(".meta"))
                         { 
-                            fileSystemInfo = fsi;
-                            continue;
-                        }
+                            if (fileSystemInfo == null)
+                            { 
+                                fileSystemInfo = fsi;
+                                continue;
+                            }
 
-                        if (fsi.CreationTimeUtc > fileSystemInfo.CreationTimeUtc)
-                        {
-                            fileSystemInfo = fsi;
-                            continue;
+                            if (fsi.CreationTimeUtc > fileSystemInfo.CreationTimeUtc)
+                            {
+                                fileSystemInfo = fsi;
+                                continue;
+                            }
                         }
                     }
+                    pathFile = fileSystemInfo.FullName;
+
+                    Debug.Log(pathFile);
+
+                    captureImage = new Texture2D(2, 2);
+                    byte[] imageData = File.ReadAllBytes(pathFile);
+                    captureImage.LoadImage(imageData);
                 }
-                pathFile = fileSystemInfo.FullName;
-
-                Debug.Log(pathFile);
-
-                captureImage = new Texture2D(2, 2);
-                byte[] imageData = File.ReadAllBytes(pathFile);
-                captureImage.LoadImage(imageData);
             }
         }
 
@@ -990,7 +1071,7 @@ namespace Scenario.Editor
             SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
             // Layers Property
             SerializedProperty layersProp = tagManager.FindProperty("layers");
-            if (!PropertyExists(layersProp, 0, 31, _layerName))
+            if (!PropertyExists(layersProp, _layerName))
             {
                 SerializedProperty sp;
                 // Start at layer 9th index -> 8 (zero based) => first 8 reserved for unity / greyed out
@@ -1017,6 +1098,55 @@ namespace Scenario.Editor
             return false;
         }
 
+        private bool CreateProjectTag(string _tag)
+        {
+            // Open tag manager
+            SerializedObject tagManager = new SerializedObject(AssetDatabase.LoadAllAssetsAtPath("ProjectSettings/TagManager.asset")[0]);
+            // Layers Property
+            SerializedProperty tagsProp = tagManager.FindProperty("tags");
+            if (tagsProp.arraySize > 0)
+            {
+                if (!PropertyExists(tagsProp, _tag))
+                {
+                    SerializedProperty sp;
+                    // Start at layer 9th index -> 8 (zero based) => first 8 reserved for unity / greyed out
+                    for (int i = 0, j = 31; i < j; i++)
+                    {
+                        sp = tagsProp.GetArrayElementAtIndex(i);
+                        if (sp != null)
+                        {
+                            if (sp.stringValue == "")
+                            {
+                                // Assign string value to layer
+                                sp.stringValue = _tag;
+                                Debug.Log("Tag: " + _tag + " has been added");
+                                // Save settings
+                                tagManager.ApplyModifiedProperties();
+                                return true;
+                            }
+                            if (i == j)
+                                Debug.Log("All allowed layers have been filled");
+                        }
+                        else
+                        {
+
+                        }
+                    }
+                }
+                else
+                {
+                    //Debug.Log ("Layer: " + layerName + " already exists");
+                }
+            }
+            else
+            {
+                tagsProp.InsertArrayElementAtIndex(0);
+                tagManager.ApplyModifiedProperties();
+                CreateProjectTag(_tag);
+            }
+            return false;
+        }
+
         /// <summary>
         /// Check if the layer already exist.
         /// </summary>
@@ -1025,14 +1155,23 @@ namespace Scenario.Editor
         /// <param name="end"> Ending index layer</param>
         /// <param name="value"> Expected index layer </param>
         /// <returns></returns>
-        private bool PropertyExists(SerializedProperty property, int start, int end, string value)
+        private bool PropertyExists(SerializedProperty property, string value)
         {
-            for (int i = start; i < end; i++)
+            if (property != null)
             {
-                SerializedProperty t = property.GetArrayElementAtIndex(i);
-                if (t.stringValue.Equals(value))
+                if (property.arraySize > 0)
                 {
-                    return true;
+                    for (int i = 0; i < property.arraySize; i++)
+                    {
+                        SerializedProperty t = property.GetArrayElementAtIndex(i);
+                        if (t != null)
+                        { 
+                            if (t.stringValue.Equals(value))
+                            {
+                                return true;
+                            }
+                        }
+                    }
                 }
             }
             return false;

@@ -8,7 +8,7 @@ namespace Scenario.Editor
         private static readonly float MinimumWidth = 1650f;
         private static readonly UpscaleEditorUI UpscaleEditorUI = new();
 
-        [MenuItem("Window/Scenario/Editors/Upscale Editor", false, 5)]
+        [MenuItem("Scenario/Editors/Upscale Editor", false, 5)]
         public static void ShowWindow()
         {
             var window = EditorWindow.GetWindow(typeof(UpscaleEditor), false, "Upscale Editor") as UpscaleEditor;

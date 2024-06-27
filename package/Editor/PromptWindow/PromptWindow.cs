@@ -16,7 +16,7 @@ namespace Scenario.Editor
 
         private CreationMode activeMode = null;
 
-        [MenuItem("Window/Scenario/Prompt Window", false, 5)]
+        [MenuItem("Scenario/Prompt Window", false, 5)]
         public static void ShowWindow()
         {
             var promptWindow = GetWindow<PromptWindow>("Prompt Window");

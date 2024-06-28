@@ -180,6 +180,7 @@ namespace Scenario.Editor.UpscaleEditor
             EditorStyle.Button("Upscale Image", () =>
             {
                 if (currentImage == null) return;
+                upscaledImages.Add(null);
                 imageDataUrl = CommonUtils.Texture2DToDataURL(currentImage);
                 if (imageData != null)
                 {
@@ -324,12 +325,21 @@ namespace Scenario.Editor.UpscaleEditor
                                         Id = asset.asset.id,
                                         Url = asset.asset.url,
                                     };
-                                    upscaledImages.Insert(0, texture);
+                                    if (upscaledImages[0] == null)
+                                    {
+                                        upscaledImages[0] = texture;
+                                    }
+                                    else
+                                    { 
+                                        upscaledImages.Insert(0, texture);
+                                    }
                                     imageDataList.Insert(0, newImageData);
                                 });
                             });
                         });
                     });
+                }, errorAction => { 
+                    upscaledImages.RemoveAt(0);
                 });
             }
             else
@@ -353,7 +363,14 @@ namespace Scenario.Editor.UpscaleEditor
                                     Id = asset.asset.id,
                                     Url = asset.asset.url,
                                 };
-                                upscaledImages.Insert(0, texture);
+                                if (upscaledImages[0] == null)
+                                {
+                                    upscaledImages[0] = texture;
+                                }
+                                else
+                                {
+                                    upscaledImages.Insert(0, texture);
+                                }
                                 imageDataList.Insert(0, newImageData);
                             });
                         });

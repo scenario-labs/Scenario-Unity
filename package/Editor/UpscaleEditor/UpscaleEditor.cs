@@ -21,7 +21,7 @@ namespace Scenario.Editor.UpscaleEditor
 
         #region MonoBehaviourCallback
 
-        [MenuItem("Window/Scenario/Editors/Upscale Editor", false, 5)]
+        [MenuItem("Scenario/Editors/Upscale Editor", false, 5)]
         public static void ShowWindow()
         {
             var window = EditorWindow.GetWindow(typeof(UpscaleEditor), false, "Upscale Editor") as UpscaleEditor;

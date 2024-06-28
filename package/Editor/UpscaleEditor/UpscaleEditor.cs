@@ -25,6 +25,7 @@ namespace Scenario.Editor.UpscaleEditor
         public static void ShowWindow()
         {
             var window = EditorWindow.GetWindow(typeof(UpscaleEditor), false, "Upscale Editor") as UpscaleEditor;
+            window.autoRepaintOnSceneChange = true;
             window.minSize = new Vector2(720, 540);
         }
 

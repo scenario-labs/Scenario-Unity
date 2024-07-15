@@ -61,6 +61,54 @@ namespace Scenario.Editor
         #region UI Drawing
 
         /// <summary>
+        /// This function is responsible for rendering all the interface
+        /// </summary>
+        /// <param name="_dimension">The dimensions of the UI element.</param>
+        public void OnGUI(Rect _dimension)
+        {
+            DrawBackground(_dimension);
+            float previewWidth = 320f;
+            float imageListWidth = selectedTexture != null ? _dimension.width - previewWidth : _dimension.width;
+            float boxWidth = (imageListWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
+            float boxHeight = boxWidth;
+
+            int numRows = Mathf.CeilToInt((float)Images.imageDataList.Count / itemsPerRow);
+
+            float scrollViewHeight = (boxHeight + padding) * numRows;
+            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height);
+            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight + 50);
+            float totalHeight = 0;
+
+            if (Images.imageDataList.Count == 0)
+            {
+                ShowLoadingPage();
+            }
+            else
+            {
+                scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
+                {
+                    DrawTextureBoxes(boxWidth, boxHeight, out totalHeight);
+                }
+                if (!isLoading)
+                {
+                    if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
+                    {
+                        isLoading = true;
+                        Images.GetInferencesData(() =>
+                        {
+                            isLoading = false;
+                        });
+                    }
+                }
+                GUI.EndScrollView();
+            }
+
+            GUILayout.FlexibleSpace();
+
+            DrawSelectedTextureSection(_dimension, previewWidth, imageListWidth);
+        }
+
+        /// <summary>
         /// Draws the background of the UI element with the specified position.
         /// This function fills the background of a UI element with a given color.
         /// </summary>
@@ -76,7 +124,6 @@ namespace Scenario.Editor
         /// </summary>
         private void InitializeButtons()
         {
-
             // Dictionary containing button labels and associated actions
             buttonActions = new Dictionary<string, Action>()
             {
@@ -229,54 +276,6 @@ namespace Scenario.Editor
                 merged = (Dictionary<string, Action>)silenceAction.Concat(buttonActions).ToDictionary(x => x.Key, x => x.Value);
                 buttonActions = merged;
             }
-        }
-
-        /// <summary>
-        /// This function is responsible for rendering all the interface
-        /// </summary>
-        /// <param name="_dimension">The dimensions of the UI element.</param>
-        public void OnGUI(Rect _dimension)
-        {
-            DrawBackground(_dimension);
-            float previewWidth = 320f;
-            float imageListWidth = selectedTexture != null ? _dimension.width - previewWidth : _dimension.width;
-            float boxWidth = (imageListWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
-            float boxHeight = boxWidth;
-
-            int numRows = Mathf.CeilToInt((float)Images.imageDataList.Count / itemsPerRow);
-
-            float scrollViewHeight = (boxHeight + padding) * numRows;
-            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height);
-            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight + 50);
-            float totalHeight = 0;
-
-            if (Images.imageDataList.Count == 0)
-            {
-                ShowLoadingPage();
-            }
-            else
-            {
-                scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
-                {
-                    DrawTextureBoxes(boxWidth, boxHeight, out totalHeight);
-                }
-                if(!isLoading)
-                {
-                    if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
-                    {
-                        isLoading = true;
-                        Images.GetInferencesData( () =>
-                        {
-                            isLoading = false;
-                        });
-                    }
-                }
-                GUI.EndScrollView();
-            }
-
-            GUILayout.FlexibleSpace();
-
-            DrawSelectedTextureSection(_dimension, previewWidth, imageListWidth);
         }
 
         private void ShowLoadingPage()

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -10,6 +9,9 @@ namespace Scenario.Editor
     public class Images : EditorWindow
     {
         #region Public Fields
+
+        public static Images Instance = null;
+
         #endregion
 
         #region Private Fields
@@ -47,8 +49,8 @@ namespace Scenario.Editor
 
             var images = (Images)GetWindow(typeof(Images));
             images.autoRepaintOnSceneChange = true;
+            Instance = images;
             ImagesUI.Init(images);
-            //ImagesUI.
         }
 
         private void OnGUI()
@@ -85,9 +87,9 @@ namespace Scenario.Editor
 
         #region Public Methods
 
-        public static bool IsVisible()
-        { 
-            return isVisible;
+        public void InitButtons()
+        {
+            ImagesUI.Init();
         }
 
         /// <summary>

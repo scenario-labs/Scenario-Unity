@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Security.Policy;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,6 +20,7 @@ namespace Scenario.Editor
         public static void ShowWindow()
         {
             var promptWindow = GetWindow<PromptWindow>("Prompt Window");
+            //promptWindow.autoRepaintOnSceneChange = true;
             promptWindow.minSize = new Vector2(500, 750);
         }
 

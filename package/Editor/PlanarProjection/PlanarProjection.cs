@@ -4,10 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
-using UnityEditor.PackageManager;
 using UnityEditor.PackageManager.Requests;
 using UnityEditor.Recorder;
-using UnityEditor.Recorder.Input;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 
@@ -240,7 +238,7 @@ namespace Scenario.Editor
 
         #region MonoBehaviour Callbacks
 
-        [MenuItem("Window/Scenario/Workflows/Planar Projection", false,2)]
+        [MenuItem("Scenario/Workflows/Planar Projection", false,2)]
         public static void ShowWindow()
         {
             GetWindow<PlanarProjection>("Planar Projection");
@@ -260,6 +258,10 @@ namespace Scenario.Editor
             }
 
             InferenceManager.SilenceMode = true;
+            if (Images.Instance != null)
+            { 
+                Images.Instance.InitButtons();
+            }
 
             if (recorderWindow != null)
             {
@@ -278,9 +280,13 @@ namespace Scenario.Editor
             }
         }
 
-        private void OnDestroy()
+        private void OnDisable()
         {
             InferenceManager.SilenceMode = false;
+            if (Images.Instance != null)
+            {
+                Images.Instance.InitButtons();
+            }
         }
 
         private void OnGUI()

@@ -88,6 +88,7 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
+            ShowWindow();
             SetTab(privacyQuickStart);
         }
 
@@ -96,14 +97,16 @@ namespace Scenario.Editor
             isProcessing = false;
         }
 
+
         #endregion
 
         #region Public Methods
 
-        [MenuItem("Window/Scenario/Models", false, 11)]
+        [MenuItem("Scenario/Models", false, 11)]
         public static void ShowWindow()
         {
             window = GetWindow<Models>("Models");
+            window.autoRepaintOnSceneChange = true;
             window.minSize = new Vector2(MinimumWidth, window.minSize.y);
         }
 

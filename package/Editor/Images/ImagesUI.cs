@@ -184,7 +184,7 @@ namespace Scenario.Editor
                 },
                 { "Upscale Image",  () => {
                         CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => {
-                            UpscaleEditor.ShowWindow(response, Images.GetImageDataById(selectedTextureId));
+                            UpscaleEditor.UpscaleEditor.ShowWindow(response, Images.GetImageDataById(selectedTextureId));
                         });
                     }
                 },

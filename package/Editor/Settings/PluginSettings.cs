@@ -89,7 +89,7 @@ namespace Scenario.Editor
             }
         }
 
-        [MenuItem("Window/Scenario/Scenario Settings", false, 100)]
+        [MenuItem("Scenario/Scenario Settings", false, 100)]
         public static void ShowWindow()
         {
             GetWindow<PluginSettings>("Scenario Settings");

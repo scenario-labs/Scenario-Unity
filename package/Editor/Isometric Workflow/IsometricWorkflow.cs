@@ -156,7 +156,7 @@ namespace Scenario.Editor
 
         #endregion
 
-        [MenuItem("Window/Scenario/Workflows/1. Isometric Workflow", false, 1)]
+        [MenuItem("Scenario/Workflows/1. Isometric Workflow")]
         public static void ShowWindow()
         {
             if (isVisible)
@@ -165,6 +165,7 @@ namespace Scenario.Editor
             InferenceManager.SilenceMode = true;
 
             var isometricWorkflow = GetWindow<IsometricWorkflow>("Isometric Workflow");
+            isometricWorkflow.autoRepaintOnSceneChange = true;
             isometricWorkflow.minSize = new Vector2(1024, 625);
 
             if (isometricWorkflow.isometricStartScreen == null)

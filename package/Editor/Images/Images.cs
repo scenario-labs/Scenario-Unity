@@ -34,7 +34,7 @@ namespace Scenario.Editor
         /// </summary>
         internal static string cdnExtension = "&format=jpeg&quality=80&width=256";
 
-        [MenuItem("Window/Scenario/Images", false, 10)]
+        [MenuItem("Scenario/Images", false, 10)]
         public static void ShowWindow()
         {
             if (isVisible)
@@ -46,6 +46,7 @@ namespace Scenario.Editor
             GetInferencesData();
 
             var images = (Images)GetWindow(typeof(Images));
+            images.autoRepaintOnSceneChange = true;
             ImagesUI.Init(images);
             //ImagesUI.
         }

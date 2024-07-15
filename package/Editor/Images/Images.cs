@@ -47,6 +47,7 @@ namespace Scenario.Editor
 
             var images = (Images)GetWindow(typeof(Images));
             ImagesUI.Init(images);
+            //ImagesUI.
         }
 
         private void OnGUI()
@@ -82,6 +83,11 @@ namespace Scenario.Editor
         #endregion
 
         #region Public Methods
+
+        public static bool IsVisible()
+        { 
+            return isVisible;
+        }
 
         /// <summary>
         /// Make a request to get an inference of four images based on existing image on database.

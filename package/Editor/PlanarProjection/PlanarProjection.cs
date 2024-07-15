@@ -249,7 +249,6 @@ namespace Scenario.Editor
         private void OnEnable()
         {
             planarProjectionView = new PlanarProjectionView(this);
-
             if (Instance == null)
             {
                 Instance = this;
@@ -259,6 +258,8 @@ namespace Scenario.Editor
 
                 GetAllScenarioTagObject();
             }
+
+            InferenceManager.SilenceMode = true;
 
             if (recorderWindow != null)
             {
@@ -275,6 +276,11 @@ namespace Scenario.Editor
 
                 LoadLastCapture();
             }
+        }
+
+        private void OnDestroy()
+        {
+            InferenceManager.SilenceMode = false;
         }
 
         private void OnGUI()

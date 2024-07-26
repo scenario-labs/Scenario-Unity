@@ -60,6 +60,12 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
+            if (!isVisible)
+            {
+                return;
+            }
+            Instance = this;
+            autoRepaintOnSceneChange = true;
             lastPageToken = string.Empty;
             imageDataList.Clear();
             GetInferencesData();
@@ -76,6 +82,11 @@ namespace Scenario.Editor
         private void OnBecameVisible()
         {
             isVisible = true;
+            autoRepaintOnSceneChange = true;
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
+            GetInferencesData();
+            ImagesUI.Init();
         }
 
         private void OnBecameInvisible()

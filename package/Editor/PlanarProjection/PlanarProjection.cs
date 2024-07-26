@@ -234,7 +234,7 @@ namespace Scenario.Editor
         /// </summary>
         private bool processing = false;
 
-#endregion
+        #endregion
 
         #region MonoBehaviour Callbacks
 
@@ -247,6 +247,7 @@ namespace Scenario.Editor
         private void OnEnable()
         {
             planarProjectionView = new PlanarProjectionView(this);
+            autoRepaintOnSceneChange = true;
             if (Instance == null)
             {
                 Instance = this;
@@ -380,6 +381,15 @@ namespace Scenario.Editor
 
             var preset = AssetDatabase.LoadAssetAtPath<RecorderControllerSettingsPreset>($"{CommonUtils.PluginFolderPath()}/Assets/Recorder/RecorderSettingPreset.asset");
 
+            if (Images.Instance != null)
+            {
+                Images.Instance.Close();
+            }
+            else
+            {
+                GetWindow<Images>().Close();
+            }
+
             recorderWindow.ApplyPreset( preset );
             PrepareRecorderSettings(true);
         }
@@ -398,6 +408,7 @@ namespace Scenario.Editor
                 SetControlNetOptions();
                 InferenceManager.SilenceMode = true;
                 promptWindow.SetImageSettingWidth(1824);
+                OpenImageWindow();
                 //promptWindow.SetImageSettingHeight(1024);
             }
         }

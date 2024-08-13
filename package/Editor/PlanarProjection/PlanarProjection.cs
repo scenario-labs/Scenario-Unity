@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Unity.EditorCoroutines.Editor;
 using UnityEditor;
 using UnityEditor.PackageManager.Requests;
@@ -193,6 +194,11 @@ namespace Scenario.Editor
         /// Path file to save the texture unwrapped of the projection.
         /// </summary>
         private string destinationPath = string.Empty;
+
+        /// <summary>
+        /// Register where you saved something with a previous usage of the projection planar.
+        /// </summary>
+        private string previousDestinationPath = string.Empty;
 
         /// <summary>
         /// Variable to manipulate scale on the projection shader.
@@ -867,7 +873,7 @@ namespace Scenario.Editor
         /// </summary>
         public void SetPropertiesToRender()
         {
-            Material projectorMaterial = selectedTargetBundle.MeshRenderer.material;
+            Material projectorMaterial = selectedTargetBundle.MeshRenderer.sharedMaterial;
 
             if (projectorMaterial.HasFloat("_Slider"))
             {
@@ -883,7 +889,7 @@ namespace Scenario.Editor
         /// </summary>
         public void ResetPropertiesToRender()
         {
-            Material projectorMaterial = selectedTargetBundle.MeshRenderer.material;
+            Material projectorMaterial = selectedTargetBundle.MeshRenderer.sharedMaterial;
 
             if (projectorMaterial.HasFloat("_Slider"))
             {
@@ -1013,10 +1019,32 @@ namespace Scenario.Editor
             {
                 // Save the texture
 
-                if (string.IsNullOrEmpty(destinationPath))
+                if (!string.IsNullOrEmpty(previousDestinationPath))
                 {
-                    destinationPath = EditorUtility.SaveFolderPanel("Save Projected Texture", "", $@"ProjectedTexture_{flag}.png");
-                    Debug.Log(destinationPath);
+                    string[] folders = previousDestinationPath.Split("/", StringSplitOptions.RemoveEmptyEntries);
+                    if (folders != null && folders.Length > 1)
+                    {
+                        string newDestination = string.Empty;
+                        for (int i = 0; i < folders.Length - 1; i++)
+                        { 
+                            newDestination += folders[i] + "/";
+                        }
+                        destinationPath = EditorUtility.SaveFolderPanel("Save Projected Texture", newDestination, "");
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(destinationPath))
+                        {
+                            destinationPath = EditorUtility.SaveFolderPanel("Save Projected Texture", "", "");
+                        }
+                    }
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(destinationPath))
+                    {
+                        destinationPath = EditorUtility.SaveFolderPanel("Save Projected Texture", "", "");
+                    }
                 }
 
                 if (destinationPath.Length != 0)
@@ -1261,6 +1289,7 @@ namespace Scenario.Editor
             }
 
             renderCoroutine = null;
+            previousDestinationPath = destinationPath;
             destinationPath = string.Empty;
             yield return null;
         }

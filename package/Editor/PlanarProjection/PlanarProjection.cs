@@ -442,10 +442,7 @@ namespace Scenario.Editor
         /// </summary>
         public void RenderProjectionWork()
         {
-            if (projector == null)
-            {
-                SetProjector();
-            }
+            SetProjector();
 
             CreateProjectedLayer("Projected");
 
@@ -728,20 +725,23 @@ namespace Scenario.Editor
         {
             if (mainCamera != null)
             {
-                GameObject projectorObject = new GameObject("Projector");
-                projectorObject.transform.parent = mainCamera.transform;
-                projectorObject.transform.position = mainCamera.transform.position;
-                projectorObject.transform.rotation = mainCamera.transform.rotation;
+                if (projector == null)
+                { 
+                    GameObject projectorObject = new GameObject("Projector");
+                    projectorObject.transform.parent = mainCamera.transform;
+                    projectorObject.transform.position = mainCamera.transform.position;
+                    projectorObject.transform.rotation = mainCamera.transform.rotation;
 
-                projectorObject.tag = "Scenario Object Projection";
+                    projectorObject.tag = "Scenario Object Projection";
 
-                projector = projectorObject.AddComponent<Projector>();
+                    projector = projectorObject.AddComponent<Projector>();
 
-                projector.aspectRatio = ((float)renderResultSelected.width / (float)renderResultSelected.height);
+                    projector.aspectRatio = ((float)renderResultSelected.width / (float)renderResultSelected.height);
 
-                projector.orthographicSize = 5;
+                    projector.orthographicSize = 5;
+                }
 
-                projector.ignoreLayers = LayerMask.NameToLayer("Everything") - ( 1 << LayerMask.NameToLayer("Projected"));
+                projector.ignoreLayers = ~( 1 <<LayerMask.NameToLayer("Projected"));
             }
             else
             {

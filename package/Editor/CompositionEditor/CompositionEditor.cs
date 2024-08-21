@@ -18,7 +18,7 @@ namespace Scenario.Editor
         internal RenderTexture renderTexture;
         private Texture2D screenshot;
 
-        [MenuItem("Window/Scenario/Editors/Composition Editor", false,0)]
+        [MenuItem("Scenario/Editors/Composition Editor", false,0)]
         public static void ShowWindow()
         {
             var window = GetWindow<CompositionEditor>("Composition Editor");

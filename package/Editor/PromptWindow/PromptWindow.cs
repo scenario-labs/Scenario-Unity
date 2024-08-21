@@ -16,10 +16,11 @@ namespace Scenario.Editor
 
         private CreationMode activeMode = null;
 
-        [MenuItem("Window/Scenario/Prompt Window", false, 5)]
+        [MenuItem("Scenario/Prompt Window", false, 5)]
         public static void ShowWindow()
         {
             var promptWindow = GetWindow<PromptWindow>("Prompt Window");
+            //promptWindow.autoRepaintOnSceneChange = true;
             promptWindow.minSize = new Vector2(500, 750);
         }
 
@@ -50,21 +51,6 @@ namespace Scenario.Editor
 
             processReceivedUploadImage = false;
             PromptWindowUI.imageUpload.LoadImage(pngBytesUploadImage);
-        }
-
-        private void UpdateSelectedModel()
-        {
-            string selectedModelId = DataCache.instance.SelectedModelId;
-            string selectedModelName = EditorPrefs.GetString("SelectedModelName");
-
-            if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
-            {
-                promptWindowUI.selectedModelName = selectedModelName;
-            }
-            else
-            {
-                promptWindowUI.selectedModelName = "Choose Model";
-            }
         }
 
         private void OnGUI()
@@ -113,6 +99,99 @@ namespace Scenario.Editor
         public static void SetDropAdditionalImageContent(Texture2D _newContent)
         {
             promptWindowUI.SetAdditionalDropImage(_newContent);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_creationMode"></param>
+        public void SetActiveModeUI(ECreationMode _creationMode)
+        {
+            promptWindowUI.imageControlTab = (int)_creationMode;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_active"></param>
+        public void ActiveAdvanceSettings(bool _active)
+        { 
+            promptWindowUI.isAdvancedSettings = _active;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_selectedModality"></param>
+        public void SetAdvancedModality(int _selectedModality)
+        { 
+            promptWindowUI.selectedOptionIndex = _selectedModality;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_value"></param>
+        public void SetAdvancedModalityValue(int _value)
+        { 
+            promptWindowUI.sliderDisplayedValue = _value;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_indexValue"></param>
+        public void SetImageSettingWidth(int _indexValue)
+        { 
+            promptWindowUI.WidthSliderValue = _indexValue;
+
+            if (_indexValue >= 1024)
+            {
+                for (int i = 0; i < promptWindowUI.allowedSDXLDimensionValues.Length; i++)
+                {
+                    if (_indexValue == promptWindowUI.allowedSDXLDimensionValues[i])
+                    {
+                        promptWindowUI.sizeSliderValue = 7 - i;
+                    }
+                }
+            }
+            else if(_indexValue <= 912)
+            {
+                for (int i = 0; i < promptWindowUI.allowed1_5DimensionValues.Length; i++)
+                {
+                    if (_indexValue == promptWindowUI.allowed1_5DimensionValues[i])
+                    {
+                        promptWindowUI.sizeSliderValue = 7 - i;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="_indexValue"></param>
+        public void SetImageSettingHeight(int _indexValue)
+        { 
+            promptWindowUI.HeightSliderValue = _indexValue;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private void UpdateSelectedModel()
+        {
+            string selectedModelId = DataCache.instance.SelectedModelId;
+            string selectedModelName = EditorPrefs.GetString("SelectedModelName");
+
+            if (!string.IsNullOrEmpty(selectedModelId) && !string.IsNullOrEmpty(selectedModelName))
+            {
+                promptWindowUI.selectedModelName = selectedModelName;
+            }
+            else
+            {
+                promptWindowUI.selectedModelName = "Choose Model";
+            }
         }
 
         #region API_DTO

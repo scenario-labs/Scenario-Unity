@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Newtonsoft.Json;
 using UnityEditor;
 using UnityEngine;
@@ -10,6 +9,9 @@ namespace Scenario.Editor
     public class Images : EditorWindow
     {
         #region Public Fields
+
+        public static Images Instance = null;
+
         #endregion
 
         #region Private Fields
@@ -34,7 +36,7 @@ namespace Scenario.Editor
         /// </summary>
         internal static string cdnExtension = "&format=jpeg&quality=80&width=256";
 
-        [MenuItem("Window/Scenario/Images", false, 10)]
+        [MenuItem("Scenario/Images", false, 10)]
         public static void ShowWindow()
         {
             if (isVisible)
@@ -46,6 +48,8 @@ namespace Scenario.Editor
             GetInferencesData();
 
             var images = (Images)GetWindow(typeof(Images));
+            images.autoRepaintOnSceneChange = true;
+            Instance = images;
             ImagesUI.Init(images);
         }
 
@@ -56,6 +60,12 @@ namespace Scenario.Editor
 
         private void OnEnable()
         {
+            if (!isVisible)
+            {
+                return;
+            }
+            Instance = this;
+            autoRepaintOnSceneChange = true;
             lastPageToken = string.Empty;
             imageDataList.Clear();
             GetInferencesData();
@@ -72,6 +82,11 @@ namespace Scenario.Editor
         private void OnBecameVisible()
         {
             isVisible = true;
+            autoRepaintOnSceneChange = true;
+            lastPageToken = string.Empty;
+            imageDataList.Clear();
+            GetInferencesData();
+            ImagesUI.Init();
         }
 
         private void OnBecameInvisible()
@@ -82,6 +97,11 @@ namespace Scenario.Editor
         #endregion
 
         #region Public Methods
+
+        public void InitButtons()
+        {
+            ImagesUI.Init();
+        }
 
         /// <summary>
         /// Make a request to get an inference of four images based on existing image on database.

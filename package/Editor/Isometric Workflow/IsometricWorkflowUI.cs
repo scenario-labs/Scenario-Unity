@@ -152,6 +152,7 @@ namespace Scenario.Editor
         /// <param name="_dimension">The dimensions of the UI element.</param>
         public void DrawBaseGUI(Rect _dimension)
         {
+            isometricWorkflow.minSize = new Vector2(1024, 650);
             isometricWorkflow.maxSize = new Vector2(1680, 920);
 
             DrawBackground(_dimension);
@@ -784,6 +785,7 @@ namespace Scenario.Editor
         public void DrawValidationGUI(Rect _dimension)
         {
             DrawBackground(_dimension);
+            isometricWorkflow.minSize = new Vector2(1480, 650);
             CustomStyle.Space();
             CustomStyle.Label("Step 5. Validation", 18, TextAnchor.UpperLeft, bold: true);
             CustomStyle.Label("Choose the final images:", 18, TextAnchor.UpperLeft, bold: true);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -60,6 +61,54 @@ namespace Scenario.Editor
         #region UI Drawing
 
         /// <summary>
+        /// This function is responsible for rendering all the interface
+        /// </summary>
+        /// <param name="_dimension">The dimensions of the UI element.</param>
+        public void OnGUI(Rect _dimension)
+        {
+            DrawBackground(_dimension);
+            float previewWidth = 320f;
+            float imageListWidth = selectedTexture != null ? _dimension.width - previewWidth : _dimension.width;
+            float boxWidth = (imageListWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
+            float boxHeight = boxWidth;
+
+            int numRows = Mathf.CeilToInt((float)Images.imageDataList.Count / itemsPerRow);
+
+            float scrollViewHeight = (boxHeight + padding) * numRows;
+            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height);
+            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight + 50);
+            float totalHeight = 0;
+
+            if (Images.imageDataList.Count == 0)
+            {
+                ShowLoadingPage();
+            }
+            else
+            {
+                scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
+                {
+                    DrawTextureBoxes(boxWidth, boxHeight, out totalHeight);
+                }
+                if (!isLoading)
+                {
+                    if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
+                    {
+                        isLoading = true;
+                        Images.GetInferencesData(() =>
+                        {
+                            isLoading = false;
+                        });
+                    }
+                }
+                GUI.EndScrollView();
+            }
+
+            GUILayout.FlexibleSpace();
+
+            DrawSelectedTextureSection(_dimension, previewWidth, imageListWidth);
+        }
+
+        /// <summary>
         /// Draws the background of the UI element with the specified position.
         /// This function fills the background of a UI element with a given color.
         /// </summary>
@@ -75,7 +124,6 @@ namespace Scenario.Editor
         /// </summary>
         private void InitializeButtons()
         {
-
             // Dictionary containing button labels and associated actions
             buttonActions = new Dictionary<string, Action>()
             {
@@ -200,54 +248,34 @@ namespace Scenario.Editor
                     }
                 }
             };
-        }
 
-        /// <summary>
-        /// This function is responsible for rendering all the interface
-        /// </summary>
-        /// <param name="_dimension">The dimensions of the UI element.</param>
-        public void OnGUI(Rect _dimension)
-        {
-            DrawBackground(_dimension);
-            float previewWidth = 320f;
-            float imageListWidth = selectedTexture != null ? _dimension.width - previewWidth : _dimension.width;
-            float boxWidth = (imageListWidth - padding * (itemsPerRow - 1)) / itemsPerRow;
-            float boxHeight = boxWidth;
-
-            int numRows = Mathf.CeilToInt((float)Images.imageDataList.Count / itemsPerRow);
-
-            float scrollViewHeight = (boxHeight + padding) * numRows;
-            var scrollViewRect = new Rect(0, 25, imageListWidth, _dimension.height);
-            var viewRect = new Rect(0, 0, imageListWidth - 20, scrollViewHeight + 50);
-            float totalHeight = 0;
-
-            if (Images.imageDataList.Count == 0)
+            if (InferenceManager.SilenceMode)
             {
-                ShowLoadingPage();
-            }
-            else
-            {
-                scrollPosition = GUI.BeginScrollView(scrollViewRect, scrollPosition, viewRect);
+                Dictionary<string, Action> silenceAction = new Dictionary<string, Action>();
+                silenceAction.Add("Projection Planar",()=> 
                 {
-                    DrawTextureBoxes(boxWidth, boxHeight, out totalHeight);
-                }
-                if(!isLoading)
-                {
-                    if (GUI.Button(new Rect(0, totalHeight + 10, imageListWidth, 20), new GUIContent("Load More", "Load next images from your account.")))
+                    Action<string> successToProjection = (filePath) =>
                     {
-                        isLoading = true;
-                        Images.GetInferencesData( () =>
+                        if (PlanarProjection.Instance != null)
                         {
-                            isLoading = false;
-                        });
-                    }
-                }
-                GUI.EndScrollView();
+                            PlanarProjection.Instance.OpenPlanarProjection(filePath);
+                        }
+                    };
+
+                    CommonUtils.FetchTextureFromURL(Images.GetImageDataById(selectedTextureId).Url, response => {
+                        CommonUtils.SaveTextureAsPNG(response, null, importPreset: PluginSettings.TexturePreset, successToProjection);
+                        buttonDetailPanelDrawFunction = () =>
+                        {
+                            GUILayout.Label("Your image has been dowloaded as a Texture in the folder you specified in the Scenario Plugin Settings.", EditorStyles.wordWrappedLabel);
+                        };
+                    });
+
+                } 
+                );
+                Dictionary<string, Action> merged = new Dictionary<string, Action>();
+                merged = (Dictionary<string, Action>)silenceAction.Concat(buttonActions).ToDictionary(x => x.Key, x => x.Value);
+                buttonActions = merged;
             }
-
-            GUILayout.FlexibleSpace();
-
-            DrawSelectedTextureSection(_dimension, previewWidth, imageListWidth);
         }
 
         private void ShowLoadingPage()

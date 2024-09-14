@@ -156,7 +156,7 @@ namespace Scenario.Editor
 
         #endregion
 
-        [MenuItem("Scenario/Workflows/1. Isometric Workflow")]
+        [MenuItem("Scenario/Workflows/1. Isometric Workflow", false, 1)]
         public static void ShowWindow()
         {
             if (isVisible)

@@ -296,5 +296,17 @@ namespace Scenario.Editor
                 Debug.LogError("There was an issue when applying the Pixels Per Unit parameter. please restart the editor.");
             }
         }
+        
+        public static void ReplaceSprite(SpriteRenderer spriteRenderer, Texture2D newTexture)
+        {
+            if (spriteRenderer != null && newTexture != null)
+            {
+                Rect spriteRect = new Rect(0, 0, newTexture.width, newTexture.height);
+                Vector2 pivot = new Vector2(0.5f, 0.5f);
+                Sprite newSprite = Sprite.Create(newTexture, spriteRect, pivot);
+
+                spriteRenderer.sprite = newSprite;
+            }
+        }
     }
 }

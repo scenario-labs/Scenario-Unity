@@ -205,7 +205,6 @@ namespace Scenario.Editor
 
             for (int i = 0; i < pageModels.Count; i++)
             {
-
                 int rowIndex = Mathf.FloorToInt((float)i / itemsPerRow);
                 int colIndex = i % itemsPerRow;
 
@@ -231,7 +230,7 @@ namespace Scenario.Editor
                         {
                             DataCache.instance.SelectedModelId = models[globalIndex].id;
                             DataCache.instance.SelectedModelType = models[globalIndex].type;
-                            
+
                             EditorPrefs.SetString("SelectedModelName", name);
                         }
 
@@ -242,13 +241,37 @@ namespace Scenario.Editor
                     string modelType = pageModels[i].type;
                     string bubbleText;
 
-                    if (modelType == "sd-xl-composition" || modelType == "sd-xl-lora" || modelType == "sd-xl")
+                    if (modelType == "sd-xl" || modelType == "sd-xl-composition" || modelType == "sd-xl-lora")
                     {
                         bubbleText = "SDXL";
                     }
-                    else if (modelType == "sd-1_5")
+                    else if (modelType == "sd-1_5" || modelType == "sd-1_5-composition" || modelType == "sd-1_5-lora")
                     {
                         bubbleText = "SD1.5";
+                    }
+                    else if (modelType == "flux.1")
+                    {
+                        bubbleText = "FLUX";
+                    }
+                    else if (modelType == "flux.1-pro")
+                    {
+                        bubbleText = "FLUX PRO";
+                    }
+                    else if (modelType == "flux1.1-pro")
+                    {
+                        bubbleText = "FLUX PRO 1.1";
+                    }
+                    else if (modelType == "flux.1.1-pro-ultra")
+                    {
+                        bubbleText = "FLUX PRO 1.1 ULTRA";
+                    }
+                    else if (modelType == "flux.1-lora")
+                    {
+                        bubbleText = "FLUX LoRA";
+                    }
+                    else if (modelType == "flux.1-composition")
+                    {
+                        bubbleText = "FLUX Composition";
                     }
                     else
                     {
@@ -272,6 +295,7 @@ namespace Scenario.Editor
                 }
             }
         }
+
 
         private Texture2D MakeTex(int width, int height, Color col)
         {

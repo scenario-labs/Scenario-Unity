@@ -249,29 +249,9 @@ namespace Scenario.Editor
                     {
                         bubbleText = "SD1.5";
                     }
-                    else if (modelType == "flux.1")
+                    else if (modelType == "flux.1" || modelType == "flux.1-pro" || modelType == "flux.1-pro-ultra" || modelType == "flux1.1-pro" || modelType == "flux.1-lora" || modelType == "flux.1-composition")
                     {
                         bubbleText = "FLUX";
-                    }
-                    else if (modelType == "flux.1-pro")
-                    {
-                        bubbleText = "FLUX PRO";
-                    }
-                    else if (modelType == "flux1.1-pro")
-                    {
-                        bubbleText = "FLUX PRO 1.1";
-                    }
-                    else if (modelType == "flux.1.1-pro-ultra")
-                    {
-                        bubbleText = "FLUX PRO 1.1 ULTRA";
-                    }
-                    else if (modelType == "flux.1-lora")
-                    {
-                        bubbleText = "FLUX LoRA";
-                    }
-                    else if (modelType == "flux.1-composition")
-                    {
-                        bubbleText = "FLUX Composition";
                     }
                     else
                     {

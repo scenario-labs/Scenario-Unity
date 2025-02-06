@@ -249,7 +249,7 @@ namespace Scenario.Editor
                     {
                         bubbleText = "SD1.5";
                     }
-                    else if (modelType == "flux.1" || modelType == "flux.1-pro" || modelType == "flux.1-pro-ultra" || modelType == "flux1.1-pro" || modelType == "flux.1-lora" || modelType == "flux.1-composition")
+                    else if (modelType == "flux.1" || modelType == "flux.1-pro" || modelType == "flux.1.1-pro-ultra" || modelType == "flux1.1-pro" || modelType == "flux.1-lora" || modelType == "flux.1-composition")
                     {
                         bubbleText = "FLUX";
                     }

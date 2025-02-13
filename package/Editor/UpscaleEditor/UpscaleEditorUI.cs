@@ -285,17 +285,16 @@ namespace Scenario.Editor.UpscaleEditor
             {
                 ApiClient.RestPost("assets", json, response =>
                 {
-                    var jsonResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+                    var jsonResponse = JsonConvert.DeserializeObject<UpscaleRoot>(response.Content);
                     assetId = jsonResponse.asset.id;
 
                     json = GetJsonPayload(imgUrl);
 
                     ApiClient.RestPost("generate/upscale", json, response =>
                     {
-                        var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+                        var upscaleResponse = JsonConvert.DeserializeObject<UpscaleRoot>(response.Content);
                         var jobId = upscaleResponse.job.jobId;
 
-                        // Call Jobs.CheckJobStatus with a callback to handle the completed asset.
                         Scenario.Editor.Jobs.CheckJobStatus(jobId, asset =>
                         {
                             Texture2D texture = new Texture2D(2, 2);
@@ -328,7 +327,7 @@ namespace Scenario.Editor.UpscaleEditor
             {
                 ApiClient.RestPost("generate/upscale", json, response =>
                 {
-                    var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+                    var upscaleResponse = JsonConvert.DeserializeObject<UpscaleRoot>(response.Content);
                     var jobId = upscaleResponse.job.jobId;
 
                     Scenario.Editor.Jobs.CheckJobStatus(jobId, asset =>
@@ -420,7 +419,6 @@ namespace Scenario.Editor.UpscaleEditor
             selectedTexture = null;
             assetId = "";
             imageDataUrl = "";
-            // Reset style and preset selections if needed.
             styleFlag = 0;
             styleSelected = styleChoices[0];
             presetSelected = "Balanced";

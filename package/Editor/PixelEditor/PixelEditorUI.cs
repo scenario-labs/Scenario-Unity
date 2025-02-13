@@ -37,7 +37,7 @@ namespace Scenario.Editor.PixelEditorWindow
         /// <summary>
         /// Default pixel grid size
         /// </summary>
-        private int pixelGridSize = 32; // Changed to int from float
+        private int pixelGridSize = 32;
 
         /// <summary>
         /// Flag to remove noise during pixelation

@@ -12,7 +12,7 @@ namespace Scenario.Editor
             string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
             string fileName = CommonUtils.GetRandomImageFileName();
 
-            UploadTexture(fileName, dataUrl, assetId =>
+            CommonUtils.UploadTexture(fileName, dataUrl, assetId =>
             {
                 if (string.IsNullOrEmpty(assetId))
                 {
@@ -25,46 +25,6 @@ namespace Scenario.Editor
             });
         }
 
-        private static void UploadTexture(string fileName, string dataUrl, Action<string> assetIdCallback)
-        {
-            string url = $"assets";
-            var payload = new
-            {
-                image = dataUrl,
-                name = fileName
-            };
-            string param = JsonConvert.SerializeObject(payload);
-
-            Debug.Log("Uploading texture as asset...");
-
-            ApiClient.RestPost(url, param, response =>
-            {
-                try
-                {
-                    Debug.Log("Asset upload response: " + response.Content);
-                    BgAssetResponse assetResponse = JsonConvert.DeserializeObject<BgAssetResponse>(response.Content);
-                    if (assetResponse != null && assetResponse.asset != null && !string.IsNullOrEmpty(assetResponse.asset.id))
-                    {
-                        Debug.Log("Asset uploaded successfully, assetId: " + assetResponse.asset.id);
-                        assetIdCallback?.Invoke(assetResponse.asset.id);
-                    }
-                    else
-                    {
-                        Debug.LogError("Asset upload response did not contain a valid assetId.");
-                        assetIdCallback?.Invoke(null);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError("Error during asset upload: " + ex.Message);
-                    assetIdCallback?.Invoke(null);
-                }
-            }, errorAction =>
-            {
-                Debug.LogError("API request for asset upload failed: " + errorAction);
-                assetIdCallback?.Invoke(null);
-            });
-        }
 
         private static void RequestBackgroundRemovalJob(string assetId, Action<byte[]> callback)
         {
@@ -166,18 +126,6 @@ namespace Scenario.Editor
             public bool magic { get; set; }
             public bool forceFaceRestoration { get; set; }
             public bool photorealist { get; set; }
-        }
-
-        // Corrected BgAssetResponse DTO to match nested JSON structure
-        public class BgAssetResponse
-        {
-            [JsonProperty("asset")]
-            public BgAssetResponseAsset asset { get; set; }
-
-            public class BgAssetResponseAsset
-            {
-                public string id { get; set; }
-            }
         }
     }
 }

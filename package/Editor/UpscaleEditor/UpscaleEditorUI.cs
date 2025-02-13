@@ -10,9 +10,8 @@ namespace Scenario.Editor.UpscaleEditor
     public class UpscaleEditorUI
     {
         #region Public Fields
-        
+
         public static Texture2D currentImage = null;
-        
         public static ImageDataStorage.ImageData imageData = null;
 
         public UpscaleEditor UpscaleEditor { get { return upscaleEditor; } set { upscaleEditor = value; } }
@@ -29,15 +28,10 @@ namespace Scenario.Editor.UpscaleEditor
         private UpscaleEditor upscaleEditor = null;
 
         private List<Texture2D> upscaledImages = new();
-        
         private Texture2D selectedTexture = null;
-        
         private Vector2 scrollPosition = Vector2.zero;
-    
         private string imageDataUrl = "";
-        
         private string assetId = string.Empty;
-
         private bool returnImage = true;
 
         /// <summary>
@@ -75,9 +69,7 @@ namespace Scenario.Editor.UpscaleEditor
         private int styleFlag = 0;
 
         private int itemsPerRow = 1;
-
         private readonly float padding = 10f;
-        
         private readonly float leftSectionWidth = 150;
 
         #endregion
@@ -116,7 +108,7 @@ namespace Scenario.Editor.UpscaleEditor
                 Rect rect = GUILayoutUtility.GetRect(leftSectionWidth, leftSectionWidth, GUILayout.Width(300), GUILayout.Height(300));
                 GUI.DrawTexture(rect, currentImage, ScaleMode.ScaleToFit);
 
-                EditorStyle.Button("Clear Image", ()=> 
+                EditorStyle.Button("Clear Image", () =>
                 {
                     currentImage = null;
                     assetId = string.Empty;
@@ -131,22 +123,18 @@ namespace Scenario.Editor.UpscaleEditor
             EditorStyle.Label("Scaling Factor:");
             GUILayout.BeginHorizontal();
             {
-            
                 if (GUILayout.Toggle(scalingFactor == 2, "2x", EditorStyles.miniButtonLeft))
                 {
                     scalingFactor = 2;
                 }
-
                 if (GUILayout.Toggle(scalingFactor == 4, "4x", EditorStyles.miniButtonRight))
                 {
                     scalingFactor = 4;
                 }
-
                 if (GUILayout.Toggle(scalingFactor == 8, "8x", EditorStyles.miniButtonRight))
                 {
                     scalingFactor = 8;
                 }
-
                 if (GUILayout.Toggle(scalingFactor == 16, "16x", EditorStyles.miniButtonRight))
                 {
                     scalingFactor = 16;
@@ -159,17 +147,14 @@ namespace Scenario.Editor.UpscaleEditor
             EditorStyle.Label("Preset:");
             GUILayout.BeginHorizontal();
             {
-
                 if (GUILayout.Toggle(presetSelected.Equals("Precise"), "Precise", EditorStyles.miniButtonLeft))
                 {
                     presetSelected = "Precise";
                 }
-
                 if (GUILayout.Toggle(presetSelected.Equals("Balanced"), "Balanced", EditorStyles.miniButtonRight))
                 {
                     presetSelected = "Balanced";
                 }
-
                 if (GUILayout.Toggle(presetSelected.Equals("Creative"), "Creative", EditorStyles.miniButtonRight))
                 {
                     presetSelected = "Creative";
@@ -188,7 +173,7 @@ namespace Scenario.Editor.UpscaleEditor
                 }
                 FetchUpscaledImage(imageDataUrl);
             });
-        
+
             if (selectedTexture != null)
             {
                 EditorStyle.Button("Download", () =>
@@ -212,8 +197,8 @@ namespace Scenario.Editor.UpscaleEditor
                     {
                         DragAndDrop.AcceptDrag();
                         string path = DragAndDrop.paths[0];
-                        if (System.IO.File.Exists(path) && 
-                            (System.IO.Path.GetExtension(path).ToLower() == ".png" || 
+                        if (System.IO.File.Exists(path) &&
+                            (System.IO.Path.GetExtension(path).ToLower() == ".png" ||
                              System.IO.Path.GetExtension(path).ToLower() == ".jpg" ||
                              System.IO.Path.GetExtension(path).ToLower() == ".jpeg"))
                         {
@@ -282,17 +267,16 @@ namespace Scenario.Editor.UpscaleEditor
                 {
                     selectedTexture = texture;
                 }
-
                 GUI.DrawTexture(boxRect, texture, ScaleMode.ScaleToFit);
             }
         }
 
         /// <summary>
-        /// Try to get asset of reference to upscale.
-        /// Then launch the upscale into a job.
-        /// Get back the result to an asset and download the image resulting of the process.
+        /// Prepares the upscale request and launches the job.
+        /// Once the API returns a job ID, it calls Jobs.CheckJobStatus to poll the job,
+        /// and when complete, downloads and displays the upscaled image.
         /// </summary>
-        /// <param name="imgUrl"></param>
+        /// <param name="imgUrl">The image URL or data URL.</param>
         private void FetchUpscaledImage(string imgUrl)
         {
             string json = GetJsonPayload(imgUrl);
@@ -309,61 +293,21 @@ namespace Scenario.Editor.UpscaleEditor
                     ApiClient.RestPost("generate/upscale", json, response =>
                     {
                         var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
-
                         var jobId = upscaleResponse.job.jobId;
 
-                        upscaleEditor.LaunchProgressUpscale(jobId, _answer => {
-                            var assetAnswer = JsonConvert.DeserializeObject<Root>(_answer);
-                            ApiClient.RestGet($"assets/{assetAnswer.job.metadata.assetIds[0]}", response =>
-                            {
-                                var asset = JsonConvert.DeserializeObject<Root>(response.Content);
-                                Texture2D texture = new Texture2D(2, 2);
-                                CommonUtils.FetchTextureFromURL(asset.asset.url, response => {
-                                    texture = response;
-                                    ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
-                                    {
-                                        Id = asset.asset.id,
-                                        Url = asset.asset.url,
-                                    };
-                                    if (upscaledImages[0] == null)
-                                    {
-                                        upscaledImages[0] = texture;
-                                    }
-                                    else
-                                    { 
-                                        upscaledImages.Insert(0, texture);
-                                    }
-                                    imageDataList.Insert(0, newImageData);
-                                });
-                            });
-                        });
-                    });
-                }, errorAction => { 
-                    upscaledImages.RemoveAt(0);
-                });
-            }
-            else
-            {
-                ApiClient.RestPost("generate/upscale", json, response =>
-                {
-                    var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
-
-                    var jobId = upscaleResponse.job.jobId;
-
-                    upscaleEditor.LaunchProgressUpscale(jobId, _answer => {
-                        var assetAnswer = JsonConvert.DeserializeObject<Root>(_answer);
-                        ApiClient.RestGet($"assets/{assetAnswer.job.metadata.assetIds[0]}", response =>
+                        // Call Jobs.CheckJobStatus with a callback to handle the completed asset.
+                        Scenario.Editor.Jobs.CheckJobStatus(jobId, asset =>
                         {
-                            var asset = JsonConvert.DeserializeObject<Root>(response.Content);
                             Texture2D texture = new Texture2D(2, 2);
-                            CommonUtils.FetchTextureFromURL(asset.asset.url, response => {
-                                texture = response;
+                            CommonUtils.FetchTextureFromURL(asset.url, fetchedTexture =>
+                            {
+                                texture = fetchedTexture;
                                 ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
                                 {
-                                    Id = asset.asset.id,
-                                    Url = asset.asset.url,
+                                    Id = asset.id,
+                                    Url = asset.url,
                                 };
-                                if (upscaledImages[0] == null)
+                                if (upscaledImages.Count > 0 && upscaledImages[0] == null)
                                 {
                                     upscaledImages[0] = texture;
                                 }
@@ -375,15 +319,49 @@ namespace Scenario.Editor.UpscaleEditor
                             });
                         });
                     });
+                }, errorAction =>
+                {
+                    upscaledImages.RemoveAt(0);
+                });
+            }
+            else
+            {
+                ApiClient.RestPost("generate/upscale", json, response =>
+                {
+                    var upscaleResponse = JsonConvert.DeserializeObject<Root>(response.Content);
+                    var jobId = upscaleResponse.job.jobId;
+
+                    Scenario.Editor.Jobs.CheckJobStatus(jobId, asset =>
+                    {
+                        Texture2D texture = new Texture2D(2, 2);
+                        CommonUtils.FetchTextureFromURL(asset.url, fetchedTexture =>
+                        {
+                            texture = fetchedTexture;
+                            ImageDataStorage.ImageData newImageData = new ImageDataStorage.ImageData
+                            {
+                                Id = asset.id,
+                                Url = asset.url,
+                            };
+                            if (upscaledImages.Count > 0 && upscaledImages[0] == null)
+                            {
+                                upscaledImages[0] = texture;
+                            }
+                            else
+                            {
+                                upscaledImages.Insert(0, texture);
+                            }
+                            imageDataList.Insert(0, newImageData);
+                        });
+                    });
                 });
             }
         }
 
         /// <summary>
-        /// Prepare the json payload to the upscale.
+        /// Prepares the JSON payload for the upscale request.
         /// </summary>
-        /// <param name="imgUrl"></param>
-        /// <returns></returns>
+        /// <param name="imgUrl">The image URL or data URL.</param>
+        /// <returns>The JSON payload as a string.</returns>
         private string GetJsonPayload(string imgUrl)
         {
             string json;
@@ -393,7 +371,6 @@ namespace Scenario.Editor.UpscaleEditor
                 case "3D Rendered":
                     styleSelected = "3d-rendered";
                     break;
-
                 case "Photorealistic":
                     styleSelected = "photography";
                     break;
@@ -410,7 +387,6 @@ namespace Scenario.Editor.UpscaleEditor
                     returnImage = returnImage,
                     name = ""
                 };
-
                 json = JsonConvert.SerializeObject(payload);
             }
             else
@@ -432,4 +408,3 @@ namespace Scenario.Editor.UpscaleEditor
         }
     }
 }
-

@@ -406,5 +406,24 @@ namespace Scenario.Editor.UpscaleEditor
 
             return json;
         }
+
+        /// <summary>
+        /// Clears all stored UI data so that the next time the window is opened, 
+        /// no stale data is displayed.
+        /// </summary>
+        public void ClearData()
+        {
+            currentImage = null;
+            imageData = null;
+            imageDataList.Clear();
+            upscaledImages.Clear();
+            selectedTexture = null;
+            assetId = "";
+            imageDataUrl = "";
+            // Reset style and preset selections if needed.
+            styleFlag = 0;
+            styleSelected = styleChoices[0];
+            presetSelected = "Balanced";
+        }
     }
 }

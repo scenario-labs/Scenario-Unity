@@ -44,7 +44,8 @@ namespace Scenario.Editor.UpscaleEditor
 
         private void OnDestroy()
         {
-            UpscaleEditorUI.currentImage = null;
+            // Clear all UI state when the window is closed.
+            UpscaleEditorUI.ClearData();
         }
 
         #endregion
@@ -52,9 +53,6 @@ namespace Scenario.Editor.UpscaleEditor
 
     #region API_DTO
 
-    /// <summary>
-    /// Asset result object
-    /// </summary>
     public class Asset
     {
         public string id { get; set; }
@@ -70,9 +68,6 @@ namespace Scenario.Editor.UpscaleEditor
         public List<object> collectionIds { get; set; }
     }
 
-    /// <summary>
-    /// Job result object
-    /// </summary>
     public class Job
     {
         public string jobId { get; set; }
@@ -82,9 +77,6 @@ namespace Scenario.Editor.UpscaleEditor
         public Metadata metadata { get; set; }
     }
 
-    /// <summary>
-    /// Metadata result object
-    /// </summary>
     public class Metadata
     {
         public string type { get; set; }
@@ -99,9 +91,6 @@ namespace Scenario.Editor.UpscaleEditor
         public bool photorealist { get; set; }
     }
 
-    /// <summary>
-    /// Root object to be deserialized from json.
-    /// </summary>
     public class Root
     {
         public Asset asset { get; set; }

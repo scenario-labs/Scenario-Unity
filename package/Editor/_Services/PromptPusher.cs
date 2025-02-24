@@ -9,16 +9,20 @@ namespace Scenario.Editor
 {
     public enum ECreationMode 
     {
-        Text_To_Image,
-        Image_To_Image,
-        ControlNet,
-        Inpaint,
-        IP_Adapter,
-        Reference_Only,
-        Image_To_Image__ControlNet,
-        //Reference_Only__Control_Net,
-        Image_To_Image__IP_Adapter,
-        ControlNet__IP_Adapter
+        Text_To_Image,                // 0
+        Image_To_Image,              // 1
+        Inpaint,                      // 2
+        ControlNet,                   // 3
+        IP_Adapter,                  // 4
+        Reference_Only,              // 5
+        Texture,                      // 6
+        Image_To_Image__ControlNet,    // 7
+        Image_To_Image__IP_Adapter,  // 8
+        ControlNet__Inpaint,          // 9
+        ControlNet__IP_Adapter, // 10 - Explicitly assigned
+        ControlNet__Reference_Only,    // 11
+        ControlNet__Texture,          // 12
+        Reference_Only__Texture       // 13
     }
 
     /// <summary>
@@ -504,7 +508,7 @@ namespace Scenario.Editor
         {
             activeMode = GetActiveMode();
 
-            if (activeMode != null)
+            if (activeMode!= null)
             {
                 string modality = "";
                 string operationType = activeMode.OperationName;
@@ -517,35 +521,27 @@ namespace Scenario.Editor
                 switch (activeMode.EMode)
                 {
                     case ECreationMode.Text_To_Image:
-
                         break;
 
                     case ECreationMode.Image_To_Image:
-
                         if (imageUpload == null)
                         {
                             Debug.LogError("Img2Img Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-
                         break;
 
                     case ECreationMode.ControlNet:
-
                         if (imageUpload == null)
                         {
                             Debug.LogError("ControlNet Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-
                         break;
 
                     case ECreationMode.Inpaint:
-
                         if (imageUpload == null)
                         {
                             Debug.LogError("Inpaint Must have an image uploaded.");
@@ -565,7 +561,6 @@ namespace Scenario.Editor
                         {
                             maskDataUrl = ProcessMask();
                         }
-
                         break;
 
                     case ECreationMode.IP_Adapter:
@@ -574,7 +569,6 @@ namespace Scenario.Editor
                             Debug.LogError("ControlNet Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         break;
 
@@ -584,35 +578,18 @@ namespace Scenario.Editor
                             Debug.LogError("ControlNet Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         break;
 
                     case ECreationMode.Image_To_Image__ControlNet:
-
                         if (imageUpload == null || additionalImageUpload == null)
                         {
                             Debug.LogError("Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
-
                         break;
-
-                    /*case ECreationMode.Reference_Only__Control_Net:
-
-                        if (imageUpload == null || additionalImageUpload == null)
-                        {
-                            Debug.LogError("Must have a image uploaded.");
-                            return false;
-                        }
-
-                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-                        dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
-
-                        break;*/
 
                     case ECreationMode.Image_To_Image__IP_Adapter:
                         if (imageUpload == null || additionalImageUpload == null)
@@ -620,31 +597,67 @@ namespace Scenario.Editor
                             Debug.LogError("Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
                         break;
 
                     case ECreationMode.ControlNet__IP_Adapter:
-
                         if (imageUpload == null || additionalImageUpload == null)
                         {
                             Debug.LogError("Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
+                        break;
 
+                    case ECreationMode.ControlNet__Inpaint:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet__Inpaint must have an image uploaded.");
+                            return false;
+                        }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
+
+                        if (maskImage == null)
+                        {
+                            Debug.LogError("ControlNet__Inpaint must have a mask uploaded.");
+                            return false;
+                        }
+                        maskDataUrl = ProcessMask();
+                        break;
+
+                    case ECreationMode.ControlNet__Reference_Only:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet__Reference_Only must have an image uploaded.");
+                            return false;
+                        }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
+                        break;
+
+                    case ECreationMode.ControlNet__Texture:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet__Texture must have an image uploaded.");
+                            return false;
+                        }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
+                        break;
+
+                    case ECreationMode.Reference_Only__Texture:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("Reference_Only__Texture must have an image uploaded.");
+                            return false;
+                        }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         break;
                 }
 
                 Dictionary<string, string> modalitySettings = PrepareModalitySettings(ref modality, ref operationType);
-
                 modality = PrepareModality(modalitySettings);
-
                 inputData = PrepareInputData(modality, operationType, dataUrl, dataAdditionalUrl, maskDataUrl);
-                //Debug.Log("Input Data: " + inputData);
                 return true;
             }
             else
@@ -784,7 +797,7 @@ namespace Scenario.Editor
 
                 case ECreationMode.Reference_Only:
                     inputData += $@"""image"": ""{dataUrl}"",";
-                    inputData += $@"""styleFidelity"": {additionalModalityValue},"; // Fidelity for Reference_Only
+                    inputData += $@"""styleFidelity"": {additionalModalityValue},";
                     inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
                     inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
                     break;
@@ -815,6 +828,35 @@ namespace Scenario.Editor
                     inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
                     break;
 
+                case ECreationMode.ControlNet__Inpaint:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""mask"": ""{maskDataUrl}"","; 
+                    inputData += $@"""modality"": ""{modality}"","; 
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; 
+                    break;
+
+                case ECreationMode.ControlNet__Reference_Only:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
+                    inputData += $@"""styleFidelity"": {additionalModalityValue},";
+                    inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
+                    inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
+                    break;
+
+                case ECreationMode.ControlNet__Texture:
+                    inputData += $@"""image"": ""{dataUrl}"","; 
+                    inputData += $@"""modality"": ""{modality}"","; 
+                    // Add any specific parameters for ControlNet__Texture here
+                    break;
+
+                case ECreationMode.Reference_Only__Texture:
+                    inputData += $@"""image"": ""{dataUrl}"","; 
+                    inputData += $@"""styleFidelity"": {additionalModalityValue},"; 
+                    inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
+                    inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
+                    // Add any specific parameters for Reference_Only__Texture here
+                    break;
+
                 default:
                     // Handle unknown or unsupported modes
                     break;
@@ -825,13 +867,13 @@ namespace Scenario.Editor
                 inputData += $@"""seed"": {ulong.Parse(seedInput)},";
             }
             inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",
-                ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-                ""numInferenceSteps"": {samplesStep},
-                ""width"": {width},
-                ""height"": {height},
-                ""numSamples"": {numberOfImages}
-                {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
-            }}";
+            ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
+            ""numInferenceSteps"": {samplesStep},
+            ""width"": {width},
+            ""height"": {height},
+            ""numSamples"": {numberOfImages}
+            {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
+        }}";
 
             return inputData;
         }
@@ -841,7 +883,7 @@ namespace Scenario.Editor
         /// </summary>
         private void InitCreationMode()
         {
-            if (creationModeList != null && creationModeList.Count == 0)
+            if (creationModeList!= null && creationModeList.Count == 0)
             {
                 foreach (ECreationMode e in Enum.GetValues(typeof(ECreationMode)))
                 {
@@ -874,14 +916,14 @@ namespace Scenario.Editor
                             mode.OperationName = "reference";
                             break;
 
+                        case ECreationMode.Texture: // New mode
+                            mode.IsControlNet = false;  // Or true, depending on your needs
+                            mode.OperationName = "txt2img-texture"; // Update with the correct operation name
+                            break;
+
                         case ECreationMode.ControlNet:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
-                            break;
-
-                        case ECreationMode.ControlNet__IP_Adapter:
-                            mode.IsControlNet = true;
-                            mode.OperationName = "controlnet_ip_adapter";
                             break;
 
                         case ECreationMode.Image_To_Image__ControlNet:
@@ -894,11 +936,29 @@ namespace Scenario.Editor
                             mode.OperationName = "img2img_ip_adapter";
                             break;
 
-                        /*case ECreationMode.Reference_Only__Control_Net:
-                            mode.IsControlNet = true;
-                            mode.OperationName = "reference_controlnet";
-                            break;*/ //Not Available now
+                        case ECreationMode.ControlNet__Inpaint:
+                            mode.OperationName = "controlnet_inpaint";
+                            break;
 
+                        case ECreationMode.ControlNet__IP_Adapter:
+                            mode.IsControlNet = true;
+                            mode.OperationName = "controlnet_ip_adapter";
+                            break;
+
+                        case ECreationMode.ControlNet__Reference_Only:
+                            mode.IsControlNet = true;
+                            mode.OperationName = "controlnet_reference";
+                            break;
+
+                        case ECreationMode.ControlNet__Texture:
+                            mode.IsControlNet = true;
+                            mode.OperationName = "controlnet_texture";
+                            break;
+
+                        case ECreationMode.Reference_Only__Texture:
+                            mode.IsControlNet = true;  // Or false, depending on your needs
+                            mode.OperationName = "reference_texture"; // Update with the correct operation name
+                            break;
                     }
 
                     creationModeList.Add(mode);

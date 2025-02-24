@@ -9,11 +9,20 @@ namespace Scenario.Editor
     public class InferenceManager
     {
         public static List<string> cancelledInferences = new List<string>();
+        
+        /// <summary>
+        /// Active this boolean when user use a specific workflow
+        /// </summary>
         public static bool SilenceMode = false;
 
         private static string operationName;  // Added declaration
         private static CreationMode activeMode;  // Added declaration
 
+        /// <summary>
+        /// Ask Scenario API to get the cost and also limitation of the inference request.
+        /// </summary>
+        /// <param name="inputData"></param>
+        /// <param name="_onInferenceRequested"></param>
         public static void PostAskInferenceRequest(string inputData, Action<string> _onInferenceRequested)
         {
             activeMode = PromptPusher.Instance.GetActiveMode();  // Assign value
@@ -30,6 +39,11 @@ namespace Scenario.Editor
             });
         }
 
+        /// <summary>
+        /// Ask Scenario API to get the cost and also limitation of the inference request.
+        /// </summary>
+        /// <param name="inputData"></param>
+        /// <param name="_onInferenceRequested"></param>
         public static void PostInferenceRequest(string inputData, int imagesliderIntValue,
             string promptinputText, int samplesliderValue, float widthSliderValue, float heightSliderValue,
             float guidancesliderValue, string _schedulerText, string seedinputText, Action<string> _onInferenceRequested = null)
@@ -75,6 +89,11 @@ namespace Scenario.Editor
             });
         }
 
+        /// <summary>
+        /// Regular expression after api return to extract cost of the result.
+        /// </summary>
+        /// <param name="_data"></param>
+        /// <returns> int cost </returns>
         private static int GetPriceCost(string _data)
         {
             string pattern = @":(\d+)";

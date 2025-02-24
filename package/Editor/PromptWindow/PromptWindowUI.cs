@@ -22,7 +22,11 @@ namespace Scenario.Editor
             "",
             "Structure",
             "Pose",
-            "Depth"
+            "Depth",
+            "Tile",
+            "Blur",
+            "Gray",
+            "low-quality"
         };
 
         /// <summary>

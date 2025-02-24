@@ -17,6 +17,14 @@ namespace Scenario.Editor
 
         public static Texture2D imageMask;
 
+        public readonly string[] dropdownOptionsflux =
+        {
+            "",
+            "Structure",
+            "Pose",
+            "Depth"
+        };
+
         /// <summary>
         /// First dropdown options according to SDXL models
         /// </summary>
@@ -249,21 +257,38 @@ namespace Scenario.Editor
                 CustomStyle.Space();
 
                 List<string> tabLabels = new List<string>();
+                List<ECreationMode> availableModes = new List<ECreationMode>();
 
                 foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
                 {
+                    if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType) &&
+                        DataCache.instance.SelectedModelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase) &&
+                        eMode == ECreationMode.ControlNet__Inpaint)
+                    {
+                        continue;
+                    }
+                    availableModes.Add(eMode);
                     string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
                     tabLabels.Add(eName);
                 }
+
+                int selectedIndex = availableModes.IndexOf(selectedMode);
+                if (selectedIndex < 0)
+                {
+                    selectedIndex = 0;
+                }
+
                 EditorGUILayout.BeginHorizontal(EditorStyles.inspectorFullWidthMargins);
-                { 
+                {
                     GUILayout.Label("Mode: ", GUILayout.Width(labelWidth));
-                    selectedMode = (ECreationMode)EditorGUILayout.Popup(imageControlTab, tabLabels.ToArray(), GUILayout.Width(sliderWidth));
+                    selectedIndex = EditorGUILayout.Popup(selectedIndex, tabLabels.ToArray(), GUILayout.Width(sliderWidth));
+                    selectedMode = availableModes[selectedIndex];
                 }
                 EditorGUILayout.EndHorizontal();
 
                 imageControlTab = (int)selectedMode;
                 promptPusher.ActiveMode(imageControlTab);
+
 
                 ManageDrawMode();
             }

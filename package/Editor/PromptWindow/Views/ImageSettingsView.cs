@@ -37,20 +37,16 @@ namespace Scenario.Editor
                 {
                     switch (DataCache.instance.SelectedModelType)
                     {
-                        case "sd-xl-composition":
-                            DrawSliderSizeValue(allowedSDXLDimensionValues);
-                            break;
-
-                        case "sd-xl-lora":
-                            DrawSliderSizeValue(allowedSDXLDimensionValues);
-                            break;
-
-                        case "sd-xl":
+                        case string modelType when modelType.StartsWith("sd-xl"):
                             DrawSliderSizeValue(allowedSDXLDimensionValues);
                             break;
 
                         case "sd-1_5":
                             DrawSliderSizeValue(allowed1_5DimensionValues);
+                            break;
+
+                        case string modelType when modelType.StartsWith("flux."):
+                            DrawSliderSizeValue(allowedSDXLDimensionValues);
                             break;
 
                         default:
@@ -64,23 +60,28 @@ namespace Scenario.Editor
 
                 CustomStyle.Space();
 
-                EditorGUILayout.BeginHorizontal();
+                if (!DataCache.instance.SelectedModelType.StartsWith("flux."))
                 {
-                    GUILayout.Label("Scheduler: ", GUILayout.Width(labelWidth));
-                    promptPusher.schedulerSelected = EditorGUILayout.Popup(promptPusher.schedulerSelected, promptPusher.SchedulerOptions, GUILayout.Width(sliderWidth));
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("Scheduler: ", GUILayout.Width(labelWidth));
+                        promptPusher.schedulerSelected = EditorGUILayout.Popup(promptPusher.schedulerSelected, promptPusher.SchedulerOptions, GUILayout.Width(sliderWidth));
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    CustomStyle.Space();
                 }
 
-                EditorGUILayout.EndHorizontal();
-
-                CustomStyle.Space();
-        
-                
 
                 imagesliderIntValue = Mathf.RoundToInt(imagesliderValue);
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.Label("Images: " + imagesliderIntValue, GUILayout.Width(labelWidth));
-                    imagesliderValue = GUILayout.HorizontalSlider(imagesliderValue, 1, 16, GUILayout.Width(sliderWidth));
+                    float maxImages = 16f;
+                    // Simplified Flux model check using StartsWith for Max Images
+                    if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+                        maxImages = 8f;
+                    imagesliderValue = GUILayout.HorizontalSlider(imagesliderValue, 1, maxImages, GUILayout.Width(sliderWidth));
                     promptPusher.numberOfImages = Mathf.RoundToInt(imagesliderValue);
                 }
                 EditorGUILayout.EndHorizontal();
@@ -88,7 +89,11 @@ namespace Scenario.Editor
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.ExpandWidth(true), GUILayout.Width(labelWidth));
-                    samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, 150, GUILayout.Width(sliderWidth));
+                    float maxSteps = 150f;
+                    // Simplified Flux model check using StartsWith for Max Steps
+                    if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+                        maxSteps = 28f;
+                    samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, maxSteps, GUILayout.Width(sliderWidth));
                     promptPusher.samplesStep = samplesliderValue;
                 }
                 EditorGUILayout.EndHorizontal();
@@ -96,14 +101,18 @@ namespace Scenario.Editor
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
+                    float maxGuidance = 20f;
+                    // Simplified Flux model check using StartsWith for Max Guidance
+                    if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+                        maxGuidance = 3.5f;
                     guidancesliderValue =
-                        Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, 20f, GUILayout.Width(sliderWidth)) * 10) / 10f;
+                        Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, maxGuidance, GUILayout.Width(sliderWidth)) * 10) / 10f;
                     promptPusher.guidance = guidancesliderValue;
                 }
                 EditorGUILayout.EndHorizontal();
 
                 if (promptWindow.ActiveMode != null)
-                { 
+                {
                     if (promptWindow.ActiveMode.EMode == ECreationMode.Image_To_Image || promptWindow.ActiveMode.IsControlNet)
                     {
                         //Connected to strengh value

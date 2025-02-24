@@ -746,101 +746,95 @@ namespace Scenario.Editor
         /// <param name="maskDataUrl"></param>
         /// <returns></returns>
         private string PrepareInputData(string modality, string operationType, string dataUrl, string _additionalDataUrl, string maskDataUrl)
-{
-    // Ensure modelId is a string
-    bool hideResults = false;
-    string modelId = DataCache.instance.SelectedModelId;
-    if (modelId == null)
-    {
-        modelId = ""; // Or handle the null case appropriately
-    }
-
-    // Start building the JSON payload as a string
-    string inputData = $@"{{
-        ""modelId"": ""{modelId}"",
-        ""hideResults"": {hideResults.ToString().ToLower()},
-        ""type"": ""{operationType}"",
-        ""dryRun"": true,
-        ""prompt"": ""{promptInput}"","; // Include prompt here
-
-    // Add other parameters based on the active mode
-    switch (activeMode.EMode)
-    {
-        case ECreationMode.Image_To_Image:
-            if (activeMode.IsControlNet)
+        {
+            bool hideResults = false;
+            string modelId = DataCache.instance.SelectedModelId;
+            if (modelId == null)
             {
-                inputData += $@"""image"": ""{dataUrl}"",";
-                inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for img2img
+                modelId = "";
             }
-            break;
 
-        case ECreationMode.Inpaint:
-            inputData += $@"""image"": ""{dataUrl}"",";
-            inputData += $@"""mask"": ""{maskDataUrl}"",";
-            inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for inpaint
-            break;
+            string inputData = $@"{{
+                ""modelId"": ""{modelId}"",
+                ""hideResults"": {hideResults.ToString().ToLower()},
+                ""type"": ""{operationType}"",
+                ""dryRun"": true,
+                ""prompt"": ""{promptInput}"","; // Include prompt here
 
-        case ECreationMode.IP_Adapter:
-            inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
-            inputData += $@"""ipAdapterScale"": {additionalModalityValue},"; // Scale for IP_Adapter
-            break;
+            switch (activeMode.EMode)
+            {
+                case ECreationMode.Image_To_Image:
+                    if (activeMode.IsControlNet)
+                    {
+                        inputData += $@"""image"": ""{dataUrl}"",";
+                        inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
+                    }
+                    break;
 
-        case ECreationMode.Reference_Only:
-            inputData += $@"""image"": ""{dataUrl}"",";
-            inputData += $@"""styleFidelity"": {additionalModalityValue},"; // Fidelity for Reference_Only
-            inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
-            inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
-            break;
+                case ECreationMode.Inpaint:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""mask"": ""{maskDataUrl}"",";
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
+                    break;
 
-        case ECreationMode.ControlNet:
-            inputData += $@"""image"": ""{dataUrl}"",";
-            inputData += $@"""modality"": ""{modality}"",";
-            break;
+                case ECreationMode.IP_Adapter:
+                    inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
+                    inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
+                    break;
 
-        case ECreationMode.ControlNet__IP_Adapter:
-            inputData += $@"""image"": ""{dataUrl}"",";
-            inputData += $@"""modality"": ""{modality}"",";
-            inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
-            inputData += $@"""ipAdapterScale"": {additionalModalityValue},"; // Scale for IP_Adapter
-            break;
+                case ECreationMode.Reference_Only:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""styleFidelity"": {additionalModalityValue},"; // Fidelity for Reference_Only
+                    inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
+                    inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
+                    break;
 
-        case ECreationMode.Image_To_Image__ControlNet:
-            inputData += $@"""image"": ""{dataUrl}"",";
-            inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for img2img
-            inputData += $@"""controlImage"": ""{_additionalDataUrl}"",";
-            inputData += $@"""modality"": ""{modality}"",";
-            break;
+                case ECreationMode.ControlNet:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
+                    break;
 
-        case ECreationMode.Image_To_Image__IP_Adapter:
-            inputData += $@"""image"": ""{dataUrl}"",";
-            inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for img2img
-            inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
-            inputData += $@"""ipAdapterScale"": {additionalModalityValue},"; // Scale for IP_Adapter
-            break;
+                case ECreationMode.ControlNet__IP_Adapter:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
+                    inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
+                    inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
+                    break;
 
-        // Add a case for ECreationMode.Reference_Only__Control_Net if needed
+                case ECreationMode.Image_To_Image__ControlNet:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
+                    inputData += $@"""controlImage"": ""{_additionalDataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
+                    break;
 
-        default:
-            // Handle unknown or unsupported modes
-            break;
-    }
+                case ECreationMode.Image_To_Image__IP_Adapter:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
+                    inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
+                    inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
+                    break;
 
-    // Add common parameters
-    if (seedInput!= "-1")
-    {
-        inputData += $@"""seed"": {ulong.Parse(seedInput)},";
-    }
-    inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",
-        ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-        ""numInferenceSteps"": {samplesStep},
-        ""width"": {width},
-        ""height"": {height},
-        ""numSamples"": {numberOfImages}
-        {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
-    }}";
+                default:
+                    // Handle unknown or unsupported modes
+                    break;
+            }
 
-    return inputData;
-}
+            if (seedInput!= "-1")
+            {
+                inputData += $@"""seed"": {ulong.Parse(seedInput)},";
+            }
+            inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",
+                ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
+                ""numInferenceSteps"": {samplesStep},
+                ""width"": {width},
+                ""height"": {height},
+                ""numSamples"": {numberOfImages}
+                {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
+            }}";
+
+            return inputData;
+        }
 
         /// <summary>
         /// Create all mode available to generate image

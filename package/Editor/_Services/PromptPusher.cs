@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -747,182 +748,104 @@ namespace Scenario.Editor
         /// <returns></returns>
         private string PrepareInputData(string modality, string operationType, string dataUrl, string _additionalDataUrl, string maskDataUrl)
         {
-            bool hideResults = false;
-            string type = operationType;
-            string mask = $"\"{maskDataUrl}\"";
-            string prompt = promptInput;
-            string seedField = "";
-            string image = $"\"{dataUrl}\"";
-            string controlImage = $"\"{_additionalDataUrl}\""; // controlImageId || ipAdapterImage and ipAdapterImageId
-
-            if (seedInput != "-1")
+            // Ensure modelId is a string
+            string modelId = DataCache.instance.SelectedModelId;
+            if (modelId == null)
             {
-                ulong seed = ulong.Parse(seedInput);
-                seedField = $@"""seed"": {seed},";
+                modelId = ""; // Or handle the null case appropriately
             }
 
-            string negativePrompt = promptNegativeInput;
-            float strength = Mathf.Clamp((float)Math.Round((100 - influenceOption) * 0.01f, 2), 0.01f, 1f); //strength is 100-influence (and between 0.01 & 1) // not used and usefull
-            float guidance = this.guidance;
-            int width = this.width;
-            int height = this.height;
-            int numInferenceSteps = samplesStep;
-            int numSamples = numberOfImages;
-            string scheduler = SchedulerOptions[schedulerSelected];
-            float addModality = additionalModalityValue;
+            // Create a new JsonObject
+            JObject jsonObject = new JObject();
 
-            string inputData = $@"{{
-                ""parameters"": {{
-                    ""hideResults"": {hideResults.ToString().ToLower()},
-                    ""type"": ""{type}"",
-                    ""dryRun"": true,";
+            // Add parameters to the jsonObject directly
+            jsonObject.Add("modelId", modelId);
+            jsonObject.Add("hideResults", false);
+            jsonObject.Add("type", operationType);
+            jsonObject.Add("dryRun", true);
+            jsonObject.Add("prompt", promptInput);
 
+            // Add other parameters based on the active mode
             switch (activeMode.EMode)
             {
                 case ECreationMode.Text_To_Image:
-
+                    // No additional parameters needed for Text_To_Image
                     break;
 
                 case ECreationMode.Image_To_Image:
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for img2img
                     break;
 
                 case ECreationMode.Inpaint:
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""mask"": ""{maskDataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""mask"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("mask", maskDataUrl);
+                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for inpaint
                     break;
 
-                case ECreationMode.IP_Adapter: // image ref ipAdapterScale
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
-                        inputData += $@"""ipAdapterScale"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""ipAdapterImage"": "",";
-                        inputData += $@"""ipAdapterScale"": "",";
-                    }
+                case ECreationMode.IP_Adapter:
+                    jsonObject.Add("ipAdapterImage", dataUrl);
+                    jsonObject.Add("ipAdapterScale", additionalModalityValue); // Scale for IP_Adapter
                     break;
 
-                case ECreationMode.Reference_Only: //image ref styleFidelity
-                    if (activeMode.IsControlNet)
-                    {
-                        Debug.Log(addModality.ToString("F2", CultureInfo.InvariantCulture));
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""styleFidelity"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
-                        inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""styleFidelity"": "",";
-                        inputData += $@"""referenceAdain"": """",";
-                        inputData += $@"""referenceAttn"": """",";
-                    }
+                case ECreationMode.Reference_Only:
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("styleFidelity", additionalModalityValue); // Fidelity for Reference_Only
+                    jsonObject.Add("referenceAdain", activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower());
+                    jsonObject.Add("referenceAttn", activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower());
                     break;
 
                 case ECreationMode.ControlNet:
-                    if (activeMode.IsControlNet && activeMode.UseControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""modality"": ""{modality}"",";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""modality"": "",";
-                    }
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("modality", modality);
                     break;
 
-                case ECreationMode.ControlNet__IP_Adapter: // double ref image and modality on second
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""modality"": ""{modality}"",";
-                        inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
-                        inputData += $@"""ipAdapterScale"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": """;
-                        inputData += $@"""modality"": """;
-                        inputData += $@"""ipAdapterImage"": "",";
-                        inputData += $@"""ipAdapterScale"": "",";
-                    }
+                case ECreationMode.ControlNet__IP_Adapter:
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("modality", modality);
+                    jsonObject.Add("ipAdapterImage", _additionalDataUrl);
+                    jsonObject.Add("ipAdapterScale", additionalModalityValue); // Scale for IP_Adapter
                     break;
 
-                case ECreationMode.Image_To_Image__ControlNet: // double ref image and modality on second
-                    if (activeMode.IsControlNet && activeMode.UseControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""controlImage"": ""{_additionalDataUrl}"",";
-                        inputData += $@"""modality"": ""{modality}"",";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""controlImage"": "",";
-                        inputData += $@"""modality"": "",";
-                    }
+                case ECreationMode.Image_To_Image__ControlNet:
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for img2img
+                    jsonObject.Add("controlImage", _additionalDataUrl);
+                    jsonObject.Add("modality", modality);
                     break;
 
-                case ECreationMode.Image_To_Image__IP_Adapter: // double ref image and influence on second ipAdapterScale: 0.75
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
-                        inputData += $@"""ipAdapterScale"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""ipAdapterImage"": "",";
-                        inputData += $@"""ipAdapterScale"": "",";
-                    }
+                case ECreationMode.Image_To_Image__IP_Adapter:
+                    jsonObject.Add("image", dataUrl);
+                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for img2img
+                    jsonObject.Add("ipAdapterImage", _additionalDataUrl);
+                    jsonObject.Add("ipAdapterScale", additionalModalityValue); // Scale for IP_Adapter
                     break;
 
-                    /*case ECreationMode.Reference_Only__Control_Net:
-                        mode.IsControlNet = true;
-                        mode.OperationName = "reference_controlnet";
-                        break;*/ //Not Available now
+                // Add a case for ECreationMode.Reference_Only__Control_Net if needed
+
+                default:
+                    // Handle unknown or unsupported modes
+                    break;
             }
 
-            inputData += $@"""prompt"": ""{prompt}"",
-                    {seedField}
-                    {(string.IsNullOrEmpty(negativePrompt) ? "" : $@"""negativePrompt"": ""{negativePrompt}"",")}
-                    ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-                    ""numInferenceSteps"": {numInferenceSteps},
-                    ""width"": {width},
-                    ""height"": {height},
-                    ""numSamples"": {numSamples}
-                    {(scheduler != "Default" ? $@",""scheduler"": ""{scheduler}""" : "")}
-                }}
-            }}";
+            // Add common parameters
+            if (seedInput!= "-1")
+            {
+                jsonObject.Add("seed", ulong.Parse(seedInput));
+            }
+            jsonObject.Add("negativePrompt", promptNegativeInput);
+            jsonObject.Add("guidance", guidance);
+            jsonObject.Add("numInferenceSteps", samplesStep);
+            jsonObject.Add("width", width);
+            jsonObject.Add("height", height);
+            jsonObject.Add("numSamples", numberOfImages);
+            if (schedulerSelected > 0)
+            {
+                jsonObject.Add("scheduler", SchedulerOptions[schedulerSelected]);
+            }
+
+            // Convert the JsonObject to a JSON string
+            string inputData = jsonObject.ToString();
 
             return inputData;
         }

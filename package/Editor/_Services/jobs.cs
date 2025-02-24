@@ -31,7 +31,7 @@ namespace Scenario.Editor
                 {
                     var progressResponse = JsonConvert.DeserializeObject<JobRoot>(response.Content);
 
-                    if (progressResponse != null && progressResponse.job != null && !string.IsNullOrEmpty(progressResponse.job.status))
+                    if (progressResponse!= null && progressResponse.job!= null &&!string.IsNullOrEmpty(progressResponse.job.status))
                     {
                         switch (progressResponse.job.status)
                         {
@@ -44,15 +44,18 @@ namespace Scenario.Editor
                             case "success":
                                 Debug.Log("Job completed successfully!");
                                 jobInProgress = false;
-                                // If metadata contains asset IDs, fetch the asset using the first one.
-                                if (progressResponse.job.metadata != null && 
-                                    progressResponse.job.metadata.assetIds != null && 
+
+                                // Fetch asset details for all asset IDs
+                                if (progressResponse.job.metadata!= null &&
+                                    progressResponse.job.metadata.assetIds!= null &&
                                     progressResponse.job.metadata.assetIds.Count > 0)
                                 {
-                                    string assetId = progressResponse.job.metadata.assetIds[0].Trim();
-                                    GetAssetData(assetId, onJobCompleted);
+                                    foreach (string assetId in progressResponse.job.metadata.assetIds)
+                                    {
+                                        GetAssetData(assetId.Trim(), onJobCompleted);
+                                    }
                                 }
-                                else if (progressResponse.asset != null)
+                                else if (progressResponse.asset!= null)
                                 {
                                     onJobCompleted?.Invoke(progressResponse.asset);
                                 }

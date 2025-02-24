@@ -67,6 +67,11 @@ namespace Scenario.Editor
         /// </summary>
         public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824 };
 
+        /// <summary>
+        /// Reference all dimension values available for SDXL models
+        /// </summary>
+        public readonly int[] allowedFLUXPRODimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824 };
+
         public string selectedPreset = "";
 
         /// <summary>
@@ -266,15 +271,44 @@ namespace Scenario.Editor
                 foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
                 {
                     if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType) &&
-                        DataCache.instance.SelectedModelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase) &&
-                        eMode == ECreationMode.ControlNet__Inpaint)
+                        DataCache.instance.SelectedModelType.StartsWith("flux.", StringComparison.OrdinalIgnoreCase))
                     {
-                        continue;
+                        if (DataCache.instance.SelectedModelType.Equals("flux.1.1-pro", StringComparison.OrdinalIgnoreCase) ||
+                            DataCache.instance.SelectedModelType.Equals("flux.1-pro", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (eMode == ECreationMode.Text_To_Image)
+                            {
+                                availableModes.Add(eMode);
+                                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                                tabLabels.Add(eName);
+                            }
+                            continue;
+                        }
+                        else if (DataCache.instance.SelectedModelType.Contains("flux.1.1-pro-ultra", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (eMode == ECreationMode.Text_To_Image || eMode == ECreationMode.IP_Adapter)
+                            {
+                                availableModes.Add(eMode);
+                                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                                tabLabels.Add(eName);
+                            }
+                            continue;
+                        }
+                        else
+                        {
+                            availableModes.Add(eMode);
+                            string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                            tabLabels.Add(eName);
+                        }
                     }
-                    availableModes.Add(eMode);
-                    string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
-                    tabLabels.Add(eName);
+                    else
+                    {
+                        availableModes.Add(eMode);
+                        string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                        tabLabels.Add(eName);
+                    }
                 }
+
 
                 int selectedIndex = availableModes.IndexOf(selectedMode);
                 if (selectedIndex < 0)

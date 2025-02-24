@@ -861,7 +861,7 @@ namespace Scenario.Editor
 
                         case ECreationMode.Texture: // New mode
                             mode.IsControlNet = false;  // Or true, depending on your needs
-                            mode.OperationName = "txt2img-texture"; // Update with the correct operation name
+                            mode.OperationName = "txt2img_texture"; // Update with the correct operation name
                             break;
 
                         case ECreationMode.ControlNet:

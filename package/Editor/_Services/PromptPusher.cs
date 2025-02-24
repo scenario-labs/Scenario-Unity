@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -747,108 +746,101 @@ namespace Scenario.Editor
         /// <param name="maskDataUrl"></param>
         /// <returns></returns>
         private string PrepareInputData(string modality, string operationType, string dataUrl, string _additionalDataUrl, string maskDataUrl)
-        {
-            // Ensure modelId is a string
-            string modelId = DataCache.instance.SelectedModelId;
-            if (modelId == null)
+{
+    // Ensure modelId is a string
+    bool hideResults = false;
+    string modelId = DataCache.instance.SelectedModelId;
+    if (modelId == null)
+    {
+        modelId = ""; // Or handle the null case appropriately
+    }
+
+    // Start building the JSON payload as a string
+    string inputData = $@"{{
+        ""modelId"": ""{modelId}"",
+        ""hideResults"": {hideResults.ToString().ToLower()},
+        ""type"": ""{operationType}"",
+        ""dryRun"": true,
+        ""prompt"": ""{promptInput}"","; // Include prompt here
+
+    // Add other parameters based on the active mode
+    switch (activeMode.EMode)
+    {
+        case ECreationMode.Image_To_Image:
+            if (activeMode.IsControlNet)
             {
-                modelId = ""; // Or handle the null case appropriately
+                inputData += $@"""image"": ""{dataUrl}"",";
+                inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for img2img
             }
+            break;
 
-            // Create a new JsonObject
-            JObject jsonObject = new JObject();
+        case ECreationMode.Inpaint:
+            inputData += $@"""image"": ""{dataUrl}"",";
+            inputData += $@"""mask"": ""{maskDataUrl}"",";
+            inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for inpaint
+            break;
 
-            // Add parameters to the jsonObject directly
-            jsonObject.Add("modelId", modelId);
-            jsonObject.Add("hideResults", false);
-            jsonObject.Add("type", operationType);
-            jsonObject.Add("dryRun", true);
-            jsonObject.Add("prompt", promptInput);
+        case ECreationMode.IP_Adapter:
+            inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
+            inputData += $@"""ipAdapterScale"": {additionalModalityValue},"; // Scale for IP_Adapter
+            break;
 
-            // Add other parameters based on the active mode
-            switch (activeMode.EMode)
-            {
-                case ECreationMode.Text_To_Image:
-                    // No additional parameters needed for Text_To_Image
-                    break;
+        case ECreationMode.Reference_Only:
+            inputData += $@"""image"": ""{dataUrl}"",";
+            inputData += $@"""styleFidelity"": {additionalModalityValue},"; // Fidelity for Reference_Only
+            inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
+            inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
+            break;
 
-                case ECreationMode.Image_To_Image:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for img2img
-                    break;
+        case ECreationMode.ControlNet:
+            inputData += $@"""image"": ""{dataUrl}"",";
+            inputData += $@"""modality"": ""{modality}"",";
+            break;
 
-                case ECreationMode.Inpaint:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("mask", maskDataUrl);
-                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for inpaint
-                    break;
+        case ECreationMode.ControlNet__IP_Adapter:
+            inputData += $@"""image"": ""{dataUrl}"",";
+            inputData += $@"""modality"": ""{modality}"",";
+            inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
+            inputData += $@"""ipAdapterScale"": {additionalModalityValue},"; // Scale for IP_Adapter
+            break;
 
-                case ECreationMode.IP_Adapter:
-                    jsonObject.Add("ipAdapterImage", dataUrl);
-                    jsonObject.Add("ipAdapterScale", additionalModalityValue); // Scale for IP_Adapter
-                    break;
+        case ECreationMode.Image_To_Image__ControlNet:
+            inputData += $@"""image"": ""{dataUrl}"",";
+            inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for img2img
+            inputData += $@"""controlImage"": ""{_additionalDataUrl}"",";
+            inputData += $@"""modality"": ""{modality}"",";
+            break;
 
-                case ECreationMode.Reference_Only:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("styleFidelity", additionalModalityValue); // Fidelity for Reference_Only
-                    jsonObject.Add("referenceAdain", activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower());
-                    jsonObject.Add("referenceAttn", activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower());
-                    break;
+        case ECreationMode.Image_To_Image__IP_Adapter:
+            inputData += $@"""image"": ""{dataUrl}"",";
+            inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; // Strength for img2img
+            inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
+            inputData += $@"""ipAdapterScale"": {additionalModalityValue},"; // Scale for IP_Adapter
+            break;
 
-                case ECreationMode.ControlNet:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("modality", modality);
-                    break;
+        // Add a case for ECreationMode.Reference_Only__Control_Net if needed
 
-                case ECreationMode.ControlNet__IP_Adapter:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("modality", modality);
-                    jsonObject.Add("ipAdapterImage", _additionalDataUrl);
-                    jsonObject.Add("ipAdapterScale", additionalModalityValue); // Scale for IP_Adapter
-                    break;
+        default:
+            // Handle unknown or unsupported modes
+            break;
+    }
 
-                case ECreationMode.Image_To_Image__ControlNet:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for img2img
-                    jsonObject.Add("controlImage", _additionalDataUrl);
-                    jsonObject.Add("modality", modality);
-                    break;
+    // Add common parameters
+    if (seedInput!= "-1")
+    {
+        inputData += $@"""seed"": {ulong.Parse(seedInput)},";
+    }
+    inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",
+        ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
+        ""numInferenceSteps"": {samplesStep},
+        ""width"": {width},
+        ""height"": {height},
+        ""numSamples"": {numberOfImages}
+        {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
+    }}";
 
-                case ECreationMode.Image_To_Image__IP_Adapter:
-                    jsonObject.Add("image", dataUrl);
-                    jsonObject.Add("strength", (100 - influenceOption) * 0.01f); // Strength for img2img
-                    jsonObject.Add("ipAdapterImage", _additionalDataUrl);
-                    jsonObject.Add("ipAdapterScale", additionalModalityValue); // Scale for IP_Adapter
-                    break;
-
-                // Add a case for ECreationMode.Reference_Only__Control_Net if needed
-
-                default:
-                    // Handle unknown or unsupported modes
-                    break;
-            }
-
-            // Add common parameters
-            if (seedInput!= "-1")
-            {
-                jsonObject.Add("seed", ulong.Parse(seedInput));
-            }
-            jsonObject.Add("negativePrompt", promptNegativeInput);
-            jsonObject.Add("guidance", guidance);
-            jsonObject.Add("numInferenceSteps", samplesStep);
-            jsonObject.Add("width", width);
-            jsonObject.Add("height", height);
-            jsonObject.Add("numSamples", numberOfImages);
-            if (schedulerSelected > 0)
-            {
-                jsonObject.Add("scheduler", SchedulerOptions[schedulerSelected]);
-            }
-
-            // Convert the JsonObject to a JSON string
-            string inputData = jsonObject.ToString();
-
-            return inputData;
-        }
+    return inputData;
+}
 
         /// <summary>
         /// Create all mode available to generate image

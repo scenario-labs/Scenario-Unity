@@ -70,6 +70,25 @@ namespace Scenario.Editor
                     EditorGUILayout.EndHorizontal();
 
                     CustomStyle.Space();
+
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.ExpandWidth(true), GUILayout.Width(labelWidth));
+                        float maxSteps = 150f;
+                        samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, maxSteps, GUILayout.Width(sliderWidth));
+                        promptPusher.samplesStep = samplesliderValue;
+                    }
+                    EditorGUILayout.EndHorizontal();
+
+                    EditorGUILayout.BeginHorizontal();
+                    {
+                        GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
+                        float maxGuidance = 20f;
+                        guidancesliderValue =
+                            Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, maxGuidance, GUILayout.Width(sliderWidth)) * 10) / 10f;
+                        promptPusher.guidance = guidancesliderValue;
+                    }
+                    EditorGUILayout.EndHorizontal();
                 }
 
 
@@ -78,19 +97,28 @@ namespace Scenario.Editor
                 {
                     GUILayout.Label("Images: " + imagesliderIntValue, GUILayout.Width(labelWidth));
                     float maxImages = 16f;
-                    // Simplified Flux model check using StartsWith for Max Images
-                    if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+                    if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra" || DataCache.instance.SelectedModelType == "flux.1-pro")
+                    {
+                        maxImages = 1f;
+                    }
+                    else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+                    {
                         maxImages = 8f;
+                    }
+                    else
+                    {
+                        maxImages = 16f;
+                    }
                     imagesliderValue = GUILayout.HorizontalSlider(imagesliderValue, 1, maxImages, GUILayout.Width(sliderWidth));
                     promptPusher.numberOfImages = Mathf.RoundToInt(imagesliderValue);
                 }
                 EditorGUILayout.EndHorizontal();
 
+
                 EditorGUILayout.BeginHorizontal();
                 {
                     GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.ExpandWidth(true), GUILayout.Width(labelWidth));
                     float maxSteps = 150f;
-                    // Simplified Flux model check using StartsWith for Max Steps
                     if (DataCache.instance.SelectedModelType.StartsWith("flux."))
                         maxSteps = 28f;
                     samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, maxSteps, GUILayout.Width(sliderWidth));
@@ -102,7 +130,6 @@ namespace Scenario.Editor
                 {
                     GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
                     float maxGuidance = 20f;
-                    // Simplified Flux model check using StartsWith for Max Guidance
                     if (DataCache.instance.SelectedModelType.StartsWith("flux."))
                         maxGuidance = 3.5f;
                     guidancesliderValue =
@@ -115,7 +142,6 @@ namespace Scenario.Editor
                 {
                     if (promptWindow.ActiveMode.EMode == ECreationMode.Image_To_Image || promptWindow.ActiveMode.IsControlNet)
                     {
-                        //Connected to strengh value
                         EditorGUILayout.BeginHorizontal();
                         {
                             GUILayout.Label(new GUIContent("Influence: " + influenceSliderValue.ToString("F0"),"Higher values amplify the weight of the reference image, affecting the final output."), GUILayout.Width(labelWidth));
@@ -155,10 +181,9 @@ namespace Scenario.Editor
         private void DrawSliderSizeValue(int[] _allowedValues)
         {
             CustomStyle.Space(10);
-            
+
             EditorGUILayout.BeginHorizontal();
             {
-                //CustomStyle.Label("Size: ", width: 45, height: 20);
                 GUILayout.Label("Size: " + promptPusher.width + " x " + promptPusher.height, GUILayout.Width(labelWidth));
                 sizeSliderValue = GUILayout.HorizontalSlider(sizeSliderValue, 1, (_allowedValues.Length *2)-1, GUILayout.Width(sliderWidth)) ;
                 sizeSliderValue = Mathf.Round(sizeSliderValue);

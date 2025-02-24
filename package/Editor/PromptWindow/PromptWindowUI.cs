@@ -389,40 +389,6 @@ namespace Scenario.Editor
                     DrawAdditionalModality("IP Adapter Scale");
                     break;
 
-                case ECreationMode.Reference_Only:
-                    dropImageView.DrawHandleImage();
-                    CustomStyle.Space();
-                    DrawAdditionalModality("Influence");
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
-                        {
-                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "Reference Attn");
-                            activeMode.AdditionalSettings["Reference Attn"] = refAtt;
-                        }
-                        else
-                        {
-                            bool refAtt = GUILayout.Toggle(true, "Reference Attn");
-                            activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
-                        {
-                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "Reference AdaIN");
-                            activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
-                        }
-                        else
-                        {
-                            bool refAd = GUILayout.Toggle(false, "Reference AdaIN");
-                            activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    break;
-
                 case ECreationMode.Texture:
                     // No specific UI for Texture mode, similar to Text_To_Image
                     break;
@@ -464,44 +430,6 @@ namespace Scenario.Editor
                     DrawAdditionalModality("IP Adapter Scale");
                     break;
 
-                case ECreationMode.ControlNet__Reference_Only:
-                    dropImageView.DrawHandleImage("(ControlNet)");
-                    CustomStyle.Space();
-                    RenderControlNetFoldout();
-                    CustomStyle.Space();
-                    dropAdditionalImageView.DrawHandleImage("(Reference)");
-                    CustomStyle.Space();
-                    DrawAdditionalModality("Influence");
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
-                        {
-                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "Reference Attn");
-                            activeMode.AdditionalSettings["Reference Attn"] = refAtt;
-                        }
-                        else
-                        {
-                            bool refAtt = GUILayout.Toggle(true, "Reference Attn");
-                            activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
-                        {
-                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "Reference AdaIN");
-                            activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
-                        }
-                        else
-                        {
-                            bool refAd = GUILayout.Toggle(false, "Reference AdaIN");
-                            activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    break;
-
                 case ECreationMode.ControlNet__Texture:
                     dropImageView.DrawHandleImage();
                     CustomStyle.Space();
@@ -510,39 +438,6 @@ namespace Scenario.Editor
                     // Implement UI for ControlNet__Texture
                     break;
 
-                case ECreationMode.Reference_Only__Texture:
-                    dropImageView.DrawHandleImage();
-                    CustomStyle.Space();
-                    DrawAdditionalModality("Influence");
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
-                        {
-                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "Reference Attn");
-                            activeMode.AdditionalSettings["Reference Attn"] = refAtt;
-                        }
-                        else
-                        {
-                            bool refAtt = GUILayout.Toggle(true, "Reference Attn");
-                            activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
-                        {
-                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "Reference AdaIN");
-                            activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
-                        }
-                        else
-                        {
-                            bool refAd = GUILayout.Toggle(false, "Reference AdaIN");
-                            activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-                    break;
             }
 
             promptPusher.UpdateActiveMode(activeMode);

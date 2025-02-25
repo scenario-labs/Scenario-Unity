@@ -111,17 +111,23 @@ namespace Scenario.Editor
                 promptPusher.numberOfImages = Mathf.RoundToInt(imagesliderValue);
                 EditorGUILayout.EndHorizontal();
 
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
-                samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, maxSteps, GUILayout.Width(sliderWidth));
-                promptPusher.samplesStep = samplesliderValue;
-                EditorGUILayout.EndHorizontal();
+                if (maxSteps > 0)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
+                    samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, maxSteps, GUILayout.Width(sliderWidth));
+                    promptPusher.samplesStep = samplesliderValue;
+                    EditorGUILayout.EndHorizontal();
+                }
 
-                EditorGUILayout.BeginHorizontal();
-                GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
-                guidancesliderValue = Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, maxGuidance, GUILayout.Width(sliderWidth)) * 10) / 10f;
-                promptPusher.guidance = guidancesliderValue;
-                EditorGUILayout.EndHorizontal();
+                if (maxGuidance > 0)
+                {
+                    EditorGUILayout.BeginHorizontal();
+                    GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
+                    guidancesliderValue = Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, maxGuidance, GUILayout.Width(sliderWidth)) * 10) / 10f;
+                    promptPusher.guidance = guidancesliderValue;
+                    EditorGUILayout.EndHorizontal();
+                }
 
                 if (promptWindow.ActiveMode != null)
                 {

@@ -52,10 +52,12 @@ namespace Scenario.Editor
                 else if (DataCache.instance.SelectedModelType == "flux.1-pro")
                 {
                     maxImages = 1f;
+                    maxSteps = 50f;
                 }
                 else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
                 {
                     maxImages = 8f;
+                    maxSteps = 50f;
                 }
                 else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
                 {

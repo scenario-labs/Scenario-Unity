@@ -273,8 +273,23 @@ namespace Scenario.Editor
                     if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType) &&
                         DataCache.instance.SelectedModelType.StartsWith("flux.", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (DataCache.instance.SelectedModelType.Equals("flux.1.1-pro", StringComparison.OrdinalIgnoreCase) ||
-                            DataCache.instance.SelectedModelType.Equals("flux.1-pro", StringComparison.OrdinalIgnoreCase))
+                        if (DataCache.instance.SelectedModelId == "flux.1-schnell") 
+                        {
+                            if (eMode == ECreationMode.Text_To_Image || 
+                                eMode == ECreationMode.Image_To_Image ||
+                                eMode == ECreationMode.ControlNet ||
+                                eMode == ECreationMode.IP_Adapter ||
+                                eMode == ECreationMode.Image_To_Image__ControlNet ||
+                                eMode == ECreationMode.Image_To_Image__IP_Adapter ||
+                                eMode == ECreationMode.ControlNet__IP_Adapter)
+                            {
+                                availableModes.Add(eMode);
+                                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                                tabLabels.Add(eName);
+                            }
+                        }
+                        else if (DataCache.instance.SelectedModelType.Equals("flux.1.1-pro", StringComparison.OrdinalIgnoreCase) ||
+                                DataCache.instance.SelectedModelType.Equals("flux.1-pro", StringComparison.OrdinalIgnoreCase))
                         {
                             if (eMode == ECreationMode.Text_To_Image)
                             {
@@ -282,7 +297,7 @@ namespace Scenario.Editor
                                 string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
                                 tabLabels.Add(eName);
                             }
-                            continue;
+                            continue; 
                         }
                         else if (DataCache.instance.SelectedModelType.Contains("flux.1.1-pro-ultra", StringComparison.OrdinalIgnoreCase))
                         {
@@ -292,7 +307,7 @@ namespace Scenario.Editor
                                 string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
                                 tabLabels.Add(eName);
                             }
-                            continue;
+                            continue; 
                         }
                         else
                         {
@@ -371,6 +386,40 @@ namespace Scenario.Editor
         private static void DrawBackground(Rect position)
         {
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
+        }
+
+        private void UpdateSliderValuesForModel()
+        {
+            if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 0;
+                guidancesliderValue = 0;
+            }
+            else if (DataCache.instance.SelectedModelType == "flux.1.1-pro")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 0;
+                guidancesliderValue = 0;
+            }
+            else if (DataCache.instance.SelectedModelType == "flux.1-pro")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 15;
+                guidancesliderValue = 1.5f;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 14;
+                guidancesliderValue = 1.75f;
+            }
+            else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 1;
+                guidancesliderValue = 3.5f;
+            }
         }
 
         /// <summary>

@@ -405,19 +405,19 @@ namespace Scenario.Editor
             else if (DataCache.instance.SelectedModelType == "flux.1-pro")
             {
                 imagesliderValue = 1;
-                samplesliderValue = 15;
-                guidancesliderValue = 1.5f;
+                samplesliderValue = 25;
+                guidancesliderValue = 3;
             }
             else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
             {
                 imagesliderValue = 4;
-                samplesliderValue = 14;
-                guidancesliderValue = 1.75f;
+                samplesliderValue = 28;
+                guidancesliderValue = 3.5f;
             }
             else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
             {
                 imagesliderValue = 1;
-                samplesliderValue = 1;
+                samplesliderValue = 4;
                 guidancesliderValue = 3.5f;
             }
         }

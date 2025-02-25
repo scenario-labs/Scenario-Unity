@@ -57,10 +57,10 @@ namespace Scenario.Editor
                 {
                     maxImages = 8f;
                 }
-                else if (DataCache.instance.SelectedModelId == "flux.1-schnell") // New condition for "flux.1-schnell"
+                else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
                 {
-                    maxImages = 4f; // Images from 1 to 4
-                    maxSteps = 10f;  // Sampling steps from 1 to 1
+                    maxImages = 4f;
+                    maxSteps = 10f;
                 }
 
                 imagesliderValue = Mathf.Max(1, Mathf.Min(imagesliderValue, (int)maxImages));

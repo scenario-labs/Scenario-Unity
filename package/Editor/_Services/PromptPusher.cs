@@ -743,7 +743,7 @@ namespace Scenario.Editor
                 ""hideResults"": {hideResults.ToString().ToLower()},
                 ""type"": ""{operationType}"",
                 ""dryRun"": true,
-                ""prompt"": ""{promptInput}"","; // Include prompt here
+                ""prompt"": ""{promptInput}"",";
 
             switch (activeMode.EMode)
             {
@@ -810,18 +810,32 @@ namespace Scenario.Editor
                     break;
             }
 
+            bool isFluxModel = DataCache.instance.SelectedModelId.StartsWith("flux.");
+            bool isSpecificFluxModel =
+                DataCache.instance.SelectedModelId == "flux.1.1-pro-ultra" ||
+                DataCache.instance.SelectedModelId == "flux.1.1-pro";
+
             if (seedInput!= "-1")
             {
                 inputData += $@"""seed"": {ulong.Parse(seedInput)},";
             }
-            inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",
-            ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-            ""numInferenceSteps"": {samplesStep},
-            ""width"": {width},
-            ""height"": {height},
-            ""numSamples"": {numberOfImages}
-            {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
-        }}";
+
+            if (!isFluxModel)
+            {
+                inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",";
+            }
+
+            if (!isSpecificFluxModel)
+            {
+                inputData += $@"""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},";
+                inputData += $@"""numInferenceSteps"": {samplesStep},";
+            }
+
+            inputData += $@"""width"": {width},
+                ""height"": {height},
+                ""numSamples"": {numberOfImages}
+                {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
+            }}";
 
             return inputData;
         }

@@ -230,8 +230,11 @@ namespace Scenario.Editor
                 CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
                 CustomStyle.Separator();
                 RenderPromptSection();
-                CustomStyle.Space();
-                RenderNegativePromptSection();
+                if (!DataCache.instance.SelectedModelType.StartsWith("flux.", StringComparison.OrdinalIgnoreCase))
+                {
+                    CustomStyle.Space();
+                    RenderNegativePromptSection();
+                }
                 CustomStyle.Separator();
             
 

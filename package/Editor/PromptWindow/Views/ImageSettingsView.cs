@@ -37,38 +37,28 @@ namespace Scenario.Editor
                 float maxSteps = 150f;
                 float maxGuidance = 20f;
 
-                if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra" || DataCache.instance.SelectedModelType == "flux.1-pro")
+                if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra")
                 {
                     maxImages = 1f;
-                }
-                else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
-                {
-                    maxImages = 8f;
-                }
-
-                if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra")
-                {
                     maxSteps = 0f;
+                    maxGuidance = 0f;
                 }
-                else if (DataCache.instance.SelectedModelType == "flux.1-pro")
+                else if (DataCache.instance.SelectedModelType == "flux.1.1-pro")
                 {
-                    maxSteps = 25f;
-                }
-                else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
-                {
-                    maxSteps = 28f;
-                }
-
-                if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra")
-                {
+                    maxImages = 1f;
+                    maxSteps = 0f;
                     maxGuidance = 0f;
                 }
                 else if (DataCache.instance.SelectedModelType == "flux.1-pro")
                 {
+                    maxImages = 1f;
+                    maxSteps = 25f;
                     maxGuidance = 3f;
                 }
                 else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
                 {
+                    maxImages = 8f;
+                    maxSteps = 28f;
                     maxGuidance = 3.5f;
                 }
 

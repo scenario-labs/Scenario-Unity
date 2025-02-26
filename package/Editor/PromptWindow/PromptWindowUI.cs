@@ -391,7 +391,7 @@ namespace Scenario.Editor
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
         }
 
-        private void UpdateSliderValuesForModel()
+        public void UpdateSliderValuesForModel()
         {
             if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra")
             {
@@ -422,6 +422,12 @@ namespace Scenario.Editor
                 imagesliderValue = 1;
                 samplesliderValue = 4;
                 guidancesliderValue = 3.5f;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("sd-xl"))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 30;
+                guidancesliderValue = 6;
             }
         }
 

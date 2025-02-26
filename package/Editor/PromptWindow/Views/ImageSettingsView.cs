@@ -64,6 +64,11 @@ namespace Scenario.Editor
                     maxImages = 4f;
                     maxSteps = 10f;
                 }
+                else if (DataCache.instance.SelectedModelType == "sd-xl")
+                {
+                    maxImages = 16f;
+                    maxSteps = 150f;
+                }
 
                 imagesliderValue = Mathf.Max(1, Mathf.Min(imagesliderValue, (int)maxImages));
                 samplesliderValue = Mathf.Max(1, Mathf.Min(samplesliderValue, (int)maxSteps));

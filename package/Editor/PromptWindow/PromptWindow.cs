@@ -192,6 +192,8 @@ namespace Scenario.Editor
             {
                 promptWindowUI.selectedModelName = "Choose Model";
             }
+
+            promptWindowUI.UpdateSliderValuesForModel();
         }
 
         #region API_DTO

@@ -291,7 +291,7 @@ namespace Scenario.Editor
                                 tabLabels.Add(eName);
                             }
                         }
-                        else if (DataCache.instance.SelectedModelType.Equals("flux.1.1-pro", StringComparison.OrdinalIgnoreCase) ||
+                        else if (DataCache.instance.SelectedModelType.Equals("flux1.1-pro", StringComparison.OrdinalIgnoreCase) ||
                                 DataCache.instance.SelectedModelType.Equals("flux.1-pro", StringComparison.OrdinalIgnoreCase))
                         {
                             if (eMode == ECreationMode.Text_To_Image)
@@ -399,7 +399,7 @@ namespace Scenario.Editor
                 samplesliderValue = 0;
                 guidancesliderValue = 0;
             }
-            else if (DataCache.instance.SelectedModelType == "flux.1.1-pro")
+            else if (DataCache.instance.SelectedModelType == "flux1.1-pro")
             {
                 imagesliderValue = 1;
                 samplesliderValue = 0;

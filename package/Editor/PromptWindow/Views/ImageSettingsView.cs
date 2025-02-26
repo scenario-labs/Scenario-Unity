@@ -43,7 +43,7 @@ namespace Scenario.Editor
                     maxSteps = 0f;
                     maxGuidance = 0f;
                 }
-                else if (DataCache.instance.SelectedModelType == "flux.1.1-pro")
+                else if (DataCache.instance.SelectedModelType == "flux1.1-pro")
                 {
                     maxImages = 1f;
                     maxSteps = 0f;

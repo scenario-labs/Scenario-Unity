@@ -53,21 +53,37 @@ namespace Scenario.Editor
                 {
                     maxImages = 1f;
                     maxSteps = 50f;
+                    maxGuidance = 20f;
                 }
                 else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
                 {
                     maxImages = 8f;
                     maxSteps = 50f;
+                    maxGuidance = 20f;
                 }
                 else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
                 {
                     maxImages = 4f;
                     maxSteps = 10f;
+                    maxGuidance = 20f;
                 }
                 else if (DataCache.instance.SelectedModelType == "sd-xl")
                 {
                     maxImages = 16f;
                     maxSteps = 150f;
+                    maxGuidance = 20f;
+                }
+                else if (DataCache.instance.SelectedModelType == "sd-1_5")
+                {
+                    maxImages = 16f;
+                    maxSteps = 150f;
+                    maxGuidance = 20f;
+                }
+                else
+                {
+                    maxImages = 16f;
+                    maxSteps = 150f;
+                    maxGuidance = 20f;
                 }
 
                 imagesliderValue = Mathf.Max(1, Mathf.Min(imagesliderValue, (int)maxImages));
@@ -116,23 +132,23 @@ namespace Scenario.Editor
                 promptPusher.numberOfImages = Mathf.RoundToInt(imagesliderValue);
                 EditorGUILayout.EndHorizontal();
 
+                EditorGUILayout.BeginHorizontal();
                 if (maxSteps > 0)
                 {
-                    EditorGUILayout.BeginHorizontal();
                     GUILayout.Label("Sampling steps: " + samplesliderValue.ToString("00"), GUILayout.Width(labelWidth));
                     samplesliderValue = (int)GUILayout.HorizontalSlider(samplesliderValue, 1, maxSteps, GUILayout.Width(sliderWidth));
                     promptPusher.samplesStep = samplesliderValue;
-                    EditorGUILayout.EndHorizontal();
                 }
+                EditorGUILayout.EndHorizontal();
 
+                EditorGUILayout.BeginHorizontal();
                 if (maxGuidance > 0)
                 {
-                    EditorGUILayout.BeginHorizontal();
                     GUILayout.Label("Guidance: " + guidancesliderValue.ToString("0.0"), GUILayout.Width(labelWidth));
                     guidancesliderValue = Mathf.Round(GUILayout.HorizontalSlider(guidancesliderValue, 0f, maxGuidance, GUILayout.Width(sliderWidth)) * 10) / 10f;
                     promptPusher.guidance = guidancesliderValue;
-                    EditorGUILayout.EndHorizontal();
                 }
+                EditorGUILayout.EndHorizontal();
 
                 if (promptWindow.ActiveMode != null)
                 {

@@ -426,8 +426,14 @@ namespace Scenario.Editor
             else if (DataCache.instance.SelectedModelType.StartsWith("sd-xl"))
             {
                 imagesliderValue = 4;
-                samplesliderValue = 30;
+                samplesliderValue = 28;
                 guidancesliderValue = 6;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("sd-1.5"))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 30;
+                guidancesliderValue = 7;
             }
         }
 

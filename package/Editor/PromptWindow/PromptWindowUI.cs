@@ -57,20 +57,58 @@ namespace Scenario.Editor
             "Line Art"
         };
 
+        public static bool isSizeSliderInitialized = false;
+
         /// <summary>
         /// Reference all dimension values available for SD 1.5 models
         /// </summary>
-        public readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912 };
+        public readonly Vector2Int[] allowed1_5DimensionValues = {
+            new Vector2Int(728, 312),  // 21:9
+            new Vector2Int(672, 384),  // 16:9
+            new Vector2Int(608, 416),  // 3:2
+            new Vector2Int(552, 416),  // 4:3
+            new Vector2Int(544, 448),  // 5:4
+            new Vector2Int(512, 512),  // 1:1
+            new Vector2Int(448, 544),  // 4:5
+            new Vector2Int(416, 552),  // 3:4
+            new Vector2Int(416, 608),  // 2:3
+            new Vector2Int(384, 672),  // 9:16
+            new Vector2Int(312, 728)   // 9:21
+        };
 
         /// <summary>
         /// Reference all dimension values available for SDXL models
         /// </summary>
-        public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824 };
+        public readonly Vector2Int[] allowedSDXLDimensionValues = {
+            new Vector2Int(1456, 624), // 21:9
+            new Vector2Int(1344, 768), // 16:9
+            new Vector2Int(1216, 832), // 3:2
+            new Vector2Int(1104, 832), // 4:3
+            new Vector2Int(1088, 896), // 5:4
+            new Vector2Int(1024, 1024),// 1:1
+            new Vector2Int(896, 1088), // 4:5
+            new Vector2Int(832, 1104), // 3:4
+            new Vector2Int(832, 1216), // 2:3
+            new Vector2Int(768, 1344), // 9:16
+            new Vector2Int(624, 1456)  // 9:21
+        };
 
         /// <summary>
-        /// Reference all dimension values available for SDXL models
+        /// Reference all dimension values available for FLUX models
         /// </summary>
-        public readonly int[] allowedFLUXPRODimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824 };
+        public readonly Vector2Int[] allowedFLUXPRODimensionValues = {
+            new Vector2Int(3136, 1344), // 21:9
+            new Vector2Int(2752, 1536), // 16:9
+            new Vector2Int(2496, 1664), // 3:2
+            new Vector2Int(2368, 1792), // 4:3
+            new Vector2Int(2304, 1856), // 5:4
+            new Vector2Int(2048, 2048),// 1:1
+            new Vector2Int(1856, 2304), // 4:5
+            new Vector2Int(1792, 2368), // 3:4
+            new Vector2Int(1664, 2496), // 2:3
+            new Vector2Int(1536, 2752), // 9:16
+            new Vector2Int(1344, 3136)  // 9:21
+        };
 
         public string selectedPreset = "";
 
@@ -192,21 +230,20 @@ namespace Scenario.Editor
             }
         }
 
-        public int NearestValueIndex(int currentValue, int[] allowedValues)
+        public int NearestValueIndex(int targetValue, Vector2Int[] values) // Updated for Vector2Int[]
         {
-            int nearestIndex = 0;
-            int minDifference = int.MaxValue;
+            int nearestIndex = -1;
+            float minDifference = float.MaxValue;
 
-            for (int i = 0; i < allowedValues.Length; i++)
+            for (int i = 0; i < values.Length; i++)
             {
-                int difference = Mathf.Abs(currentValue - allowedValues[i]);
+                float difference = Mathf.Abs(values[i].x - targetValue); // Compare with Vector2Int.x (width)
                 if (difference < minDifference)
                 {
                     minDifference = difference;
                     nearestIndex = i;
                 }
             }
-
             return nearestIndex;
         }
 

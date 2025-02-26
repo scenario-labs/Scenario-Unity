@@ -98,6 +98,10 @@ namespace Scenario.Editor
                             DrawSliderSizeValue(allowedSDXLDimensionValues);
                             break;
 
+                        case "flux.1.1-pro-ultra":
+                            DrawSliderSizeValue(allowedFLUXPRODimensionValues);
+                            break;
+
                         case "sd-1_5":
                             DrawSliderSizeValue(allowed1_5DimensionValues);
                             break;
@@ -183,33 +187,31 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Draw a slider to select the width and height of the image, still according to the Scenario's web app
+        /// Draw a slider to select the width and height of the image
         /// </summary>
         /// <param name="_allowedValues"> Reference Array </param>
-        private void DrawSliderSizeValue(int[] _allowedValues)
+        private void DrawSliderSizeValue(Vector2Int[] _allowedValues)
         {
             CustomStyle.Space(10);
-            
+
             EditorGUILayout.BeginHorizontal();
             {
-                GUILayout.Label("Size: " + promptPusher.width + " x " + promptPusher.height, GUILayout.Width(labelWidth));
-                sizeSliderValue = GUILayout.HorizontalSlider(sizeSliderValue, 1, (_allowedValues.Length * 2) - 1, GUILayout.Width(sliderWidth));
-                sizeSliderValue = Mathf.Round(sizeSliderValue);
-                int correspondingValue = 0;
-
-                if (sizeSliderValue >= _allowedValues.Length)
+                int middleIndex = Mathf.FloorToInt(_allowedValues.Length / 2f);
+                if (!isSizeSliderInitialized)
                 {
-                    correspondingValue = (int)sizeSliderValue - _allowedValues.Length;
-                    heightSliderValue = _allowedValues[correspondingValue];
-                    widthSliderValue = _allowedValues[0];
-                    promptPusher.height = heightSliderValue;
-                    promptPusher.width = widthSliderValue;
+                    sizeSliderValue = middleIndex;
+                    isSizeSliderInitialized = true;
                 }
-                else if (sizeSliderValue < _allowedValues.Length)
+
+                GUILayout.Label("Size: " + promptPusher.width + " x " + promptPusher.height, GUILayout.Width(labelWidth));
+                sizeSliderValue = GUILayout.HorizontalSlider(sizeSliderValue, 0, _allowedValues.Length - 1, GUILayout.Width(sliderWidth));
+                sizeSliderValue = Mathf.Round(sizeSliderValue);
+
+                int selectedIndex = Mathf.RoundToInt(sizeSliderValue);
+                if (selectedIndex >= 0 && selectedIndex < _allowedValues.Length)
                 {
-                    correspondingValue = _allowedValues.Length - (int)sizeSliderValue;
-                    widthSliderValue = _allowedValues[correspondingValue];
-                    heightSliderValue = _allowedValues[0];
+                    widthSliderValue = _allowedValues[selectedIndex].x;
+                    heightSliderValue = _allowedValues[selectedIndex].y;
                     promptPusher.width = widthSliderValue;
                     promptPusher.height = heightSliderValue;
                 }

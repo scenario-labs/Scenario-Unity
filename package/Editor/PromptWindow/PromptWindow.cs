@@ -1,3 +1,4 @@
+//PromptWindow.cs
 using System;
 using System.Collections.Generic;
 using UnityEditor;
@@ -149,7 +150,7 @@ namespace Scenario.Editor
             {
                 for (int i = 0; i < promptWindowUI.allowedSDXLDimensionValues.Length; i++)
                 {
-                    if (_indexValue == promptWindowUI.allowedSDXLDimensionValues[i])
+                    if (_indexValue == promptWindowUI.allowedSDXLDimensionValues[i].x)
                     {
                         promptWindowUI.sizeSliderValue = 7 - i;
                     }
@@ -159,7 +160,7 @@ namespace Scenario.Editor
             {
                 for (int i = 0; i < promptWindowUI.allowed1_5DimensionValues.Length; i++)
                 {
-                    if (_indexValue == promptWindowUI.allowed1_5DimensionValues[i])
+                    if (_indexValue == promptWindowUI.allowed1_5DimensionValues[i].x)
                     {
                         promptWindowUI.sizeSliderValue = 7 - i;
                     }

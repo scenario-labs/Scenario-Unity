@@ -63,7 +63,7 @@ namespace Scenario.Editor
                 }
                 else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
                 {
-                    maxImages = 4f;
+                    maxImages = 8f;
                     maxSteps = 10f;
                     maxGuidance = 20f;
                 }

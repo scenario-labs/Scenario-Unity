@@ -121,7 +121,7 @@ namespace Scenario.Editor
 
                 CustomStyle.Space();
 
-                if (!DataCache.instance.SelectedModelType.StartsWith("flux."))
+                if (!DataCache.instance.SelectedModelType.StartsWith("flux.") && DataCache.instance.SelectedModelType != "flux1.1-pro")
                 {
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Label("Scheduler: ", GUILayout.Width(labelWidth));

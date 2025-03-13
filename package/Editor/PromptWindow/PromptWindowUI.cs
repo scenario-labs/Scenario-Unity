@@ -450,16 +450,16 @@ namespace Scenario.Editor
                 samplesliderValue = 25;
                 guidancesliderValue = 3;
             }
-            else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
-            {
-                imagesliderValue = 4;
-                samplesliderValue = 28;
-                guidancesliderValue = 3.5f;
-            }
             else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
             {
                 imagesliderValue = 4;
                 samplesliderValue = 4;
+                guidancesliderValue = 3.5f;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 28;
                 guidancesliderValue = 3.5f;
             }
             else if (DataCache.instance.SelectedModelType.StartsWith("sd-xl"))

@@ -267,8 +267,7 @@ namespace Scenario.Editor
                 CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
                 CustomStyle.Separator();
                 RenderPromptSection();
-                if (!DataCache.instance.SelectedModelType.StartsWith("flux.", StringComparison.OrdinalIgnoreCase) &&
-                    !DataCache.instance.SelectedModelType.StartsWith("flux1.1", StringComparison.OrdinalIgnoreCase))
+                if (!DataCache.instance.SelectedModelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
                 {
                     CustomStyle.Space();
                     RenderNegativePromptSection();
@@ -312,9 +311,8 @@ namespace Scenario.Editor
                 foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
                 {
                     if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType) &&
-                        DataCache.instance.SelectedModelType.StartsWith("flux.", StringComparison.OrdinalIgnoreCase))
+                        DataCache.instance.SelectedModelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
                     {
-                        
                         if (DataCache.instance.SelectedModelType.Equals("flux1.1-pro", StringComparison.OrdinalIgnoreCase) ||
                                 DataCache.instance.SelectedModelType.Equals("flux.1-pro", StringComparison.OrdinalIgnoreCase))
                         {
@@ -337,21 +335,6 @@ namespace Scenario.Editor
                             continue; 
                         }
                         else
-                        {
-                            availableModes.Add(eMode);
-                            string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
-                            tabLabels.Add(eName);
-                        }
-                    }
-                    else if (DataCache.instance.SelectedModelId == "flux.1-schnell") 
-                    {
-                        if (eMode == ECreationMode.Text_To_Image || 
-                            eMode == ECreationMode.Image_To_Image ||
-                            eMode == ECreationMode.ControlNet ||
-                            eMode == ECreationMode.IP_Adapter ||
-                            eMode == ECreationMode.Image_To_Image__ControlNet ||
-                            eMode == ECreationMode.Image_To_Image__IP_Adapter ||
-                            eMode == ECreationMode.ControlNet__IP_Adapter)
                         {
                             availableModes.Add(eMode);
                             string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
@@ -456,7 +439,7 @@ namespace Scenario.Editor
                 samplesliderValue = 4;
                 guidancesliderValue = 3.5f;
             }
-            else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
+            else if (DataCache.instance.SelectedModelType.StartsWith("flux"))
             {
                 imagesliderValue = 4;
                 samplesliderValue = 28;

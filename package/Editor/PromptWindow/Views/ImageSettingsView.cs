@@ -55,16 +55,16 @@ namespace Scenario.Editor
                     maxSteps = 50f;
                     maxGuidance = 20f;
                 }
-                else if (DataCache.instance.SelectedModelType.StartsWith("flux."))
-                {
-                    maxImages = 8f;
-                    maxSteps = 50f;
-                    maxGuidance = 20f;
-                }
                 else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
                 {
                     maxImages = 8f;
                     maxSteps = 10f;
+                    maxGuidance = 20f;
+                }
+                else if (DataCache.instance.SelectedModelType.StartsWith("flux"))
+                {
+                    maxImages = 8f;
+                    maxSteps = 50f;
                     maxGuidance = 20f;
                 }
                 else if (DataCache.instance.SelectedModelType == "sd-xl")
@@ -121,7 +121,7 @@ namespace Scenario.Editor
 
                 CustomStyle.Space();
 
-                if (!DataCache.instance.SelectedModelType.StartsWith("flux.") && DataCache.instance.SelectedModelType != "flux1.1-pro")
+                if (!DataCache.instance.SelectedModelType.StartsWith("flux"))
                 {
                     EditorGUILayout.BeginHorizontal();
                     GUILayout.Label("Scheduler: ", GUILayout.Width(labelWidth));

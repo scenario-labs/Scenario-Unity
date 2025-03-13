@@ -416,13 +416,16 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 {
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
-                    if (string.IsNullOrEmpty(currentImageData.Scheduler))
+                    if (DataCache.instance.SelectedModelType.StartsWith("flux"))
                     {
-                        CustomStyle.Label($"Scheduler: Default");
-                    }
-                    else
-                    { 
-                        CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                        if (string.IsNullOrEmpty(currentImageData.Scheduler))
+                        {
+                            CustomStyle.Label($"Scheduler: Default");
+                        }
+                        else
+                        { 
+                            CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                        }
                     }
                 }
                 GUILayout.EndHorizontal();

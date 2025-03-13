@@ -34,6 +34,7 @@ namespace Scenario.Editor
         /// </summary>
         private bool isLoading = false;
 
+        private Dictionary<string, string> modelNameCache = new Dictionary<string, string>();
 
         #region Initialization
 
@@ -405,7 +406,21 @@ namespace Scenario.Editor
             {
                 if (!string.IsNullOrEmpty(currentImageData.modelId))
                 {
-                    string modelName = await Models.FetchModelById(currentImageData.modelId).name;
+                    string modelName = currentImageData.modelId;
+                    if (!modelNameCache.ContainsKey(currentImageData.modelId))
+                    {
+                        Models.FetchModelById(currentImageData.modelId).Then(model => {
+                            if (model != null)
+                            {
+                                modelNameCache[currentImageData.modelId] = model.name;
+                                EditorWindow.GetWindow<Images>().Repaint();
+                            }
+                        });
+                    }
+                    else
+                    {
+                        modelName = modelNameCache[currentImageData.modelId];
+                    }
                     CustomStyle.Label($"Model: {modelName}");
                     CustomStyle.Space(padding);
                 }

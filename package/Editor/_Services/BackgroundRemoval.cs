@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
@@ -12,37 +11,79 @@ namespace Scenario.Editor
         {
             string dataUrl = CommonUtils.Texture2DToDataURL(texture2D);
             string fileName = CommonUtils.GetRandomImageFileName();
-            string url = $"images/erase-background";
-            string param = $"{{\"image\":\"{dataUrl}\",\"name\":\"{fileName}\",\"backgroundColor\":\"\",\"format\":\"png\",\"returnImage\":\"false\"}}";
 
-            Debug.Log("Requesting background removal, please wait..");
+            CommonUtils.UploadTexture(fileName, dataUrl, assetId =>
+            {
+                if (string.IsNullOrEmpty(assetId))
+                {
+                    Debug.LogError("Asset upload failed, background removal cannot proceed.");
+                    callback?.Invoke(null);
+                    return;
+                }
 
-            ApiClient.RestPut(url,param,response =>
+                RequestBackgroundRemovalJob(assetId, callback);
+            });
+        }
+
+
+        private static void RequestBackgroundRemovalJob(string assetId, Action<byte[]> callback)
+        {
+            string url = $"generate/remove-background";
+
+            var payload = new
+            {
+                image = assetId,
+                backgroundColor = "",
+                format = "png",
+                returnImage = false,
+                originalAssets = true
+            };
+            string param = JsonConvert.SerializeObject(payload);
+
+            Debug.Log("Requesting background removal job using assetId...");
+
+            ApiClient.RestPost(url, param, response =>
             {
                 try
                 {
-                    Debug.Log(response.Content);
-                    Root jsonResponse = JsonConvert.DeserializeObject<BackgroundRemoval.Root>(response.Content);
-                    string imageUrl = jsonResponse.asset.url;
-                    CommonUtils.FetchTextureFromURL(imageUrl, texture =>
+                    Debug.Log("Background removal job response: " + response.Content);
+                    BgRoot jsonResponse = JsonConvert.DeserializeObject<BgRoot>(response.Content);
+                    string jobId = jsonResponse.job.jobId;
+
+                    Scenario.Editor.Jobs.CheckJobStatus(jobId, asset =>
                     {
-                        byte[] textureBytes = texture.EncodeToPNG();
-                        callback?.Invoke(textureBytes);
+                        CommonUtils.FetchTextureFromURL(asset.url, texture =>
+                        {
+                            byte[] textureBytes = texture.EncodeToPNG();
+                            callback?.Invoke(textureBytes);
+                        });
                     });
                 }
                 catch (Exception ex)
                 {
-                    Debug.LogError("An error occurred while processing the response: " + ex.Message);
+                    Debug.LogError("Error during background removal job processing: " + ex.Message);
+                    callback?.Invoke(null);
                 }
+            }, errorAction =>
+            {
+                Debug.LogError("API request for background removal job failed: " + errorAction);
+                callback?.Invoke(null);
             });
         }
-        
-        public class Asset
+
+        public class BgRoot
+        {
+            public BgAsset asset { get; set; }
+            public BgJob job { get; set; }
+            public string image { get; set; }
+        }
+
+        public class BgAsset
         {
             public string id { get; set; }
             public string url { get; set; }
             public string mimeType { get; set; }
-            public Metadata metadata { get; set; }
+            public BgMetadata metadata { get; set; }
             public string ownerId { get; set; }
             public string authorId { get; set; }
             public string description { get; set; }
@@ -55,7 +96,7 @@ namespace Scenario.Editor
             public List<string> editCapabilities { get; set; }
         }
 
-        public class Metadata
+        public class BgMetadata
         {
             public string type { get; set; }
             public string parentId { get; set; }
@@ -68,10 +109,23 @@ namespace Scenario.Editor
             public int size { get; set; }
         }
 
-        public class Root
+        public class BgJob
         {
-            public Asset asset { get; set; }
-            public string image { get; set; }
+            public string jobId { get; set; }
+            public string jobType { get; set; }
+            public string status { get; set; }
+            public float progress { get; set; }
+            public BgMetadata metadata { get; set; }
+            public string type { get; set; }
+            public string preset { get; set; }
+            public string parentId { get; set; }
+            public string rootParentId { get; set; }
+            public string kind { get; set; }
+            public string[] assetIds { get; set; }
+            public int scalingFactor { get; set; }
+            public bool magic { get; set; }
+            public bool forceFaceRestoration { get; set; }
+            public bool photorealist { get; set; }
         }
     }
 }

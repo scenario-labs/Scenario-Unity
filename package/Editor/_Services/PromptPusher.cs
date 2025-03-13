@@ -9,16 +9,17 @@ namespace Scenario.Editor
 {
     public enum ECreationMode 
     {
-        Text_To_Image,
-        Image_To_Image,
-        ControlNet,
-        Inpaint,
-        IP_Adapter,
-        Reference_Only,
-        Image_To_Image__ControlNet,
-        //Reference_Only__Control_Net,
-        Image_To_Image__IP_Adapter,
-        ControlNet__IP_Adapter
+        Text_To_Image,                // 0
+        Image_To_Image,              // 1
+        Inpaint,                      // 2
+        ControlNet,                   // 3
+        IP_Adapter,                  // 4
+        Texture,                      // 6
+        Image_To_Image__ControlNet,    // 7
+        Image_To_Image__IP_Adapter,  // 8
+        ControlNet__Inpaint,          // 9
+        ControlNet__IP_Adapter, // 10 - Explicitly assigned
+        ControlNet__Texture,          // 12
     }
 
     /// <summary>
@@ -504,7 +505,7 @@ namespace Scenario.Editor
         {
             activeMode = GetActiveMode();
 
-            if (activeMode != null)
+            if (activeMode!= null)
             {
                 string modality = "";
                 string operationType = activeMode.OperationName;
@@ -517,35 +518,27 @@ namespace Scenario.Editor
                 switch (activeMode.EMode)
                 {
                     case ECreationMode.Text_To_Image:
-
                         break;
 
                     case ECreationMode.Image_To_Image:
-
                         if (imageUpload == null)
                         {
                             Debug.LogError("Img2Img Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-
                         break;
 
                     case ECreationMode.ControlNet:
-
                         if (imageUpload == null)
                         {
                             Debug.LogError("ControlNet Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-
                         break;
 
                     case ECreationMode.Inpaint:
-
                         if (imageUpload == null)
                         {
                             Debug.LogError("Inpaint Must have an image uploaded.");
@@ -565,7 +558,6 @@ namespace Scenario.Editor
                         {
                             maskDataUrl = ProcessMask();
                         }
-
                         break;
 
                     case ECreationMode.IP_Adapter:
@@ -574,45 +566,18 @@ namespace Scenario.Editor
                             Debug.LogError("ControlNet Must have a image uploaded.");
                             return false;
                         }
-
-                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-                        break;
-
-                    case ECreationMode.Reference_Only:
-                        if (imageUpload == null)
-                        {
-                            Debug.LogError("ControlNet Must have a image uploaded.");
-                            return false;
-                        }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         break;
 
                     case ECreationMode.Image_To_Image__ControlNet:
-
                         if (imageUpload == null || additionalImageUpload == null)
                         {
                             Debug.LogError("Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
-
                         break;
-
-                    /*case ECreationMode.Reference_Only__Control_Net:
-
-                        if (imageUpload == null || additionalImageUpload == null)
-                        {
-                            Debug.LogError("Must have a image uploaded.");
-                            return false;
-                        }
-
-                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
-                        dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
-
-                        break;*/
 
                     case ECreationMode.Image_To_Image__IP_Adapter:
                         if (imageUpload == null || additionalImageUpload == null)
@@ -620,31 +585,50 @@ namespace Scenario.Editor
                             Debug.LogError("Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
                         break;
 
                     case ECreationMode.ControlNet__IP_Adapter:
-
                         if (imageUpload == null || additionalImageUpload == null)
                         {
                             Debug.LogError("Must have a image uploaded.");
                             return false;
                         }
-
                         dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         dataAdditionalUrl = CommonUtils.Texture2DToDataURL(additionalImageUpload);
+                        break;
 
+                    case ECreationMode.ControlNet__Inpaint:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet__Inpaint must have an image uploaded.");
+                            return false;
+                        }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
+
+                        if (maskImage == null)
+                        {
+                            Debug.LogError("ControlNet__Inpaint must have a mask uploaded.");
+                            return false;
+                        }
+                        maskDataUrl = ProcessMask();
+                        break;
+
+
+                    case ECreationMode.ControlNet__Texture:
+                        if (imageUpload == null)
+                        {
+                            Debug.LogError("ControlNet__Texture must have an image uploaded.");
+                            return false;
+                        }
+                        dataUrl = CommonUtils.Texture2DToDataURL(imageUpload);
                         break;
                 }
 
                 Dictionary<string, string> modalitySettings = PrepareModalitySettings(ref modality, ref operationType);
-
                 modality = PrepareModality(modalitySettings);
-
                 inputData = PrepareInputData(modality, operationType, dataUrl, dataAdditionalUrl, maskDataUrl);
-                //Debug.Log("Input Data: " + inputData);
                 return true;
             }
             else
@@ -748,180 +732,109 @@ namespace Scenario.Editor
         private string PrepareInputData(string modality, string operationType, string dataUrl, string _additionalDataUrl, string maskDataUrl)
         {
             bool hideResults = false;
-            string type = operationType;
-            string mask = $"\"{maskDataUrl}\"";
-            string prompt = promptInput;
-            string seedField = "";
-            string image = $"\"{dataUrl}\"";
-            string controlImage = $"\"{_additionalDataUrl}\""; // controlImageId || ipAdapterImage and ipAdapterImageId
-
-            if (seedInput != "-1")
+            string modelId = DataCache.instance.SelectedModelId;
+            if (modelId == null)
             {
-                ulong seed = ulong.Parse(seedInput);
-                seedField = $@"""seed"": {seed},";
+                modelId = "";
             }
 
-            string negativePrompt = promptNegativeInput;
-            float strength = Mathf.Clamp((float)Math.Round((100 - influenceOption) * 0.01f, 2), 0.01f, 1f); //strength is 100-influence (and between 0.01 & 1) // not used and usefull
-            float guidance = this.guidance;
-            int width = this.width;
-            int height = this.height;
-            int numInferenceSteps = samplesStep;
-            int numSamples = numberOfImages;
-            string scheduler = SchedulerOptions[schedulerSelected];
-            float addModality = additionalModalityValue;
-
             string inputData = $@"{{
-                ""parameters"": {{
-                    ""hideResults"": {hideResults.ToString().ToLower()},
-                    ""type"": ""{type}"",
-                    ""dryRun"": true,";
+                ""modelId"": ""{modelId}"",
+                ""hideResults"": {hideResults.ToString().ToLower()},
+                ""type"": ""{operationType}"",
+                ""dryRun"": true,
+                ""prompt"": ""{promptInput}"",";
 
             switch (activeMode.EMode)
             {
-                case ECreationMode.Text_To_Image:
-
-                    break;
-
                 case ECreationMode.Image_To_Image:
                     if (activeMode.IsControlNet)
                     {
                         inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
+                        inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
                     }
                     break;
 
                 case ECreationMode.Inpaint:
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""mask"": ""{maskDataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""mask"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""mask"": ""{maskDataUrl}"",";
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
                     break;
 
-                case ECreationMode.IP_Adapter: // image ref ipAdapterScale
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
-                        inputData += $@"""ipAdapterScale"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""ipAdapterImage"": "",";
-                        inputData += $@"""ipAdapterScale"": "",";
-                    }
-                    break;
-
-                case ECreationMode.Reference_Only: //image ref styleFidelity
-                    if (activeMode.IsControlNet)
-                    {
-                        Debug.Log(addModality.ToString("F2", CultureInfo.InvariantCulture));
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""styleFidelity"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""referenceAdain"": {activeMode.AdditionalSettings["Reference AdaIN"].ToString().ToLower()},";
-                        inputData += $@"""referenceAttn"": {activeMode.AdditionalSettings["Reference Attn"].ToString().ToLower()},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""styleFidelity"": "",";
-                        inputData += $@"""referenceAdain"": """",";
-                        inputData += $@"""referenceAttn"": """",";
-                    }
+                case ECreationMode.IP_Adapter:
+                    inputData += $@"""ipAdapterImage"": ""{dataUrl}"",";
+                    inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
                     break;
 
                 case ECreationMode.ControlNet:
-                    if (activeMode.IsControlNet && activeMode.UseControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""modality"": ""{modality}"",";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""modality"": "",";
-                    }
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
                     break;
 
-                case ECreationMode.ControlNet__IP_Adapter: // double ref image and modality on second
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""modality"": ""{modality}"",";
-                        inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
-                        inputData += $@"""ipAdapterScale"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": """;
-                        inputData += $@"""modality"": """;
-                        inputData += $@"""ipAdapterImage"": "",";
-                        inputData += $@"""ipAdapterScale"": "",";
-                    }
+                case ECreationMode.ControlNet__IP_Adapter:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
+                    inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
+                    inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
                     break;
 
-                case ECreationMode.Image_To_Image__ControlNet: // double ref image and modality on second
-                    if (activeMode.IsControlNet && activeMode.UseControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""controlImage"": ""{_additionalDataUrl}"",";
-                        inputData += $@"""modality"": ""{modality}"",";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""controlImage"": "",";
-                        inputData += $@"""modality"": "",";
-                    }
+                case ECreationMode.Image_To_Image__ControlNet:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
+                    inputData += $@"""controlImage"": ""{_additionalDataUrl}"",";
+                    inputData += $@"""modality"": ""{modality}"",";
                     break;
 
-                case ECreationMode.Image_To_Image__IP_Adapter: // double ref image and influence on second ipAdapterScale: 0.75
-                    if (activeMode.IsControlNet)
-                    {
-                        inputData += $@"""image"": ""{dataUrl}"",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
-                        inputData += $@"""ipAdapterScale"": {addModality.ToString("F2", CultureInfo.InvariantCulture)},";
-                    }
-                    else
-                    {
-                        inputData += $@"""image"": "",";
-                        inputData += $@"""strength"": {strength.ToString("F2", CultureInfo.InvariantCulture)},";
-                        inputData += $@"""ipAdapterImage"": "",";
-                        inputData += $@"""ipAdapterScale"": "",";
-                    }
+                case ECreationMode.Image_To_Image__IP_Adapter:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},";
+                    inputData += $@"""ipAdapterImage"": ""{_additionalDataUrl}"",";
+                    inputData += $@"""ipAdapterScale"": {additionalModalityValue},";
                     break;
 
-                    /*case ECreationMode.Reference_Only__Control_Net:
-                        mode.IsControlNet = true;
-                        mode.OperationName = "reference_controlnet";
-                        break;*/ //Not Available now
+                case ECreationMode.ControlNet__Inpaint:
+                    inputData += $@"""image"": ""{dataUrl}"",";
+                    inputData += $@"""mask"": ""{maskDataUrl}"","; 
+                    inputData += $@"""modality"": ""{modality}"","; 
+                    inputData += $@"""strength"": {(100 - influenceOption) * 0.01f},"; 
+                    break;
+
+                case ECreationMode.ControlNet__Texture:
+                    inputData += $@"""image"": ""{dataUrl}"","; 
+                    inputData += $@"""modality"": ""{modality}"","; 
+                    // Add any specific parameters for ControlNet__Texture here
+                    break;
+
+                default:
+                    // Handle unknown or unsupported modes
+                    break;
             }
 
-            inputData += $@"""prompt"": ""{prompt}"",
-                    {seedField}
-                    {(string.IsNullOrEmpty(negativePrompt) ? "" : $@"""negativePrompt"": ""{negativePrompt}"",")}
-                    ""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},
-                    ""numInferenceSteps"": {numInferenceSteps},
-                    ""width"": {width},
-                    ""height"": {height},
-                    ""numSamples"": {numSamples}
-                    {(scheduler != "Default" ? $@",""scheduler"": ""{scheduler}""" : "")}
-                }}
+            bool isFluxModel = DataCache.instance.SelectedModelId.StartsWith("flux.");
+            bool isSpecificFluxModel =
+                DataCache.instance.SelectedModelId == "flux.1.1-pro-ultra" ||
+                DataCache.instance.SelectedModelId == "flux.1.1-pro";
+
+            if (seedInput!= "-1")
+            {
+                inputData += $@"""seed"": {ulong.Parse(seedInput)},";
+            }
+
+            if (!isFluxModel)
+            {
+                inputData += $@"""negativePrompt"": ""{promptNegativeInput}"",";
+            }
+
+            if (!isSpecificFluxModel)
+            {
+                inputData += $@"""guidance"": {guidance.ToString("F2", CultureInfo.InvariantCulture)},";
+                inputData += $@"""numInferenceSteps"": {samplesStep},";
+            }
+
+            inputData += $@"""width"": {width},
+                ""height"": {height},
+                ""numSamples"": {numberOfImages}
+                {(schedulerSelected > 0? $@",""scheduler"": ""{SchedulerOptions[schedulerSelected]}""": "")}
             }}";
 
             return inputData;
@@ -932,7 +845,7 @@ namespace Scenario.Editor
         /// </summary>
         private void InitCreationMode()
         {
-            if (creationModeList != null && creationModeList.Count == 0)
+            if (creationModeList!= null && creationModeList.Count == 0)
             {
                 foreach (ECreationMode e in Enum.GetValues(typeof(ECreationMode)))
                 {
@@ -960,19 +873,14 @@ namespace Scenario.Editor
                             mode.OperationName = "txt2img_ip_adapter";
                             break;
 
-                        case ECreationMode.Reference_Only:
-                            mode.IsControlNet = true;
-                            mode.OperationName = "reference";
+                        case ECreationMode.Texture: // New mode
+                            mode.IsControlNet = false;  // Or true, depending on your needs
+                            mode.OperationName = "txt2img_texture"; // Update with the correct operation name
                             break;
 
                         case ECreationMode.ControlNet:
                             mode.IsControlNet = true;
                             mode.OperationName = "controlnet";
-                            break;
-
-                        case ECreationMode.ControlNet__IP_Adapter:
-                            mode.IsControlNet = true;
-                            mode.OperationName = "controlnet_ip_adapter";
                             break;
 
                         case ECreationMode.Image_To_Image__ControlNet:
@@ -985,10 +893,19 @@ namespace Scenario.Editor
                             mode.OperationName = "img2img_ip_adapter";
                             break;
 
-                        /*case ECreationMode.Reference_Only__Control_Net:
+                        case ECreationMode.ControlNet__Inpaint:
+                            mode.OperationName = "controlnet_inpaint";
+                            break;
+
+                        case ECreationMode.ControlNet__IP_Adapter:
                             mode.IsControlNet = true;
-                            mode.OperationName = "reference_controlnet";
-                            break;*/ //Not Available now
+                            mode.OperationName = "controlnet_ip_adapter";
+                            break;
+
+                        case ECreationMode.ControlNet__Texture:
+                            mode.IsControlNet = true;
+                            mode.OperationName = "controlnet_texture";
+                            break;
 
                     }
 

@@ -34,6 +34,7 @@ namespace Scenario.Editor
         /// </summary>
         private bool isLoading = false;
 
+        private Dictionary<string, (string name, string type)> modelCache = new Dictionary<string, (string name, string type)>();
 
         #region Initialization
 
@@ -389,6 +390,25 @@ namespace Scenario.Editor
             }
         }
 
+        private void FetchModelName(string modelId)
+        {
+            if (string.IsNullOrEmpty(modelId) || modelCache.ContainsKey(modelId))
+                return;
+
+            // Start the fetch operation
+            var task = Models.FetchModelById(modelId);
+            task.ContinueWith(t => {
+                if (t.IsCompleted && !t.IsFaulted && t.Result != null)
+                {
+                    modelCache[modelId] = (t.Result.name, t.Result.type);
+                    // Ensure we update the UI on the main thread
+                    EditorApplication.delayCall += () => {
+                        EditorWindow.GetWindow<Images>()?.Repaint();
+                    };
+                }
+            });
+        }
+
         /// <summary>
         /// Draws the data associated with the currently selected image, including prompt, steps, size, guidance, and scheduler.
         /// This function displays textual information about the selected image's attributes.
@@ -403,6 +423,20 @@ namespace Scenario.Editor
 
             GUILayout.BeginVertical();
             {
+                if (!string.IsNullOrEmpty(currentImageData.modelId))
+                {
+                    string modelName = currentImageData.modelId;
+                    if (modelCache.ContainsKey(currentImageData.modelId))
+                    {
+                        modelName = modelCache[currentImageData.modelId].name;
+                    }
+                    else
+                    {
+                        FetchModelName(currentImageData.modelId);
+                    }
+                    CustomStyle.Label($"Model: {modelName}");
+                    CustomStyle.Space(padding);
+                }
                 CustomStyle.Label("Prompt:");
                 CustomStyle.Label($"{currentImageData.Prompt}");
                 CustomStyle.Space(padding);
@@ -416,13 +450,18 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 {
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
-                    if (string.IsNullOrEmpty(currentImageData.Scheduler))
+                    if (modelCache.TryGetValue(currentImageData.modelId, out var modelInfo) && 
+                        !string.IsNullOrEmpty(modelInfo.type) &&
+                        !modelInfo.type.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
                     {
-                        CustomStyle.Label($"Scheduler: Default");
-                    }
-                    else
-                    { 
-                        CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                        if (string.IsNullOrEmpty(currentImageData.Scheduler))
+                        {
+                            CustomStyle.Label($"Scheduler: Default");
+                        }
+                        else
+                        { 
+                            CustomStyle.Label($"Scheduler: {currentImageData.Scheduler}");
+                        }
                     }
                 }
                 GUILayout.EndHorizontal();

@@ -161,27 +161,24 @@ namespace Scenario.Editor
                     int matchingWidth = 0;
                     int matchingHeight = 0;
 
-                    int[] allowedValues = new int[0];
+                    Vector2Int[] allowedValues = new Vector2Int[0];
+
                     if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType))
                     {
                         switch (DataCache.instance.SelectedModelType)
                         {
-                            case "sd-xl-composition":
+                            case string modelType when modelType.StartsWith("flux."):
                                 allowedValues = promptWindowUI.allowedSDXLDimensionValues;
                                 break;
-
-                            case "sd-xl-lora":
+                            case "flux.1.1-pro-ultra":
+                                allowedValues = promptWindowUI.allowedFLUXPRODimensionValues;
+                                break;
+                            case string modelType when modelType.StartsWith("sd-xl"):
                                 allowedValues = promptWindowUI.allowedSDXLDimensionValues;
                                 break;
-
-                            case "sd-xl":
-                                allowedValues = promptWindowUI.allowedSDXLDimensionValues;
-                                break;
-
                             case "sd-1_5":
                                 allowedValues = promptWindowUI.allowed1_5DimensionValues;
                                 break;
-
                             default:
                                 break;
                         }
@@ -214,21 +211,20 @@ namespace Scenario.Editor
         }
 
         /// <summary>
-        /// Check if there is a same value
+        /// Check if there is a matching width value in the Vector2Int array
         /// </summary>
-        /// <param name="targetValue"> Expected value </param>
-        /// <param name="values"> Array of values to check in </param>
+        /// <param name="targetValue">Expected width value</param>
+        /// <param name="values">Array of Vector2Int values to check in</param>
         /// <returns></returns>
-        private int GetMatchingValue(int targetValue, int[] values)
+        private int GetMatchingValue(int targetValue, Vector2Int[] values)
         {
-            foreach (int value in values)
+            foreach (Vector2Int value in values)
             {
-                if (value == targetValue)
+                if (value.x == targetValue)
                 {
-                    return value;
+                    return value.x;
                 }
             }
-
             return -1;
         }
 

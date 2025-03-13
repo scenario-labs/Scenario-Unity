@@ -10,6 +10,7 @@ using UnityEditor.Presets;
 using UnityEngine;
 using UnityEngine.Networking;
 using Object = UnityEngine.Object;
+using Newtonsoft.Json;
 
 namespace Scenario.Editor
 {
@@ -295,6 +296,72 @@ namespace Scenario.Editor
             {
                 Debug.LogError("There was an issue when applying the Pixels Per Unit parameter. please restart the editor.");
             }
+        }
+
+        /// <summary>
+        /// Uploads the texture to the /assets endpoint and returns the assetId via callback.
+        /// This is now a utility function in CommonUtils.
+        /// </summary>
+        /// <param name="fileName">The original file name of the image.</param>
+        /// <param name="dataUrl">The Data URL of the texture.</param>
+        /// <param name="assetIdCallback">Callback function to be invoked with the assetId or null in case of failure.</param>
+        public static void UploadTexture(string fileName, string dataUrl, Action<string> assetIdCallback)
+        {
+            string url = $"assets";
+            var payload = new
+            {
+                image = dataUrl,
+                name = fileName
+            };
+            string param = JsonConvert.SerializeObject(payload);
+
+            Debug.Log("Uploading texture as asset...");
+
+            ApiClient.RestPost(url, param, response =>
+            {
+                try
+                {
+                    BgAssetResponse assetResponse = JsonConvert.DeserializeObject<BgAssetResponse>(response.Content);
+                    if (assetResponse != null && assetResponse.asset != null && !string.IsNullOrEmpty(assetResponse.asset.id))
+                    {
+                        Debug.Log("Asset uploaded successfully, assetId: " + assetResponse.asset.id);
+                        assetIdCallback?.Invoke(assetResponse.asset.id);
+                    }
+                    else
+                    {
+                        Debug.LogError("Asset upload response did not contain a valid assetId.");
+                        assetIdCallback?.Invoke(null);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogError("Error during asset upload: " + ex.Message);
+                    assetIdCallback?.Invoke(null);
+                }
+            }, errorAction =>
+            {
+                Debug.LogError("API request for asset upload failed: " + errorAction);
+                assetIdCallback?.Invoke(null);
+            });
+        }
+
+        // DTO for the /assets POST response - to get the assetId
+        public class BgAssetResponse
+        {
+            [JsonProperty("asset")]
+            public BgAssetResponseAsset asset { get; set; }
+
+            public class BgAssetResponseAsset
+            {
+                public string id { get; set; }
+            }
+        }
+
+        // ---  Existing RestResponse Class (Make sure this is present in your CommonUtils.cs) ---
+        public class RestResponse
+        {
+            public string Content { get; set; }
+            public long StatusCode { get; set; }
         }
     }
 }

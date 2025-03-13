@@ -17,6 +17,18 @@ namespace Scenario.Editor
 
         public static Texture2D imageMask;
 
+        public readonly string[] dropdownOptionsflux =
+        {
+            "",
+            "Structure",
+            "Pose",
+            "Depth",
+            "Tile",
+            "Blur",
+            "Gray",
+            "low-quality"
+        };
+
         /// <summary>
         /// First dropdown options according to SDXL models
         /// </summary>
@@ -45,15 +57,58 @@ namespace Scenario.Editor
             "Line Art"
         };
 
+        public static bool isSizeSliderInitialized = false;
+
         /// <summary>
         /// Reference all dimension values available for SD 1.5 models
         /// </summary>
-        public readonly int[] allowed1_5DimensionValues = { 512, 576, 640, 688, 704, 768, 912 };
+        public readonly Vector2Int[] allowed1_5DimensionValues = {
+            new Vector2Int(728, 312),  // 21:9
+            new Vector2Int(672, 384),  // 16:9
+            new Vector2Int(608, 416),  // 3:2
+            new Vector2Int(552, 416),  // 4:3
+            new Vector2Int(544, 448),  // 5:4
+            new Vector2Int(512, 512),  // 1:1
+            new Vector2Int(448, 544),  // 4:5
+            new Vector2Int(416, 552),  // 3:4
+            new Vector2Int(416, 608),  // 2:3
+            new Vector2Int(384, 672),  // 9:16
+            new Vector2Int(312, 728)   // 9:21
+        };
 
         /// <summary>
         /// Reference all dimension values available for SDXL models
         /// </summary>
-        public readonly int[] allowedSDXLDimensionValues = { 1024, 1152, 1280, 1376, 1408, 1536, 1824 };
+        public readonly Vector2Int[] allowedSDXLDimensionValues = {
+            new Vector2Int(1456, 624), // 21:9
+            new Vector2Int(1344, 768), // 16:9
+            new Vector2Int(1216, 832), // 3:2
+            new Vector2Int(1104, 832), // 4:3
+            new Vector2Int(1088, 896), // 5:4
+            new Vector2Int(1024, 1024),// 1:1
+            new Vector2Int(896, 1088), // 4:5
+            new Vector2Int(832, 1104), // 3:4
+            new Vector2Int(832, 1216), // 2:3
+            new Vector2Int(768, 1344), // 9:16
+            new Vector2Int(624, 1456)  // 9:21
+        };
+
+        /// <summary>
+        /// Reference all dimension values available for FLUX models
+        /// </summary>
+        public readonly Vector2Int[] allowedFLUXPRODimensionValues = {
+            new Vector2Int(3136, 1344), // 21:9
+            new Vector2Int(2752, 1536), // 16:9
+            new Vector2Int(2496, 1664), // 3:2
+            new Vector2Int(2368, 1792), // 4:3
+            new Vector2Int(2304, 1856), // 5:4
+            new Vector2Int(2048, 2048),// 1:1
+            new Vector2Int(1856, 2304), // 4:5
+            new Vector2Int(1792, 2368), // 3:4
+            new Vector2Int(1664, 2496), // 2:3
+            new Vector2Int(1536, 2752), // 9:16
+            new Vector2Int(1344, 3136)  // 9:21
+        };
 
         public string selectedPreset = "";
 
@@ -175,21 +230,20 @@ namespace Scenario.Editor
             }
         }
 
-        public int NearestValueIndex(int currentValue, int[] allowedValues)
+        public int NearestValueIndex(int targetValue, Vector2Int[] values) // Updated for Vector2Int[]
         {
-            int nearestIndex = 0;
-            int minDifference = int.MaxValue;
+            int nearestIndex = -1;
+            float minDifference = float.MaxValue;
 
-            for (int i = 0; i < allowedValues.Length; i++)
+            for (int i = 0; i < values.Length; i++)
             {
-                int difference = Mathf.Abs(currentValue - allowedValues[i]);
+                float difference = Mathf.Abs(values[i].x - targetValue); // Compare with Vector2Int.x (width)
                 if (difference < minDifference)
                 {
                     minDifference = difference;
                     nearestIndex = i;
                 }
             }
-
             return nearestIndex;
         }
 
@@ -213,8 +267,11 @@ namespace Scenario.Editor
                 CustomStyle.ButtonSecondary(selectedModelName, 30, Models.ShowWindow);
                 CustomStyle.Separator();
                 RenderPromptSection();
-                CustomStyle.Space();
-                RenderNegativePromptSection();
+                if (!DataCache.instance.SelectedModelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
+                {
+                    CustomStyle.Space();
+                    RenderNegativePromptSection();
+                }
                 CustomStyle.Separator();
             
 
@@ -249,21 +306,67 @@ namespace Scenario.Editor
                 CustomStyle.Space();
 
                 List<string> tabLabels = new List<string>();
+                List<ECreationMode> availableModes = new List<ECreationMode>();
 
                 foreach (ECreationMode eMode in Enum.GetValues(typeof(ECreationMode)))
                 {
-                    string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
-                    tabLabels.Add(eName);
+                    if (!string.IsNullOrEmpty(DataCache.instance.SelectedModelType) &&
+                        DataCache.instance.SelectedModelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (DataCache.instance.SelectedModelType.Equals("flux1.1-pro", StringComparison.OrdinalIgnoreCase) ||
+                                DataCache.instance.SelectedModelType.Equals("flux.1-pro", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (eMode == ECreationMode.Text_To_Image)
+                            {
+                                availableModes.Add(eMode);
+                                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                                tabLabels.Add(eName);
+                            }
+                            continue; 
+                        }
+                        else if (DataCache.instance.SelectedModelType.Contains("flux.1.1-pro-ultra", StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (eMode == ECreationMode.Text_To_Image || eMode == ECreationMode.IP_Adapter)
+                            {
+                                availableModes.Add(eMode);
+                                string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                                tabLabels.Add(eName);
+                            }
+                            continue; 
+                        }
+                        else
+                        {
+                            availableModes.Add(eMode);
+                            string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                            tabLabels.Add(eName);
+                        }
+                    }
+                    else
+                    {
+                        availableModes.Add(eMode);
+                        string eName = eMode.ToString("G").Replace("__", " + ").Replace("_", " ");
+                        tabLabels.Add(eName);
+                    }
                 }
+
+
+                int selectedIndex = availableModes.IndexOf(selectedMode);
+                if (selectedIndex < 0)
+                {
+                    selectedIndex = 0;
+                }
+
                 EditorGUILayout.BeginHorizontal(EditorStyles.inspectorFullWidthMargins);
-                { 
+                {
                     GUILayout.Label("Mode: ", GUILayout.Width(labelWidth));
-                    selectedMode = (ECreationMode)EditorGUILayout.Popup(imageControlTab, tabLabels.ToArray(), GUILayout.Width(sliderWidth));
+                    selectedIndex = EditorGUILayout.Popup(selectedIndex, tabLabels.ToArray(), GUILayout.Width(sliderWidth));
+                    selectedMode = availableModes[selectedIndex];
                 }
                 EditorGUILayout.EndHorizontal();
 
                 imageControlTab = (int)selectedMode;
                 promptPusher.ActiveMode(imageControlTab);
+
 
                 ManageDrawMode();
             }
@@ -310,6 +413,52 @@ namespace Scenario.Editor
             EditorGUI.DrawRect(new Rect(0, 0, position.width, position.height), CustomStyle.GetBackgroundColor());
         }
 
+        public void UpdateSliderValuesForModel()
+        {
+            if (DataCache.instance.SelectedModelType == "flux.1.1-pro-ultra")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 0;
+                guidancesliderValue = 0;
+            }
+            else if (DataCache.instance.SelectedModelType == "flux1.1-pro")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 0;
+                guidancesliderValue = 0;
+            }
+            else if (DataCache.instance.SelectedModelType == "flux.1-pro")
+            {
+                imagesliderValue = 1;
+                samplesliderValue = 25;
+                guidancesliderValue = 3;
+            }
+            else if (DataCache.instance.SelectedModelId == "flux.1-schnell")
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 4;
+                guidancesliderValue = 3.5f;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("flux"))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 28;
+                guidancesliderValue = 3.5f;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("sd-xl"))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 30;
+                guidancesliderValue = 6;
+            }
+            else if (DataCache.instance.SelectedModelType.StartsWith("sd-1.5"))
+            {
+                imagesliderValue = 4;
+                samplesliderValue = 30;
+                guidancesliderValue = 7;
+            }
+        }
+
         /// <summary>
         /// WARNING --> may have to remove activeMode.IsControlNet if it useless
         /// Manage all display available depending on active creation mode
@@ -326,20 +475,18 @@ namespace Scenario.Editor
 
             switch (activeMode.EMode)
             {
+                case ECreationMode.Text_To_Image:
+                    // No specific UI for Text_To_Image mode
+                    break;
+
                 case ECreationMode.Image_To_Image:
-
                     dropImageView.DrawHandleImage();
-
                     CustomStyle.Space();
-
                     break;
 
                 case ECreationMode.Inpaint:
-
                     dropImageView.DrawHandleImage();
-
                     GUILayout.BeginHorizontal();
-
                     if (activeMode.IsControlNet)
                     {
                         if (GUILayout.Button("Add Mask"))
@@ -347,120 +494,74 @@ namespace Scenario.Editor
                             InpaintingEditor.ShowWindow(dropImageView.ImageUpload);
                         }
                     }
-
                     GUILayout.EndHorizontal();
-
                     break;
 
                 case ECreationMode.ControlNet:
-
                     dropImageView.DrawHandleImage();
-
                     CustomStyle.Space();
-
                     RenderControlNetFoldout();
-
                     break;
 
                 case ECreationMode.IP_Adapter:
-
                     dropImageView.DrawHandleImage();
-
-                    CustomStyle.Space(); 
-
+                    CustomStyle.Space();
                     DrawAdditionalModality("IP Adapter Scale");
-
                     break;
 
-                case ECreationMode.Reference_Only:
-                    dropImageView.DrawHandleImage();
-
-                    CustomStyle.Space();
-
-                    DrawAdditionalModality("Influence");
-                    
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference Attn"))
-                        {
-                            bool refAtt = GUILayout.Toggle(activeMode.AdditionalSettings["Reference Attn"], "Reference Attn");
-                            activeMode.AdditionalSettings["Reference Attn"] = refAtt;
-                        }
-                        else
-                        {
-                            bool refAtt = GUILayout.Toggle(true, "Reference Attn");
-                            activeMode.AdditionalSettings.Add("Reference Attn", refAtt);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-
-                    GUILayout.BeginHorizontal();
-                    {
-                        if (activeMode.AdditionalSettings.ContainsKey("Reference AdaIN"))
-                        {
-                            bool refAd = GUILayout.Toggle(activeMode.AdditionalSettings["Reference AdaIN"], "Reference AdaIN");
-                            activeMode.AdditionalSettings["Reference AdaIN"] = refAd;
-                        }
-                        else
-                        {
-                            bool refAd = GUILayout.Toggle(false, "Reference AdaIN");
-                            activeMode.AdditionalSettings.Add("Reference AdaIN", refAd);
-                        }
-                    }
-                    GUILayout.EndHorizontal();
-
+                case ECreationMode.Texture:
+                    // No specific UI for Texture mode, similar to Text_To_Image
                     break;
 
                 case ECreationMode.Image_To_Image__ControlNet:
-
                     dropImageView.DrawHandleImage("(Image to image)");
-
                     CustomStyle.Space();
-
                     dropAdditionalImageView.DrawHandleImage("(ControlNet)");
-
                     CustomStyle.Space();
-
                     RenderControlNetFoldout();
-
                     break;
 
                 case ECreationMode.Image_To_Image__IP_Adapter:
-
                     dropImageView.DrawHandleImage("(Image to image)");
-
                     CustomStyle.Space();
-
                     dropAdditionalImageView.DrawHandleImage("(IP Adapter)");
-
                     CustomStyle.Space();
-
                     DrawAdditionalModality("IP Adapter Scale");
+                    break;
 
+                case ECreationMode.ControlNet__Inpaint:
+                    dropImageView.DrawHandleImage("(ControlNet)");
+                    CustomStyle.Space();
+                    RenderControlNetFoldout();
+                    CustomStyle.Space();
+                    if (GUILayout.Button("Add Mask"))
+                    {
+                        InpaintingEditor.ShowWindow(dropImageView.ImageUpload);
+                    }
                     break;
 
                 case ECreationMode.ControlNet__IP_Adapter:
-
                     dropImageView.DrawHandleImage("(ControlNet)");
-
                     CustomStyle.Space();
-
                     RenderControlNetFoldout();
-
                     CustomStyle.Space();
-
                     dropAdditionalImageView.DrawHandleImage("(IP Adapter)");
-
                     CustomStyle.Space();
-
                     DrawAdditionalModality("IP Adapter Scale");
-
                     break;
+
+                case ECreationMode.ControlNet__Texture:
+                    dropImageView.DrawHandleImage();
+                    CustomStyle.Space();
+                    RenderControlNetFoldout();
+                    CustomStyle.Space();
+                    // Implement UI for ControlNet__Texture
+                    break;
+
             }
 
             promptPusher.UpdateActiveMode(activeMode);
         }
-
 
         /// <summary>
         /// Draw display for additional modality

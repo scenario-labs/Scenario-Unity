@@ -405,7 +405,7 @@ namespace Scenario.Editor
             {
                 if (!string.IsNullOrEmpty(currentImageData.modelId))
                 {
-                    string modelName = DataCache.instance.GetModelNameById(currentImageData.modelId);
+                    string modelName = await Models.FetchModelById(currentImageData.modelId).name;
                     CustomStyle.Label($"Model: {modelName}");
                     CustomStyle.Space(padding);
                 }

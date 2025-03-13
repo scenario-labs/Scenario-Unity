@@ -450,8 +450,8 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 {
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
-                    if (!string.IsNullOrEmpty(currentImageData.modelId) && 
-                        currentImageData.modelId.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrEmpty(currentImageData.modelType) && 
+                        !currentImageData.modelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
                     {
                         if (string.IsNullOrEmpty(currentImageData.Scheduler))
                         {

@@ -403,6 +403,11 @@ namespace Scenario.Editor
 
             GUILayout.BeginVertical();
             {
+                if (!string.IsNullOrEmpty(currentImageData.Model))
+                {
+                    CustomStyle.Label($"Model: {currentImageData.Model}");
+                    CustomStyle.Space(padding);
+                }
                 CustomStyle.Label("Prompt:");
                 CustomStyle.Label($"{currentImageData.Prompt}");
                 CustomStyle.Space(padding);
@@ -416,7 +421,7 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 {
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
-                    if (DataCache.instance.SelectedModelType.StartsWith("flux"))
+                    if (currentImageData.Model.StartsWith("flux"))
                     {
                         if (string.IsNullOrEmpty(currentImageData.Scheduler))
                         {

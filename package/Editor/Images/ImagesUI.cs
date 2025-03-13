@@ -452,7 +452,7 @@ namespace Scenario.Editor
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
                     if (modelCache.TryGetValue(currentImageData.modelId, out var modelInfo) && 
                         !string.IsNullOrEmpty(modelInfo.type) &&
-                        modelInfo.type.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
+                        !modelInfo.type.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
                     {
                         if (string.IsNullOrEmpty(currentImageData.Scheduler))
                         {

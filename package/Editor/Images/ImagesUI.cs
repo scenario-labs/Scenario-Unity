@@ -34,7 +34,7 @@ namespace Scenario.Editor
         /// </summary>
         private bool isLoading = false;
 
-        private Dictionary<string, string> modelNameCache = new Dictionary<string, string>();
+        private Dictionary<string, (string name, string type)> modelCache = new Dictionary<string, (string name, string type)>();
 
         #region Initialization
 
@@ -392,7 +392,7 @@ namespace Scenario.Editor
 
         private void FetchModelName(string modelId)
         {
-            if (string.IsNullOrEmpty(modelId) || modelNameCache.ContainsKey(modelId))
+            if (string.IsNullOrEmpty(modelId) || modelCache.ContainsKey(modelId))
                 return;
 
             // Start the fetch operation
@@ -400,7 +400,7 @@ namespace Scenario.Editor
             task.ContinueWith(t => {
                 if (t.IsCompleted && !t.IsFaulted && t.Result != null)
                 {
-                    modelNameCache[modelId] = t.Result.name;
+                    modelCache[modelId] = (t.Result.name, t.Result.type);
                     // Ensure we update the UI on the main thread
                     EditorApplication.delayCall += () => {
                         EditorWindow.GetWindow<Images>()?.Repaint();
@@ -426,9 +426,9 @@ namespace Scenario.Editor
                 if (!string.IsNullOrEmpty(currentImageData.modelId))
                 {
                     string modelName = currentImageData.modelId;
-                    if (modelNameCache.ContainsKey(currentImageData.modelId))
+                    if (modelCache.ContainsKey(currentImageData.modelId))
                     {
-                        modelName = modelNameCache[currentImageData.modelId];
+                        modelName = modelCache[currentImageData.modelId].name;
                     }
                     else
                     {
@@ -450,8 +450,9 @@ namespace Scenario.Editor
                 GUILayout.BeginHorizontal();
                 {
                     CustomStyle.Label($"Guidance: {currentImageData.Guidance}");
-                    if (!string.IsNullOrEmpty(currentImageData.modelType) && 
-                        !currentImageData.modelType.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
+                    if (modelCache.TryGetValue(currentImageData.modelId, out var modelInfo) && 
+                        !string.IsNullOrEmpty(modelInfo.type) &&
+                        modelInfo.type.StartsWith("flux", StringComparison.OrdinalIgnoreCase))
                     {
                         if (string.IsNullOrEmpty(currentImageData.Scheduler))
                         {

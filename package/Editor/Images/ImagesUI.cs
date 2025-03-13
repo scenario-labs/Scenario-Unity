@@ -390,6 +390,25 @@ namespace Scenario.Editor
             }
         }
 
+        private void FetchModelName(string modelId)
+        {
+            if (string.IsNullOrEmpty(modelId) || modelNameCache.ContainsKey(modelId))
+                return;
+
+            // Start the fetch operation
+            var task = Models.FetchModelById(modelId);
+            task.ContinueWith(t => {
+                if (t.IsCompleted && !t.IsFaulted && t.Result != null)
+                {
+                    modelNameCache[modelId] = t.Result.name;
+                    // Ensure we update the UI on the main thread
+                    EditorApplication.delayCall += () => {
+                        EditorWindow.GetWindow<Images>()?.Repaint();
+                    };
+                }
+            });
+        }
+
         /// <summary>
         /// Draws the data associated with the currently selected image, including prompt, steps, size, guidance, and scheduler.
         /// This function displays textual information about the selected image's attributes.
@@ -407,19 +426,13 @@ namespace Scenario.Editor
                 if (!string.IsNullOrEmpty(currentImageData.modelId))
                 {
                     string modelName = currentImageData.modelId;
-                    if (!modelNameCache.ContainsKey(currentImageData.modelId))
+                    if (modelNameCache.ContainsKey(currentImageData.modelId))
                     {
-                        Models.FetchModelById(currentImageData.modelId).Then(model => {
-                            if (model != null)
-                            {
-                                modelNameCache[currentImageData.modelId] = model.name;
-                                EditorWindow.GetWindow<Images>().Repaint();
-                            }
-                        });
+                        modelName = modelNameCache[currentImageData.modelId];
                     }
                     else
                     {
-                        modelName = modelNameCache[currentImageData.modelId];
+                        FetchModelName(currentImageData.modelId);
                     }
                     CustomStyle.Label($"Model: {modelName}");
                     CustomStyle.Space(padding);
